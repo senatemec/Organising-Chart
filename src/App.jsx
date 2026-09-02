@@ -1,0 +1,328 @@
+import React, { useState, useEffect } from 'react';
+import Navbar from './components/Navbar';
+import VenueGrid from './components/VenueGrid';
+import AvailabilityGrid from './components/AvailabilityGrid';
+import VenueDetailsModal from './components/VenueDetailsModal';
+import BookingModal from './components/BookingModal';
+import AdminDashboard from './components/AdminDashboard';
+import MyBookings from './components/MyBookings';
+import AnalyticsView from './components/AnalyticsView';
+import GoogleAuthModal from './components/GoogleAuthModal';
+
+import { initialVenues, initialBookings } from './data/mockData';
+import { CheckCircle2, AlertCircle, Info, Sparkles, XCircle } from 'lucide-react';
+
+export default function App() {
+  // Persistent State with Smart Migration
+  const [venues, setVenues] = useState(() => {
+    const saved = localStorage.getItem('cs_venues_v7');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 10) return parsed;
+      } catch (e) {}
+    }
+    return initialVenues;
+  });
+
+  const [bookings, setBookings] = useState(() => {
+    const saved = localStorage.getItem('cs_bookings_v7');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return initialBookings;
+  });
+
+  // Logged-in Google User State (null if logged out)
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('cs_google_user_v1');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return null;
+  });
+
+  const [activeTab, setActiveTab] = useState('venues');
+
+  // Toast / Notification State
+  const [toast, setToast] = useState(null);
+
+  // Modals
+  const [selectedVenueForDetails, setSelectedVenueForDetails] = useState(null);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [bookingModalInitialData, setBookingModalInitialData] = useState({
+    venue: null,
+    date: '2026-09-05',
+    time: '10:00'
+  });
+
+  // Google Auth Modal State
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMessage, setAuthModalMessage] = useState('');
+  const [pendingBookingPayload, setPendingBookingPayload] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem('cs_venues_v7', JSON.stringify(venues));
+  }, [venues]);
+
+  useEffect(() => {
+    localStorage.setItem('cs_bookings_v7', JSON.stringify(bookings));
+  }, [bookings]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('cs_google_user_v1', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('cs_google_user_v1');
+    }
+  }, [currentUser]);
+
+  // Security guard: If current tab is admin/analytics and user is not union admin, bounce to venues
+  useEffect(() => {
+    if ((activeTab === 'admin' || activeTab === 'analytics') && !currentUser?.isUnionAdmin) {
+      setActiveTab('venues');
+    }
+  }, [activeTab, currentUser]);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 4500);
+  };
+
+  // Trigger Google Auth Modal for unauthenticated actions
+  const triggerAuthModal = (message, pendingPayload = null) => {
+    setAuthModalMessage(message);
+    setPendingBookingPayload(pendingPayload);
+    setAuthModalOpen(true);
+  };
+
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+    if (user.isUnionAdmin) {
+      showToast(`Welcome Union Senate Executive (${user.email})! Admin controls unlocked.`, 'success');
+    } else {
+      showToast(`Signed in with Google as ${user.name} (${user.email})`, 'info');
+    }
+
+    // If user was trying to book a venue, proceed to open booking modal
+    if (pendingBookingPayload) {
+      setBookingModalInitialData(pendingBookingPayload);
+      setBookingModalOpen(true);
+      setPendingBookingPayload(null);
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    if (activeTab === 'admin') {
+      setActiveTab('venues');
+    }
+    showToast('Signed out successfully.', 'info');
+  };
+
+  // Open booking modal (requires Google Login!)
+  const handleOpenBookingModal = (venue = null, date = '2026-09-05', time = '10:00') => {
+    const payload = { venue, date, time };
+    if (!currentUser) {
+      triggerAuthModal('Please sign in with your Google / College account to book a venue.', payload);
+      return;
+    }
+    setBookingModalInitialData(payload);
+    setBookingModalOpen(true);
+  };
+
+  // Add new booking (Instantly Confirmed!)
+  const handleCreateBooking = (newBooking) => {
+    setBookings([newBooking, ...bookings]);
+    showToast(`Booking ${newBooking.id} confirmed for ${newBooking.venueName}!`, 'success');
+  };
+
+  // Union Admin Cancel with message
+  const handleAdminCancelBooking = (bookingId, reason) => {
+    setBookings(bookings.map((b) => {
+      if (b.id === bookingId) {
+        return {
+          ...b,
+          status: 'cancelled',
+          cancelledBy: currentUser?.email || 'Union Admin',
+          cancellationReason: reason
+        };
+      }
+      return b;
+    }));
+    showToast(`Booking ${bookingId} cancelled by Union Admin.`, 'error');
+  };
+
+  // Student cancel own booking
+  const handleCancelBooking = (bookingId) => {
+    setBookings(bookings.filter(b => b.id !== bookingId));
+    showToast(`Booking ${bookingId} deleted.`, 'info');
+  };
+
+  // Toggle Maintenance Status (Admin only)
+  const handleToggleVenueStatus = (venueId) => {
+    setVenues(venues.map((v) => {
+      if (v.id === venueId) {
+        const nextStatus = v.status === 'Maintenance' ? 'Available' : 'Maintenance';
+        showToast(`${v.name} status updated to ${nextStatus}`, 'info');
+        return { ...v, status: nextStatus };
+      }
+      return v;
+    }));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#080C15] text-slate-100 flex flex-col justify-between">
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[2000] animate-fade-in">
+          <div className={`px-4 py-3 rounded-2xl border flex items-center gap-3 text-xs font-semibold shadow-2xl backdrop-blur-md ${
+            toast.type === 'error' 
+              ? 'bg-rose-950/90 border-rose-500/60 text-rose-200' 
+              : toast.type === 'info'
+              ? 'bg-indigo-950/90 border-indigo-500/60 text-indigo-200'
+              : 'bg-emerald-950/90 border-emerald-500/60 text-emerald-200'
+          }`}>
+            {toast.type === 'error' ? (
+              <XCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            ) : toast.type === 'info' ? (
+              <Info className="w-4 h-4 shrink-0 text-indigo-400" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            )}
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Header Navbar with Google Sign-in & Union Mail Role Gating */}
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        currentUser={currentUser}
+        onOpenLoginModal={(msg) => triggerAuthModal(msg)}
+        onLogout={handleLogout}
+        onNewBookingClick={() => handleOpenBookingModal()}
+      />
+
+      {/* Main Workspace Container */}
+      <main className="max-w-7xl mx-auto px-4 lg:px-8 pb-16 flex-1 w-full space-y-6">
+        
+        {/* Tab 1: Venues & Landing Showcase */}
+        {activeTab === 'venues' && (
+          <VenueGrid
+            venues={venues}
+            onBookClick={(venue) => handleOpenBookingModal(venue)}
+            onViewDetails={(venue) => setSelectedVenueForDetails(venue)}
+            onScheduleClick={() => setActiveTab('availability')}
+          />
+        )}
+
+        {/* Tab 2: Availability Grid Matrix */}
+        {activeTab === 'availability' && (
+          <AvailabilityGrid
+            venues={venues}
+            bookings={bookings}
+            onSlotClick={(venue, date, slot) => handleOpenBookingModal(venue, date, slot)}
+          />
+        )}
+
+        {/* Tab 3: My Bookings */}
+        {activeTab === 'my-bookings' && (
+          <MyBookings
+            bookings={bookings}
+            venues={venues}
+            onCancelBooking={handleCancelBooking}
+            onNewBookingClick={() => handleOpenBookingModal()}
+          />
+        )}
+
+        {/* Tab 4: Union Admin Portal (Exclusively available to Union Mail) */}
+        {activeTab === 'admin' && currentUser?.isUnionAdmin && (
+          <AdminDashboard
+            bookings={bookings}
+            venues={venues}
+            onAdminCancelBooking={handleAdminCancelBooking}
+            onToggleVenueStatus={handleToggleVenueStatus}
+          />
+        )}
+
+        {/* Tab 5: Analytics & Insights (Exclusively available to Union Admin) */}
+        {activeTab === 'analytics' && currentUser?.isUnionAdmin && (
+          <AnalyticsView
+            venues={venues}
+            bookings={bookings}
+          />
+        )}
+
+      </main>
+
+      {/* Google Authentication Modal */}
+      <GoogleAuthModal
+        isOpen={authModalOpen}
+        onClose={() => {
+          setAuthModalOpen(false);
+          setPendingBookingPayload(null);
+        }}
+        onLoginSuccess={handleLoginSuccess}
+        intendedActionMessage={authModalMessage}
+      />
+
+      {/* Venue Details Modal */}
+      {selectedVenueForDetails && (
+        <VenueDetailsModal
+          venue={selectedVenueForDetails}
+          bookings={bookings}
+          onClose={() => setSelectedVenueForDetails(null)}
+          onBookClick={(venue) => handleOpenBookingModal(venue)}
+        />
+      )}
+
+      {/* Booking Modal */}
+      {bookingModalOpen && (
+        <BookingModal
+          venues={venues}
+          existingBookings={bookings}
+          initialVenue={bookingModalInitialData.venue}
+          initialDate={bookingModalInitialData.date}
+          initialTime={bookingModalInitialData.time}
+          initialEmail={currentUser?.email || ''}
+          initialOrganizer={currentUser?.name || ''}
+          onClose={() => setBookingModalOpen(false)}
+          onSubmitBooking={handleCreateBooking}
+        />
+      )}
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-6 bg-[#070A12] text-center text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-lg border border-white/10">
+              <img src="/mec_college_logo.png" alt="MEC" className="w-5 h-5 object-contain bg-white rounded p-0.5" />
+              <img src="/union_mec_logo.png" alt="Union MEC" className="w-5 h-5 object-contain bg-white rounded p-0.5" />
+            </div>
+            <div className="text-slate-400 text-left">
+              © 2026 <strong className="text-white">Govt. Model Engineering College</strong> • Managed by <strong className="text-red-400">Union MEC</strong>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-slate-400 text-[11px]">
+            <span className="hover:text-slate-200 cursor-pointer transition-colors">Union Bylaws</span>
+            <span>•</span>
+            <span className="hover:text-slate-200 cursor-pointer transition-colors">Staff Advisor (MEC)</span>
+            <span>•</span>
+            <span className="hover:text-slate-200 cursor-pointer transition-colors">Dean Student Affairs</span>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  );
+}

@@ -1,0 +1,614 @@
+import React, { useState } from 'react';
+import { 
+  Calendar, 
+  CalendarDays,
+  Clock, 
+  Sparkles, 
+  ChevronLeft, 
+  ChevronRight,
+  Info,
+  CheckCircle2,
+  Building2,
+  DoorClosed,
+  Filter,
+  Plus,
+  Layers
+} from 'lucide-react';
+import { timeSlots, formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
+
+export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
+  const [viewMode, setViewMode] = useState('monthly'); // 'daily' | 'monthly'
+  const [selectedDate, setSelectedDate] = useState('2026-09-05');
+  const [currentMonthDate, setCurrentMonthDate] = useState(new Date('2026-09-01T00:00:00'));
+  const [selectedDivision, setSelectedDivision] = useState('All');
+  const [selectedMonthDay, setSelectedMonthDay] = useState('2026-09-05');
+
+  // Change date by offset in days (for daily matrix)
+  const changeDateByDays = (days) => {
+    const d = new Date(selectedDate + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    setSelectedDate(`${yyyy}-${mm}-${dd}`);
+  };
+
+  const setDatePreset = (preset) => {
+    if (preset === 'today') {
+      setSelectedDate('2026-09-05');
+    } else if (preset === 'tomorrow') {
+      setSelectedDate('2026-09-06');
+    }
+  };
+
+  // Helper for daily matrix slot state
+  const getSlotState = (venueId, timeStr) => {
+    const slotHour = parseInt(timeStr.split(':')[0], 10);
+
+    const matchingBooking = bookings.find((b) => {
+      if (b.venueId !== venueId || b.date !== selectedDate || b.status === 'cancelled' || b.status === 'rejected') return false;
+      const startHour = parseInt(b.startTime.split(':')[0], 10);
+      const endHour = parseInt(b.endTime.split(':')[0], 10);
+      return slotHour >= startHour && slotHour < endHour;
+    });
+
+    if (matchingBooking) {
+      return {
+        isOccupied: true,
+        status: matchingBooking.status,
+        booking: matchingBooking
+      };
+    }
+
+    return { isOccupied: false, status: 'available', booking: null };
+  };
+
+  // Monthly Calendar Navigation & Computation
+  const changeMonth = (delta) => {
+    const nextMonth = new Date(currentMonthDate);
+    nextMonth.setMonth(nextMonth.getMonth() + delta);
+    setCurrentMonthDate(nextMonth);
+  };
+
+  const year = currentMonthDate.getFullYear();
+  const month = currentMonthDate.getMonth(); // 0-indexed
+  const monthName = currentMonthDate.toLocaleString('default', { month: 'long' });
+
+  // Compute days in month
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0 = Sun, 1 = Mon ...
+  // Adjusted for Monday start (0 = Mon, 6 = Sun)
+  const startOffset = (firstDayOfWeek + 6) % 7;
+
+  // Filter bookings for monthly view
+  const activeBookings = bookings.filter(b => b.status !== 'cancelled' && b.status !== 'rejected');
+  
+  const filteredMonthlyBookings = activeBookings.filter((b) => {
+    if (selectedDivision === 'All') return true;
+    const v = venues.find(ven => ven.id === b.venueId);
+    return v && v.type === selectedDivision;
+  });
+
+  // Get bookings for a specific day string (YYYY-MM-DD)
+  const getBookingsForDate = (dateStr) => {
+    return filteredMonthlyBookings.filter(b => b.date === dateStr);
+  };
+
+  // Monthly statistics
+  const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const bookingsThisMonth = activeBookings.filter(b => b.date.startsWith(monthPrefix));
+
+  const daysArray = [];
+  for (let i = 0; i < startOffset; i++) {
+    daysArray.push(null);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    daysArray.push({ dayNumber: d, dateStr });
+  }
+
+  // Selected day bookings
+  const selectedDayBookings = activeBookings.filter(b => b.date === selectedMonthDay);
+
+  return (
+    <div className="space-y-6">
+      
+      {/* Top Header & View Switcher */}
+      <div className="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-white/10 shadow-xl">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
+            {viewMode === 'monthly' ? <CalendarDays className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-white tracking-tight">
+              {viewMode === 'monthly' ? 'Monthly Venue Schedule Overview' : 'Daily Hourly Venue Matrix'}
+            </h2>
+            <p className="text-xs text-slate-400">
+              {viewMode === 'monthly' 
+                ? `Month at a glance for ${monthName} ${year} • Click any day to inspect bookings` 
+                : 'Hour-by-hour availability timeline • Click any green slot to reserve'}
+            </p>
+          </div>
+        </div>
+
+        {/* Right View Switcher Toggle */}
+        <div className="flex items-center gap-2.5 w-full md:w-auto">
+          <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-white/10 text-xs">
+            <button
+              onClick={() => setViewMode('monthly')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold transition-all ${
+                viewMode === 'monthly' 
+                  ? 'bg-indigo-600 text-white shadow-sm' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span>Monthly Overview</span>
+            </button>
+            <button
+              onClick={() => setViewMode('daily')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold transition-all ${
+                viewMode === 'daily' 
+                  ? 'bg-indigo-600 text-white shadow-sm' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Hourly Matrix</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          VIEW 1: MONTHLY CALENDAR OVERVIEW
+          ========================================================================= */}
+      {viewMode === 'monthly' && (
+        <div className="space-y-6">
+          
+          {/* Monthly Controls Bar */}
+          <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-white/10 bg-slate-950/70">
+            
+            {/* Month Navigator */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => changeMonth(-1)}
+                className="p-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-white/10 transition-colors"
+                title="Previous Month"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <div className="px-4 py-1.5 bg-slate-900/90 rounded-xl border border-white/10 text-center min-w-[170px]">
+                <span className="font-extrabold text-sm text-white">{monthName} {year}</span>
+              </div>
+
+              <button
+                onClick={() => changeMonth(1)}
+                className="p-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-white/10 transition-colors"
+                title="Next Month"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setCurrentMonthDate(new Date('2026-09-01T00:00:00'));
+                  setSelectedMonthDay('2026-09-05');
+                }}
+                className="btn-secondary text-xs py-1.5 px-3 ml-2"
+              >
+                Current Month
+              </button>
+            </div>
+
+            {/* Division Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto text-xs pb-1 md:pb-0">
+              <span className="text-slate-400 text-[11px] font-medium mr-1 hidden sm:inline">Division:</span>
+              {[
+                { id: 'All', label: 'All Venues' },
+                { id: 'Activity Division', label: 'Activity' },
+                { id: 'Auditorium', label: 'Auditoriums' },
+                { id: 'Computer Lab', label: 'Labs' },
+                { id: 'Classrooms', label: 'Classrooms' },
+              ].map((div) => (
+                <button
+                  key={div.id}
+                  onClick={() => setSelectedDivision(div.id)}
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                    selectedDivision === div.id
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-slate-900 text-slate-400 hover:text-white border border-white/5'
+                  }`}
+                >
+                  {div.label}
+                </button>
+              ))}
+            </div>
+
+          </div>
+
+          {/* Month Summary KPI Badges */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="glass-panel p-3.5 rounded-xl border border-white/10 bg-slate-900/60 text-xs">
+              <div className="text-slate-400">Total Bookings in {monthName}</div>
+              <div className="text-xl font-extrabold text-white mt-0.5">{bookingsThisMonth.length} Confirmed</div>
+            </div>
+            <div className="glass-panel p-3.5 rounded-xl border border-white/10 bg-slate-900/60 text-xs">
+              <div className="text-slate-400">Registered Facilities</div>
+              <div className="text-xl font-extrabold text-indigo-400 mt-0.5">{venues.length} Facilities</div>
+            </div>
+            <div className="glass-panel p-3.5 rounded-xl border border-white/10 bg-slate-900/60 text-xs">
+              <div className="text-slate-400">Activity Division Events</div>
+              <div className="text-xl font-extrabold text-emerald-400 mt-0.5">
+                {bookingsThisMonth.filter(b => {
+                  const v = venues.find(ven => ven.id === b.venueId);
+                  return v && v.type === 'Activity Division';
+                }).length} Active
+              </div>
+            </div>
+            <div className="glass-panel p-3.5 rounded-xl border border-white/10 bg-slate-900/60 text-xs">
+              <div className="text-slate-400">Conflict Engine</div>
+              <div className="text-xl font-extrabold text-cyan-300 mt-0.5">Zero Clashes</div>
+            </div>
+          </div>
+
+          {/* 7-Day Monthly Calendar Grid */}
+          <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-slate-950/80">
+            
+            {/* Weekday Header */}
+            <div className="grid grid-cols-7 border-b border-white/10 bg-slate-950 text-xs font-bold text-slate-400 text-center">
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                <div key={day} className="py-3 border-r border-white/5 last:border-r-0 uppercase tracking-wider text-[11px]">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Days Matrix */}
+            <div className="grid grid-cols-7 divide-x divide-y divide-white/5">
+              {daysArray.map((item, index) => {
+                if (!item) {
+                  return (
+                    <div key={`empty-${index}`} className="min-h-[105px] sm:min-h-[125px] bg-slate-950/40 p-2" />
+                  );
+                }
+
+                const dayBookings = getBookingsForDate(item.dateStr);
+                const isSelected = selectedMonthDay === item.dateStr;
+                const isToday = item.dateStr === '2026-09-05';
+
+                return (
+                  <div
+                    key={item.dateStr}
+                    onClick={() => setSelectedMonthDay(item.dateStr)}
+                    className={`min-h-[105px] sm:min-h-[125px] p-2 sm:p-2.5 transition-all cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-indigo-600/15 ring-2 ring-indigo-500/80'
+                        : isToday
+                        ? 'bg-slate-900/90'
+                        : 'bg-slate-950/60 hover:bg-slate-900/50'
+                    }`}
+                  >
+                    {/* Day Top Bar */}
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
+                        isToday 
+                          ? 'bg-indigo-600 text-white font-extrabold shadow-sm' 
+                          : isSelected
+                          ? 'bg-white/15 text-white'
+                          : 'text-slate-300'
+                      }`}>
+                        {item.dayNumber}
+                      </span>
+
+                      {dayBookings.length > 0 && (
+                        <span className="badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[9px] px-1.5 py-0.2">
+                          {dayBookings.length} {dayBookings.length === 1 ? 'Event' : 'Events'}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Bookings Pills List */}
+                    <div className="space-y-1 my-1 overflow-hidden">
+                      {dayBookings.slice(0, 2).map((b) => (
+                        <div
+                          key={b.id}
+                          className="bg-indigo-950/80 border border-indigo-500/40 text-indigo-200 px-1.5 py-0.5 rounded text-[10px] font-medium truncate shadow-sm"
+                          title={`${b.venueName}${b.roomNumber ? ` (${b.roomNumber})` : ''}: ${b.eventTitle}`}
+                        >
+                          <strong className="text-white">{b.venueName.split(' ')[0]}:</strong> {b.eventTitle}
+                        </div>
+                      ))}
+
+                      {dayBookings.length > 2 && (
+                        <div className="text-[9px] text-cyan-300 font-semibold px-1">
+                          +{dayBookings.length - 2} more events
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer Status */}
+                    <div className="text-[10px] text-slate-500 flex items-center justify-between pt-1">
+                      {dayBookings.length === 0 ? (
+                        <span className="text-emerald-500/70 text-[9px] font-medium">• Available</span>
+                      ) : (
+                        <span className="text-indigo-400 text-[9px] font-mono">
+                          {formatTime12H(dayBookings[0].startTime).replace(':00', '')}
+                        </span>
+                      )}
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+
+          </div>
+
+          {/* Selected Day Inspector Drawer */}
+          {selectedMonthDay && (
+            <div className="glass-panel p-5 rounded-2xl border border-indigo-500/30 bg-slate-950 space-y-4 shadow-xl animate-fade-in">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">
+                      {formatDateFriendly(selectedMonthDay)} — Bookings & Schedule
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      {selectedDayBookings.length} confirmed venue {selectedDayBookings.length === 1 ? 'reservation' : 'reservations'} on this date
+                    </p>
+                  </div>
+                </div>
+
+                {/* Switch to Hourly Matrix for this day */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedDate(selectedMonthDay);
+                      setViewMode('daily');
+                    }}
+                    className="btn-secondary text-xs py-1.5 px-3"
+                  >
+                    <Clock className="w-3.5 h-3.5 text-indigo-400" /> View Hourly Timeline
+                  </button>
+                  <button
+                    onClick={() => onSlotClick(venues[0], selectedMonthDay, '10:00')}
+                    className="btn-primary text-xs py-1.5 px-3.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Book on this Date
+                  </button>
+                </div>
+              </div>
+
+              {/* Day's Event List */}
+              {selectedDayBookings.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {selectedDayBookings.map((b) => (
+                    <div
+                      key={b.id}
+                      className="p-3.5 rounded-xl bg-slate-900/80 border border-white/10 space-y-2 text-xs hover:border-indigo-500/40 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] font-bold text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded">
+                          {b.id}
+                        </span>
+                        <span className="badge badge-available text-[9px] py-0.5">
+                          <CheckCircle2 className="w-2.5 h-2.5" /> Confirmed
+                        </span>
+                      </div>
+
+                      <div>
+                        <div className="font-bold text-white text-sm line-clamp-1">{b.eventTitle}</div>
+                        <div className="text-indigo-300 text-[11px] font-semibold">{b.organizer}</div>
+                      </div>
+
+                      <div className="space-y-1 text-slate-300 bg-slate-950/60 p-2 rounded-lg border border-white/5 text-[11px]">
+                        <div className="flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span className="font-medium text-white">
+                            {b.venueName} {b.roomNumber && <span className="text-cyan-300 font-mono">({b.roomNumber})</span>}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 font-mono text-cyan-300">
+                          <Clock className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          <span>{formatTime12H(b.startTime)} - {formatTime12H(b.endTime)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-xs text-slate-400 space-y-2 bg-slate-900/40 rounded-xl border border-white/5">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
+                  <p className="font-semibold text-slate-200">No events booked on this date</p>
+                  <p className="text-slate-500">All campus auditoriums, activity spaces, and classrooms are wide open for reservation.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* =========================================================================
+          VIEW 2: DAILY HOURLY MATRIX
+          ========================================================================= */}
+      {viewMode === 'daily' && (
+        <div className="space-y-6">
+          
+          {/* Daily Date Controls Bar */}
+          <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-white/10 bg-slate-950/70">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setDatePreset('today')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  selectedDate === '2026-09-05' 
+                    ? 'bg-indigo-600 text-white shadow-sm' 
+                    : 'bg-slate-900 text-slate-400 hover:text-white border border-white/5'
+                }`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setDatePreset('tomorrow')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  selectedDate === '2026-09-06' 
+                    ? 'bg-indigo-600 text-white shadow-sm' 
+                    : 'bg-slate-900 text-slate-400 hover:text-white border border-white/5'
+                }`}
+              >
+                Tomorrow
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-white/10">
+              <button
+                onClick={() => changeDateByDays(-1)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                title="Previous Day"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-transparent text-xs font-bold text-indigo-300 focus:outline-none px-2 cursor-pointer font-mono"
+              />
+
+              <button
+                onClick={() => changeDateByDays(1)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                title="Next Day"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Daily Legend */}
+          <div className="flex flex-wrap items-center gap-5 px-1 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-3.5 h-3.5 rounded bg-emerald-500/20 border border-emerald-500/60 shadow-sm shadow-emerald-500/30" />
+              <span className="text-slate-300 font-medium">Free Slot (Click to Book)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3.5 h-3.5 rounded bg-indigo-600 border border-indigo-400" />
+              <span className="text-slate-300 font-medium">Confirmed Booking</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3.5 h-3.5 rounded bg-slate-800 border border-slate-700" />
+              <span className="text-slate-400 font-medium">Under Maintenance</span>
+            </div>
+          </div>
+
+          {/* Matrix Table */}
+          <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[950px]">
+                <thead>
+                  <tr className="bg-slate-950 border-b border-white/10 text-xs font-bold text-slate-400">
+                    <th className="p-4 w-64 sticky left-0 z-20 bg-slate-950 border-r border-white/10">
+                      Venue / Facility
+                    </th>
+                    {timeSlots.map((slot) => (
+                      <th key={slot} className="p-3 text-center min-w-[70px] border-r border-white/5 font-mono text-[11px]">
+                        {formatTime12H(slot).replace(':00', '')}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-xs">
+                  {venues.map((venue) => (
+                    <tr key={venue.id} className="hover:bg-white/[0.02] transition-colors">
+                      
+                      {/* Sticky Venue Header Column */}
+                      <td className="p-4 sticky left-0 z-10 bg-slate-900/95 border-r border-white/10 backdrop-blur-md">
+                        <div className="font-bold text-white truncate max-w-[200px]" title={venue.name}>
+                          {venue.name}
+                        </div>
+                        <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                          <span>{venue.type}</span> • <span className="text-indigo-400 font-semibold">{venue.capacity} seats</span>
+                        </div>
+                      </td>
+
+                      {/* Hourly Slot Cells */}
+                      {timeSlots.map((slot) => {
+                        const slotState = getSlotState(venue.id, slot);
+                        
+                        if (venue.status === 'Maintenance') {
+                          return (
+                            <td key={slot} className="p-1 border-r border-white/5 text-center bg-slate-950/60">
+                              <div className="w-full h-11 rounded-lg bg-slate-900/40 border border-white/5 flex items-center justify-center text-slate-600 text-[10px] font-medium">
+                                Maint
+                              </div>
+                            </td>
+                          );
+                        }
+
+                        if (slotState.isOccupied) {
+                          return (
+                            <td key={slot} className="p-1 border-r border-white/5 relative group">
+                              <div className="w-full h-11 rounded-lg p-1.5 flex flex-col justify-center transition-all cursor-pointer bg-indigo-600/90 border border-indigo-400/80 text-white shadow-sm shadow-indigo-500/20">
+                                <span className="font-bold truncate text-[10px] block">
+                                  {slotState.booking.eventTitle}
+                                </span>
+                                <span className="text-[9px] opacity-80 truncate block">
+                                  {slotState.booking.organizer}
+                                </span>
+                              </div>
+
+                              {/* Hover Tooltip */}
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-30 w-64 glass-panel p-3 rounded-xl border border-white/20 shadow-2xl bg-slate-950 text-xs pointer-events-none">
+                                <div className="font-bold text-white mb-0.5">{slotState.booking.eventTitle}</div>
+                                <div className="text-indigo-300 font-semibold text-[11px] mb-1">{slotState.booking.organizer}</div>
+                                {slotState.booking.roomNumber && (
+                                  <div className="text-cyan-300 font-mono text-[10px] mb-1">
+                                    Room: {slotState.booking.roomNumber}
+                                  </div>
+                                )}
+                                <div className="text-slate-400 text-[10px] font-mono">
+                                  Time: {formatTime12H(slotState.booking.startTime)} - {formatTime12H(slotState.booking.endTime)}
+                                </div>
+                                <div className="text-emerald-400 text-[10px] font-bold mt-0.5 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3" /> Confirmed Booking
+                                </div>
+                              </div>
+                            </td>
+                          );
+                        }
+
+                        {/* Free Slot */}
+                        return (
+                          <td key={slot} className="p-1 border-r border-white/5">
+                            <button
+                              onClick={() => onSlotClick(venue, selectedDate, slot)}
+                              className="w-full h-11 rounded-lg bg-emerald-500/5 hover:bg-emerald-500/25 border border-emerald-500/20 hover:border-emerald-400 transition-all flex items-center justify-center group"
+                              title={`Book ${venue.name} at ${formatTime12H(slot)}`}
+                            >
+                              <span className="text-[10px] text-emerald-400 opacity-0 group-hover:opacity-100 font-bold">
+                                + Book
+                              </span>
+                            </button>
+                          </td>
+                        );
+                      })}
+
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+    </div>
+  );
+}
