@@ -10,7 +10,18 @@ import AnalyticsView from './components/AnalyticsView';
 import GoogleAuthModal from './components/GoogleAuthModal';
 
 import { initialVenues, initialBookings } from './data/mockData';
-import { CheckCircle2, AlertCircle, Info, Sparkles, XCircle } from 'lucide-react';
+import { 
+  isFirebaseConfigured, 
+  seedInitialFirestoreData, 
+  subscribeToBookings, 
+  subscribeToVenues, 
+  dbCreateBooking, 
+  dbUpdateBooking, 
+  dbDeleteBooking, 
+  dbUpdateVenueStatus 
+} from './services/firebase';
+
+import { CheckCircle2, AlertCircle, Info, Sparkles, XCircle, Cloud, Database } from 'lucide-react';
 
 export default function App() {
   // Persistent State with Smart Migration
@@ -65,6 +76,30 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMessage, setAuthModalMessage] = useState('');
   const [pendingBookingPayload, setPendingBookingPayload] = useState(null);
+
+  // Real-time Cloud Database Synchronization
+  useEffect(() => {
+    if (isFirebaseConfigured) {
+      seedInitialFirestoreData();
+
+      const unsubscribeBookings = subscribeToBookings((liveBookings) => {
+        if (liveBookings && liveBookings.length > 0) {
+          setBookings(liveBookings);
+        }
+      });
+
+      const unsubscribeVenues = subscribeToVenues((liveVenues) => {
+        if (liveVenues && liveVenues.length > 0) {
+          setVenues(liveVenues);
+        }
+      });
+
+      return () => {
+        unsubscribeBookings();
+        unsubscribeVenues();
+      };
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('cs_venues_v7', JSON.stringify(venues));
@@ -138,44 +173,71 @@ export default function App() {
     setBookingModalOpen(true);
   };
 
-  // Add new booking (Instantly Confirmed!)
-  const handleCreateBooking = (newBooking) => {
+  // Add new booking (Instantly Confirmed & synced with Firestore)
+  const handleCreateBooking = async (newBooking) => {
     setBookings([newBooking, ...bookings]);
+    if (isFirebaseConfigured) {
+      try {
+        await dbCreateBooking(newBooking);
+      } catch (e) {
+        console.error('Firebase create error:', e);
+      }
+    }
     showToast(`Booking ${newBooking.id} confirmed for ${newBooking.venueName}!`, 'success');
   };
 
   // Union Admin Cancel with message
-  const handleAdminCancelBooking = (bookingId, reason) => {
-    setBookings(bookings.map((b) => {
-      if (b.id === bookingId) {
-        return {
-          ...b,
-          status: 'cancelled',
-          cancelledBy: currentUser?.email || 'Union Admin',
-          cancellationReason: reason
-        };
+  const handleAdminCancelBooking = async (bookingId, reason) => {
+    const updates = {
+      status: 'cancelled',
+      cancelledBy: currentUser?.email || 'Union Admin',
+      cancellationReason: reason
+    };
+
+    setBookings(bookings.map((b) => b.id === bookingId ? { ...b, ...updates } : b));
+    
+    if (isFirebaseConfigured) {
+      try {
+        await dbUpdateBooking(bookingId, updates);
+      } catch (e) {
+        console.error('Firebase update error:', e);
       }
-      return b;
-    }));
+    }
+
     showToast(`Booking ${bookingId} cancelled by Union Admin.`, 'error');
   };
 
   // Student cancel own booking
-  const handleCancelBooking = (bookingId) => {
+  const handleCancelBooking = async (bookingId) => {
     setBookings(bookings.filter(b => b.id !== bookingId));
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbDeleteBooking(bookingId);
+      } catch (e) {
+        console.error('Firebase delete error:', e);
+      }
+    }
+
     showToast(`Booking ${bookingId} deleted.`, 'info');
   };
 
   // Toggle Maintenance Status (Admin only)
-  const handleToggleVenueStatus = (venueId) => {
-    setVenues(venues.map((v) => {
-      if (v.id === venueId) {
-        const nextStatus = v.status === 'Maintenance' ? 'Available' : 'Maintenance';
-        showToast(`${v.name} status updated to ${nextStatus}`, 'info');
-        return { ...v, status: nextStatus };
+  const handleToggleVenueStatus = async (venueId) => {
+    const target = venues.find(v => v.id === venueId);
+    const nextStatus = target?.status === 'Maintenance' ? 'Available' : 'Maintenance';
+
+    setVenues(venues.map((v) => v.id === venueId ? { ...v, status: nextStatus } : v));
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbUpdateVenueStatus(venueId, nextStatus);
+      } catch (e) {
+        console.error('Firebase status error:', e);
       }
-      return v;
-    }));
+    }
+
+    showToast(`${target?.name || 'Venue'} status updated to ${nextStatus}`, 'info');
   };
 
   return (
@@ -301,8 +363,8 @@ export default function App() {
         />
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-white/10 py-6 bg-[#070A12] text-center text-xs text-slate-500">
+      {/* Footer with Database Status Indicator */}
+      <footer className="border-t border-white/10 py-6 bg-[#070A12] text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-lg border border-white/10">
@@ -313,12 +375,20 @@ export default function App() {
               © 2026 <strong className="text-white">Govt. Model Engineering College</strong> • Managed by <strong className="text-red-400">Union MEC</strong>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-slate-400 text-[11px]">
-            <span className="hover:text-slate-200 cursor-pointer transition-colors">Union Bylaws</span>
-            <span>•</span>
-            <span className="hover:text-slate-200 cursor-pointer transition-colors">Staff Advisor (MEC)</span>
-            <span>•</span>
-            <span className="hover:text-slate-200 cursor-pointer transition-colors">Dean Student Affairs</span>
+
+          {/* Cloud Sync Status */}
+          <div className="flex items-center gap-2 text-[11px] bg-slate-900/80 px-3 py-1 rounded-full border border-white/10">
+            {isFirebaseConfigured ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-emerald-300 font-medium">Cloud Database Connected (Live Sync)</span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                <span className="text-slate-400">Local Cache Mode (Ready for Cloud Sync)</span>
+              </>
+            )}
           </div>
         </div>
       </footer>
