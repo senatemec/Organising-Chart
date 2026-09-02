@@ -41,7 +41,7 @@ if (isFirebaseConfigured) {
 }
 
 /**
- * Seed default venues and sample bookings to Firestore if collection is empty
+ * Seed default campus venues to Firestore if collection is empty
  */
 export async function seedInitialFirestoreData() {
   if (!db) return;
@@ -49,21 +49,13 @@ export async function seedInitialFirestoreData() {
   try {
     const venuesSnap = await getDocs(collection(db, 'venues'));
     if (venuesSnap.empty) {
-      console.log('Seeding initial venues to Firestore...');
+      console.log('Seeding initial campus venues to Firestore...');
       for (const venue of initialVenues) {
         await setDoc(doc(db, 'venues', venue.id), venue);
       }
     }
-
-    const bookingsSnap = await getDocs(collection(db, 'bookings'));
-    if (bookingsSnap.empty) {
-      console.log('Seeding initial bookings to Firestore...');
-      for (const booking of initialBookings) {
-        await setDoc(doc(db, 'bookings', booking.id), booking);
-      }
-    }
   } catch (err) {
-    console.warn('Firestore initial data check/seed:', err);
+    console.warn('Firestore initial venue seed check:', err);
   }
 }
 

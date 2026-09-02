@@ -4,29 +4,66 @@ import {
   Calendar, 
   Clock, 
   Building2, 
-  Trash2, 
   CheckCircle2, 
   AlertCircle,
   XCircle,
   Plus,
   Users,
   DoorClosed,
-  AlertTriangle
+  AlertTriangle,
+  Lock,
+  ShieldCheck,
+  LogIn
 } from 'lucide-react';
 import { formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
 
-export default function MyBookings({ bookings, venues, onCancelBooking, onNewBookingClick }) {
+export default function MyBookings({ 
+  bookings, 
+  venues, 
+  currentUser,
+  onOpenLoginModal,
+  onNewBookingClick 
+}) {
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const filteredBookings = bookings.filter((b) => {
+  // If user is not logged in, prompt to sign in
+  if (!currentUser) {
+    return (
+      <div className="glass-panel p-12 text-center rounded-3xl border border-white/10 space-y-5 bg-slate-950 max-w-xl mx-auto shadow-2xl">
+        <div className="w-16 h-16 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <Lock className="w-7 h-7" />
+        </div>
+        <div>
+          <h2 className="text-xl font-extrabold text-white">Sign In to View Your Bookings</h2>
+          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+            Please sign in with your college Google account to access your personal venue bookings and permits.
+          </p>
+        </div>
+        <button
+          onClick={() => onOpenLoginModal('Sign in with Google to view your venue bookings')}
+          className="btn-primary py-2.5 px-6 text-xs mx-auto shadow-indigo-500/30"
+        >
+          <LogIn className="w-4 h-4" /> Sign In with Google
+        </button>
+      </div>
+    );
+  }
+
+  // Filter bookings strictly created by this logged-in Google account
+  const myUserBookings = bookings.filter((b) => {
+    if (!b.contactEmail) return false;
+    return b.contactEmail.toLowerCase().trim() === currentUser.email.toLowerCase().trim();
+  });
+
+  const filteredBookings = myUserBookings.filter((b) => {
     if (filterStatus === 'all') return true;
     if (filterStatus === 'active') return b.status === 'confirmed' || b.status === 'approved';
     if (filterStatus === 'cancelled') return b.status === 'cancelled' || b.status === 'rejected';
     return true;
   });
 
-  const activeCount = bookings.filter(b => b.status === 'confirmed' || b.status === 'approved').length;
-  const cancelledCount = bookings.filter(b => b.status === 'cancelled' || b.status === 'rejected').length;
+  const activeCount = myUserBookings.filter(b => b.status === 'confirmed' || b.status === 'approved').length;
+  const cancelledCount = myUserBookings.filter(b => b.status === 'cancelled' || b.status === 'rejected').length;
 
   return (
     <div className="space-y-6">
@@ -38,9 +75,14 @@ export default function MyBookings({ bookings, venues, onCancelBooking, onNewBoo
             <Ticket className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-white tracking-tight">Society Bookings & Schedule</h2>
-            <p className="text-xs text-slate-300">
-              Manage your confirmed campus venue and classroom bookings
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-extrabold text-white tracking-tight">My Bookings & Permits</h2>
+              <span className="badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px]">
+                {currentUser.email}
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Your confirmed campus venue and classroom booking permits
             </p>
           </div>
         </div>
@@ -53,8 +95,8 @@ export default function MyBookings({ bookings, venues, onCancelBooking, onNewBoo
       {/* Filter Tabs Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {[
-          { id: 'all', label: 'All Bookings', count: bookings.length },
-          { id: 'active', label: 'Active / Confirmed', count: activeCount },
+          { id: 'all', label: 'All My Bookings', count: myUserBookings.length },
+          { id: 'active', label: 'Active Permits', count: activeCount },
           { id: 'cancelled', label: 'Cancelled / Revoked', count: cancelledCount },
         ].map((tab) => (
           <button
@@ -80,7 +122,6 @@ export default function MyBookings({ bookings, venues, onCancelBooking, onNewBoo
       {filteredBookings.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredBookings.map((b) => {
-            const venue = venues.find(v => v.id === b.venueId);
             const isConfirmed = b.status === 'confirmed' || b.status === 'approved';
 
             return (
@@ -99,11 +140,11 @@ export default function MyBookings({ bookings, venues, onCancelBooking, onNewBoo
                     </span>
                     {isConfirmed ? (
                       <span className="badge badge-available">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed Booking
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed Permit
                       </span>
                     ) : (
                       <span className="badge badge-occupied">
-                        <XCircle className="w-3.5 h-3.5" /> Cancelled / Revoked
+                        <XCircle className="w-3.5 h-3.5" /> Revoked by Union
                       </span>
                     )}
                   </div>
@@ -133,33 +174,30 @@ export default function MyBookings({ bookings, venues, onCancelBooking, onNewBoo
                     <div className="bg-rose-500/15 border border-rose-500/40 p-3 rounded-xl text-xs text-rose-300 space-y-1">
                       <div className="flex items-center gap-1.5 font-bold text-rose-200">
                         <AlertTriangle className="w-4 h-4 text-rose-400" />
-                        <span>Cancelled by Union Admin:</span>
+                        <span>Revoked by Union Senate Admin:</span>
                       </div>
-                      <p className="text-[11px] text-rose-300/90 leading-relaxed">
-                        {b.cancellationReason || b.rejectionReason || 'Cancelled due to college administrative priority.'}
+                      <p className="text-[11px] text-rose-200 pl-5 italic">
+                        "{b.cancellationReason || 'Cancelled due to administrative or institutional conflict.'}"
                       </p>
                     </div>
                   )}
 
                 </div>
 
-                {/* Card Actions */}
+                {/* Card Status Footer */}
                 <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs">
                   {isConfirmed ? (
                     <div className="flex items-center justify-between w-full">
                       <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Booking Active
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Permit Valid & Active
                       </span>
-                      <button
-                        onClick={() => onCancelBooking(b.id)}
-                        className="btn-secondary text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 py-1.5 px-3 text-xs"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Cancel Booking
-                      </button>
+                      <span className="text-[10px] text-slate-500 italic">
+                        Authorized by Union MEC
+                      </span>
                     </div>
                   ) : (
-                    <div className="text-[11px] text-slate-500 text-center w-full italic">
-                      This booking was cancelled and the slot is released.
+                    <div className="text-[11px] text-rose-400/80 text-center w-full italic">
+                      This permit was revoked by Union Admin and the slot has been released.
                     </div>
                   )}
                 </div>
@@ -173,10 +211,10 @@ export default function MyBookings({ bookings, venues, onCancelBooking, onNewBoo
           <Ticket className="w-12 h-12 text-slate-600 mx-auto" />
           <h3 className="text-base font-bold text-white">No Bookings Found</h3>
           <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            You don't have any bookings matching this filter. Browse registered venues and book a slot!
+            You haven't reserved any venues with <span className="font-mono text-cyan-300">{currentUser.email}</span> yet. Browse campus venues to book a slot!
           </p>
           <button onClick={onNewBookingClick} className="btn-primary text-xs mt-2">
-            Explore Campus Venues
+            Book Venue Slot
           </button>
         </div>
       )}

@@ -37,7 +37,7 @@ export default function App() {
   });
 
   const [bookings, setBookings] = useState(() => {
-    const saved = localStorage.getItem('cs_bookings_v7');
+    const saved = localStorage.getItem('cs_bookings_v8');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -106,7 +106,7 @@ export default function App() {
   }, [venues]);
 
   useEffect(() => {
-    localStorage.setItem('cs_bookings_v7', JSON.stringify(bookings));
+    localStorage.setItem('cs_bookings_v8', JSON.stringify(bookings));
   }, [bookings]);
 
   useEffect(() => {
@@ -297,12 +297,13 @@ export default function App() {
           />
         )}
 
-        {/* Tab 3: My Bookings */}
+        {/* Tab 3: My Bookings (Filtered by logged in Google user) */}
         {activeTab === 'my-bookings' && (
           <MyBookings
             bookings={bookings}
             venues={venues}
-            onCancelBooking={handleCancelBooking}
+            currentUser={currentUser}
+            onOpenLoginModal={(msg) => triggerAuthModal(msg)}
             onNewBookingClick={() => handleOpenBookingModal()}
           />
         )}
