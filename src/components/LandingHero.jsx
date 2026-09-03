@@ -1,19 +1,14 @@
 import React from 'react';
 import { 
-  Building2, 
   CalendarDays, 
   ShieldCheck, 
   Sparkles, 
-  CheckCircle2, 
   ArrowRight, 
-  Zap, 
-  Users, 
   Clock,
   Check
 } from 'lucide-react';
 
 export default function LandingHero({ 
-  totalVenues, 
   onExploreClick, 
   onScheduleClick, 
   onBookClick 
@@ -55,7 +50,7 @@ export default function LandingHero({
               </span>
             </h1>
             <p className="text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed">
-              Official venue booking portal managed by <strong>College Student Union (Union MEC)</strong>. Reserve Auditoriums, Activity spaces (Casa, Elga, Ground, Amphitheatre), Computing Labs (CL1, CL2, CCF, CCC), and Classrooms with instant confirmation and zero clashes.
+              Official venue booking portal managed by <strong>College Student Union (Union MEC)</strong>.
             </p>
           </div>
 
@@ -84,49 +79,6 @@ export default function LandingHero({
               <span>Explore Facilities</span>
               <ArrowRight className="w-4 h-4 ml-0.5" />
             </button>
-          </div>
-
-          {/* Stats Bar */}
-          <div className="pt-6 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-lg sm:text-xl font-extrabold text-white">{totalVenues || 14}</div>
-                <div className="text-[11px] text-slate-400">MEC Facilities</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-lg sm:text-xl font-extrabold text-emerald-400">0 Clashes</div>
-                <div className="text-[11px] text-slate-400">Conflict Engine</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
-                <Check className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-lg sm:text-xl font-extrabold text-cyan-300">Instant</div>
-                <div className="text-[11px] text-slate-400">Direct Confirmation</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-lg sm:text-xl font-extrabold text-red-300">Union MEC</div>
-                <div className="text-[11px] text-slate-400">Executive Control</div>
-              </div>
-            </div>
           </div>
 
         </div>
