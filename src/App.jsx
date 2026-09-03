@@ -15,10 +15,15 @@ import {
   seedInitialFirestoreData, 
   subscribeToBookings, 
   subscribeToVenues, 
+  subscribeToAllowedUsers,
+  subscribeToAuthSettings,
   dbCreateBooking, 
   dbUpdateBooking, 
   dbDeleteBooking, 
-  dbUpdateVenueStatus 
+  dbUpdateVenueStatus,
+  dbAddAllowedUser,
+  dbRemoveAllowedUser,
+  dbUpdateAuthSettings
 } from './services/firebase';
 
 import { CheckCircle2, AlertCircle, Info, Sparkles, XCircle, Cloud, Database } from 'lucide-react';
@@ -45,6 +50,27 @@ export default function App() {
       } catch (e) {}
     }
     return initialBookings;
+  });
+
+  // Allowed Users (Whitelist of authorized booking accounts)
+  const [allowedUsers, setAllowedUsers] = useState(() => {
+    const saved = localStorage.getItem('cs_allowed_users_v1');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return [];
+  });
+
+  // Strict Whitelist Auth Policy
+  const [strictAuthEnabled, setStrictAuthEnabled] = useState(() => {
+    const saved = localStorage.getItem('cs_strict_auth_v1');
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    return true; // Default: Only authorized accounts can sign in & book!
   });
 
   // Logged-in Google User State (null if logged out)
@@ -83,7 +109,7 @@ export default function App() {
       seedInitialFirestoreData();
 
       const unsubscribeBookings = subscribeToBookings((liveBookings) => {
-        if (liveBookings && liveBookings.length > 0) {
+        if (liveBookings) {
           setBookings(liveBookings);
         }
       });
@@ -94,9 +120,23 @@ export default function App() {
         }
       });
 
+      const unsubscribeAllowedUsers = subscribeToAllowedUsers((liveAllowedUsers) => {
+        if (liveAllowedUsers) {
+          setAllowedUsers(liveAllowedUsers);
+        }
+      });
+
+      const unsubscribeAuthSettings = subscribeToAuthSettings((policy) => {
+        if (policy && typeof policy.strictAuthEnabled === 'boolean') {
+          setStrictAuthEnabled(policy.strictAuthEnabled);
+        }
+      });
+
       return () => {
         unsubscribeBookings();
         unsubscribeVenues();
+        unsubscribeAllowedUsers();
+        unsubscribeAuthSettings();
       };
     }
   }, []);
@@ -108,6 +148,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('cs_bookings_v8', JSON.stringify(bookings));
   }, [bookings]);
+
+  useEffect(() => {
+    localStorage.setItem('cs_allowed_users_v1', JSON.stringify(allowedUsers));
+  }, [allowedUsers]);
+
+  useEffect(() => {
+    localStorage.setItem('cs_strict_auth_v1', String(strictAuthEnabled));
+  }, [strictAuthEnabled]);
 
   useEffect(() => {
     if (currentUser) {
@@ -141,9 +189,9 @@ export default function App() {
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
     if (user.isUnionAdmin) {
-      showToast(`Welcome Union Senate Executive (${user.email})! Admin controls unlocked.`, 'success');
+      showToast(`Welcome Union Senate Executive (${user.email})! Master controls unlocked.`, 'success');
     } else {
-      showToast(`Signed in with Google as ${user.name} (${user.email})`, 'info');
+      showToast(`Signed in with authorized Google account: ${user.name} (${user.email})`, 'success');
     }
 
     // If user was trying to book a venue, proceed to open booking modal
@@ -162,11 +210,64 @@ export default function App() {
     showToast('Signed out successfully.', 'info');
   };
 
+  // Add Allowed User to Whitelist
+  const handleAddAllowedUser = async (userEntry) => {
+    const cleanEmail = userEntry.email.toLowerCase().trim();
+    if (allowedUsers.some(u => u.email.toLowerCase() === cleanEmail)) {
+      showToast(`${cleanEmail} is already in the authorized list!`, 'info');
+      return;
+    }
+
+    const updated = [...allowedUsers, { ...userEntry, email: cleanEmail }];
+    setAllowedUsers(updated);
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbAddAllowedUser(userEntry);
+      } catch (e) {
+        console.error('Firebase allowed user add error:', e);
+      }
+    }
+
+    showToast(`Granted booking authorization to ${cleanEmail}`, 'success');
+  };
+
+  // Remove Allowed User from Whitelist
+  const handleRemoveAllowedUser = async (email) => {
+    const cleanEmail = email.toLowerCase().trim();
+    setAllowedUsers(allowedUsers.filter(u => u.email.toLowerCase() !== cleanEmail));
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbRemoveAllowedUser(cleanEmail);
+      } catch (e) {
+        console.error('Firebase allowed user remove error:', e);
+      }
+    }
+
+    showToast(`Revoked booking authorization for ${cleanEmail}`, 'info');
+  };
+
+  // Toggle Strict Auth Policy
+  const handleToggleStrictAuth = async (enabled) => {
+    setStrictAuthEnabled(enabled);
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbUpdateAuthSettings({ strictAuthEnabled: enabled });
+      } catch (e) {
+        console.error('Firebase auth policy update error:', e);
+      }
+    }
+
+    showToast(enabled ? 'Strict Whitelist Login Enabled' : 'Open Login Mode Enabled', 'info');
+  };
+
   // Open booking modal (requires Google Login!)
   const handleOpenBookingModal = (venue = null, date = '2026-09-05', time = '10:00') => {
     const payload = { venue, date, time };
     if (!currentUser) {
-      triggerAuthModal('Please sign in with your Google / College account to book a venue.', payload);
+      triggerAuthModal('Please sign in with your authorized Google account to book a venue.', payload);
       return;
     }
     setBookingModalInitialData(payload);
@@ -207,7 +308,7 @@ export default function App() {
     showToast(`Booking ${bookingId} cancelled by Union Admin.`, 'error');
   };
 
-  // Student cancel own booking
+  // Student cancel own booking / Admin purge booking
   const handleCancelBooking = async (bookingId) => {
     setBookings(bookings.filter(b => b.id !== bookingId));
 
@@ -315,8 +416,13 @@ export default function App() {
           <AdminDashboard
             bookings={bookings}
             venues={venues}
+            allowedUsers={allowedUsers}
+            strictAuthEnabled={strictAuthEnabled}
             onAdminCancelBooking={handleAdminCancelBooking}
             onAdminDeleteBooking={handleCancelBooking}
+            onAddAllowedUser={handleAddAllowedUser}
+            onRemoveAllowedUser={handleRemoveAllowedUser}
+            onToggleStrictAuth={handleToggleStrictAuth}
             onToggleVenueStatus={handleToggleVenueStatus}
           />
         )}
@@ -331,9 +437,11 @@ export default function App() {
 
       </main>
 
-      {/* Google Authentication Modal */}
+      {/* Google Authentication Modal with Strict Whitelist Enforcement */}
       <GoogleAuthModal
         isOpen={authModalOpen}
+        allowedUsers={allowedUsers}
+        strictAuthEnabled={strictAuthEnabled}
         onClose={() => {
           setAuthModalOpen(false);
           setPendingBookingPayload(null);
@@ -361,7 +469,7 @@ export default function App() {
           initialDate={bookingModalInitialData.date}
           initialTime={bookingModalInitialData.time}
           initialEmail={currentUser?.email || ''}
-          initialOrganizer={currentUser?.name || ''}
+          initialOrganizer={currentUser?.society || currentUser?.name || ''}
           onClose={() => setBookingModalOpen(false)}
           onSubmitBooking={handleCreateBooking}
         />

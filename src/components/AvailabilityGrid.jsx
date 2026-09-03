@@ -282,7 +282,7 @@ export default function AvailabilityGrid({
                 >
                   {/* Day Top Header */}
                   <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
                         isToday 
                           ? 'bg-indigo-600 text-white font-extrabold shadow-sm' 
@@ -292,8 +292,11 @@ export default function AvailabilityGrid({
                       }`}>
                         {item.dayNumber}
                       </span>
-                      <span className="text-[11px] text-slate-400 font-medium">
+                      <span className="text-[11px] text-slate-300 font-bold">
                         {monthName.slice(0, 3)} {item.dayNumber}
+                      </span>
+                      <span className="text-[10px] font-bold text-cyan-400 bg-cyan-500/10 px-1.5 py-0.2 rounded border border-cyan-500/20">
+                        {new Date(item.dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
                       </span>
                     </div>
 

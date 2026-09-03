@@ -1,9 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ShieldCheck, Lock, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
+import { X, ShieldCheck, Lock, AlertCircle, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '339715089734-il7f8qb0mrpg7nlm35edqutdnu7761ov.apps.googleusercontent.com';
 
-export default function GoogleAuthModal({ isOpen, onClose, onLoginSuccess, intendedActionMessage }) {
+export default function GoogleAuthModal({ 
+  isOpen, 
+  onClose, 
+  onLoginSuccess, 
+  intendedActionMessage,
+  allowedUsers = [],
+  strictAuthEnabled = true
+}) {
   const [authError, setAuthError] = useState(null);
   const [sdkReady, setSdkReady] = useState(false);
   const googleBtnRef = useRef(null);
@@ -60,12 +67,23 @@ export default function GoogleAuthModal({ isOpen, onClose, onLoginSuccess, inten
                                    userEmail.startsWith('senate@') || 
                                    userEmail === 'union@mec.ac.in';
 
+              const isWhitelisted = allowedUsers.some(u => (u.email || '').toLowerCase().trim() === userEmail);
+
+              // Access Control Enforcement:
+              if (strictAuthEnabled && !isSenateAdmin && !isWhitelisted) {
+                setAuthError(`Access Restricted: "${userEmail}" is not authorized by Union MEC to book college venues. Please contact senatemec@mec.ac.in to add your email to the approved organizer list.`);
+                return;
+              }
+
+              const matchedUser = allowedUsers.find(u => (u.email || '').toLowerCase().trim() === userEmail);
+
               const account = {
                 name: payload.name || userEmail.split('@')[0],
                 email: userEmail,
                 avatar: payload.picture || (isSenateAdmin ? '/union_mec_logo.png' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'),
                 isUnionAdmin: isSenateAdmin,
-                role: isSenateAdmin ? 'Union Senate Executive' : 'MEC Student'
+                society: matchedUser?.society || (isSenateAdmin ? 'Union Senate' : 'Authorized Organizer'),
+                role: isSenateAdmin ? 'Union Senate Executive' : (matchedUser?.note || 'Authorized Organizer')
               };
 
               onLoginSuccess(account);
@@ -97,7 +115,7 @@ export default function GoogleAuthModal({ isOpen, onClose, onLoginSuccess, inten
       console.error('Google Auth Init Error:', err);
       setAuthError('Failed to initialize Google Sign-In.');
     }
-  }, [isOpen, sdkReady]);
+  }, [isOpen, sdkReady, allowedUsers, strictAuthEnabled]);
 
   if (!isOpen) return null;
 
@@ -108,78 +126,61 @@ export default function GoogleAuthModal({ isOpen, onClose, onLoginSuccess, inten
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-900/90 text-slate-400 hover:text-white flex items-center justify-center transition-colors border border-white/10 z-10"
+          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-900 text-slate-400 hover:text-white flex items-center justify-center transition-colors border border-white/10"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Google Header Branding */}
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center mx-auto shadow-lg shadow-white/10 p-2.5">
-            <svg viewBox="0 0 24 24" className="w-full h-full">
-              <path
-                fill="#4285F4"
-                d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
-              />
-              <path
-                fill="#34A853"
-                d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.35 24 12 24z"
-              />
-              <path
-                fill="#FBBC05"
-                d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-              />
-              <path
-                fill="#EA4335"
-                d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
-              />
-            </svg>
+        {/* Modal Header */}
+        <div className="text-center space-y-3">
+          <div className="flex items-center justify-center gap-2">
+            <img src="/mec_college_logo.png" alt="MEC Logo" className="w-10 h-10 object-contain rounded-xl bg-white p-1 shadow-md" />
+            <img src="/union_mec_logo.png" alt="Union MEC" className="w-10 h-10 object-contain rounded-xl bg-white p-1 shadow-md" />
           </div>
 
           <div>
-            <h2 className="text-xl font-extrabold text-white tracking-tight">
-              Sign in with Google
-            </h2>
+            <h2 className="text-xl font-extrabold text-white tracking-tight">Sign In with Google</h2>
             <p className="text-xs text-slate-400 mt-1">
-              {intendedActionMessage || 'Sign in with your Google account to book a venue at MEC'}
+              Govt. Model Engineering College Venue Portal
             </p>
           </div>
         </div>
 
-        {/* Role Permissions Notice */}
-        <div className="bg-slate-900/90 border border-white/10 p-3.5 rounded-2xl space-y-1.5 text-xs text-slate-300">
-          <div className="flex items-center gap-2 font-bold text-white">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Google Account Roles at MEC:</span>
+        {/* Action Prompt message */}
+        {intendedActionMessage && (
+          <div className="bg-indigo-500/10 border border-indigo-500/20 p-3 rounded-xl flex items-center gap-2 text-xs text-indigo-300">
+            <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
+            <span>{intendedActionMessage}</span>
           </div>
-          <ul className="space-y-1 text-[11px] text-slate-400 pl-6 list-disc">
-            <li>
-              <strong className="text-red-300 font-mono">senatemec@mec.ac.in</strong>: Unlocks <strong>Union Admin Panel & Controls</strong>.
-            </li>
-            <li>
-              <span className="text-slate-300">All other Google accounts</span>: Regular booking access (Admin tab stays hidden).
-            </li>
-          </ul>
-        </div>
+        )}
 
-        {/* Real Google GIS Button Direct Rendering */}
-        <div className="space-y-4 text-center py-2">
-          <div className="flex justify-center min-h-[46px] items-center">
+        {/* Error Notification */}
+        {authError && (
+          <div className="bg-rose-500/15 border border-rose-500/40 p-3.5 rounded-xl flex items-start gap-2.5 text-xs text-rose-300 animate-fade-in">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <span className="leading-relaxed">{authError}</span>
+          </div>
+        )}
+
+        {/* Official Google GIS Button Container */}
+        <div className="space-y-4">
+          <div className="flex flex-col items-center justify-center min-h-[50px]">
             <div ref={googleBtnRef} className="flex justify-center" />
           </div>
 
-          {authError && (
-            <div className="bg-rose-500/15 border border-rose-500/30 p-2.5 rounded-xl text-xs text-rose-300 flex items-center gap-2 text-left">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-              <span>{authError}</span>
-            </div>
-          )}
+          <div className="text-[11px] text-slate-400 text-center space-y-1 bg-slate-900/60 p-3 rounded-xl border border-white/5">
+            <p className="font-semibold text-slate-300">🔒 Authorized Access Control</p>
+            <p className="text-slate-500">
+              Only authorized Gmail accounts approved by <strong className="text-red-400">Union MEC</strong> can book campus venues.
+            </p>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-white/10 pt-3 flex items-center justify-center gap-2 text-[11px] text-slate-500">
-          <Lock className="w-3.5 h-3.5 text-slate-500" />
-          <span>Official Google Identity Services (GIS) OAuth 2.0</span>
+        {/* Security Footer */}
+        <div className="pt-2 border-t border-white/10 text-center">
+          <p className="text-[10px] text-slate-500">
+            Protected by Google OAuth 2.0 • Admin: <span className="font-mono text-cyan-300">senatemec@mec.ac.in</span>
+          </p>
         </div>
 
       </div>

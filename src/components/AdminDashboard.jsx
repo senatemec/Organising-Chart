@@ -15,21 +15,38 @@ import {
   DoorClosed, 
   Trash2,
   CalendarDays,
-  Tag
+  Tag,
+  UserCheck,
+  UserPlus,
+  Lock,
+  Mail,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
 import { formatDateFriendly, formatTime12H, formatDateTime } from '../utils/availabilityUtils';
+import { studentSocieties } from '../data/mockData';
 
 export default function AdminDashboard({ 
   bookings, 
   venues, 
+  allowedUsers = [],
+  strictAuthEnabled = true,
   onAdminCancelBooking, 
   onAdminDeleteBooking,
+  onAddAllowedUser,
+  onRemoveAllowedUser,
+  onToggleStrictAuth,
   onToggleVenueStatus 
 }) {
   const [activeSubTab, setActiveSubTab] = useState('active-events');
   const [cancelReasonModal, setCancelReasonModal] = useState(null);
   const [reasonText, setReasonText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // New allowed user form state
+  const [newEmail, setNewEmail] = useState('');
+  const [newSociety, setNewSociety] = useState(studentSocieties[0] || 'IEDC');
+  const [newNote, setNewNote] = useState('');
 
   const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'approved');
   const cancelledBookings = bookings.filter(b => b.status === 'cancelled' || b.status === 'rejected');
@@ -53,6 +70,22 @@ export default function AdminDashboard({
     }
   };
 
+  const handleAddUserSubmit = (e) => {
+    e.preventDefault();
+    if (!newEmail.trim()) return;
+
+    if (onAddAllowedUser) {
+      onAddAllowedUser({
+        email: newEmail.trim().toLowerCase(),
+        society: newSociety,
+        note: newNote.trim() || `${newSociety} Representative`
+      });
+    }
+
+    setNewEmail('');
+    setNewNote('');
+  };
+
   return (
     <div className="space-y-6">
       
@@ -71,7 +104,7 @@ export default function AdminDashboard({
               </span>
             </div>
             <p className="text-xs text-slate-300 mt-0.5">
-              Govt. Model Engineering College • Master booking oversight, revocation with mandatory reasons & facility maintenance.
+              Govt. Model Engineering College • Master booking oversight, organizer email authorization & facility maintenance.
             </p>
           </div>
         </div>
@@ -83,8 +116,8 @@ export default function AdminDashboard({
             <div className="text-slate-400 text-[10px]">Active Bookings</div>
           </div>
           <div className="bg-slate-900/90 px-3.5 py-2 rounded-xl border border-white/10 text-center">
-            <div className="text-rose-400 font-extrabold text-lg">{cancelledBookings.length}</div>
-            <div className="text-slate-400 text-[10px]">Cancelled Bookings</div>
+            <div className="text-cyan-400 font-extrabold text-lg">{allowedUsers.length + 1}</div>
+            <div className="text-slate-400 text-[10px]">Allowed Accounts</div>
           </div>
           <div className="bg-slate-900/90 px-3.5 py-2 rounded-xl border border-white/10 text-center">
             <div className="text-indigo-400 font-extrabold text-lg">{venues.length}</div>
@@ -117,6 +150,18 @@ export default function AdminDashboard({
         >
           <Calendar className="w-4 h-4 text-indigo-400" />
           Master Event History ({bookings.length})
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('access-control')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+            activeSubTab === 'access-control'
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <UserCheck className="w-4 h-4 text-amber-400" />
+          Authorized Gmail Accounts ({allowedUsers.length})
         </button>
 
         <button
@@ -351,7 +396,185 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {/* TAB 3: VENUE MAINTENANCE & CONTROLS */}
+      {/* TAB 3: ACCESS CONTROL & ALLOWED GMAIL ACCOUNTS */}
+      {activeSubTab === 'access-control' && (
+        <div className="space-y-6">
+          
+          {/* Policy Banner & Strict Mode Switch */}
+          <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-slate-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Gmail Access Control Policy</h3>
+                <p className="text-xs text-slate-400">
+                  {strictAuthEnabled 
+                    ? 'Strict Access Mode Active: ONLY explicitly approved Gmail addresses can sign in & reserve venues.' 
+                    : 'Open Mode Active: Any Google user can sign in and book.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onToggleStrictAuth && onToggleStrictAuth(!strictAuthEnabled)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                strictAuthEnabled 
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30' 
+                  : 'bg-slate-900 text-slate-400 border-white/10 hover:text-white'
+              }`}
+            >
+              {strictAuthEnabled ? <ToggleRight className="w-5 h-5 text-emerald-400" /> : <ToggleLeft className="w-5 h-5 text-slate-500" />}
+              <span>{strictAuthEnabled ? 'Strict Whitelist Enabled' : 'Strict Whitelist Disabled'}</span>
+            </button>
+          </div>
+
+          {/* Add Authorized User Form */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 bg-slate-950 space-y-4 shadow-xl">
+            <div className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4 text-indigo-400" />
+              <h4 className="text-sm font-bold text-white">Authorize New Gmail Address</h4>
+            </div>
+
+            <form onSubmit={handleAddUserSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+              <div className="md:col-span-4 space-y-1">
+                <label className="text-[11px] font-bold text-slate-300">Google Email Address:</label>
+                <div className="relative">
+                  <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. iedcmec@gmail.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="input-field pl-9 py-2 text-xs w-full"
+                  />
+                </div>
+              </div>
+
+              <div className="md:col-span-3 space-y-1">
+                <label className="text-[11px] font-bold text-slate-300">Official Organizing Body:</label>
+                <select
+                  value={newSociety}
+                  onChange={(e) => setNewSociety(e.target.value)}
+                  className="input-field py-2 text-xs w-full"
+                >
+                  {studentSocieties.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="md:col-span-3 space-y-1">
+                <label className="text-[11px] font-bold text-slate-300">Role / Designee Name:</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Secretary / Club Lead"
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  className="input-field py-2 text-xs w-full"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <button
+                  type="submit"
+                  className="btn-primary w-full text-xs py-2 px-3 justify-center shadow-indigo-500/20"
+                >
+                  <UserPlus className="w-3.5 h-3.5" /> Grant Access
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Allowed Accounts Table */}
+          <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden shadow-xl bg-slate-950">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Authorized Booking Accounts Whitelist ({allowedUsers.length + 1})</span>
+              </h4>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-950 border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider">
+                    <th className="p-3.5">Google Account Email</th>
+                    <th className="p-3.5">Authorized Organizing Body</th>
+                    <th className="p-3.5">Role / Designee</th>
+                    <th className="p-3.5">Permission Level</th>
+                    <th className="p-3.5 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  
+                  {/* Master Union Admin Row */}
+                  <tr className="bg-red-950/20 hover:bg-red-950/30 transition-colors">
+                    <td className="p-3.5">
+                      <div className="font-mono font-bold text-white flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                        <span>senatemec@mec.ac.in</span>
+                      </div>
+                    </td>
+                    <td className="p-3.5 font-bold text-red-300">College Union Senate</td>
+                    <td className="p-3.5 text-slate-300">Union Senate Executive</td>
+                    <td className="p-3.5">
+                      <span className="badge bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-bold">
+                        Master Super Admin
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-center text-slate-500 italic text-[10px]">
+                      Permanent
+                    </td>
+                  </tr>
+
+                  {/* Whitelisted Accounts List */}
+                  {allowedUsers.map((u) => (
+                    <tr key={u.email} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="p-3.5 font-mono text-cyan-300 font-semibold">
+                        {u.email}
+                      </td>
+                      <td className="p-3.5 font-bold text-white">
+                        {u.society || 'Authorized Body'}
+                      </td>
+                      <td className="p-3.5 text-slate-400">
+                        {u.note || 'Authorized Organizer'}
+                      </td>
+                      <td className="p-3.5">
+                        <span className="badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px]">
+                          Authorized Booking Access
+                        </span>
+                      </td>
+                      <td className="p-3.5 text-center">
+                        <button
+                          onClick={() => onRemoveAllowedUser && onRemoveAllowedUser(u.email)}
+                          className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-white/5 transition-colors"
+                          title="Revoke booking access for this email"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {allowedUsers.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="p-6 text-center text-slate-500 italic">
+                        No additional Gmail accounts registered yet. Use the form above to grant access to club leads.
+                      </td>
+                    </tr>
+                  )}
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* TAB 4: VENUE MAINTENANCE & CONTROLS */}
       {activeSubTab === 'venue-maintenance' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {venues.map((venue) => (

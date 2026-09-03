@@ -97,6 +97,92 @@ export function subscribeToVenues(onData, onError) {
 }
 
 /**
+ * Real-time listener for Authorized Emails Whitelist
+ */
+export function subscribeToAllowedUsers(onData, onError) {
+  if (!db) return () => {};
+
+  return onSnapshot(collection(db, 'allowed_users'), (snapshot) => {
+    const list = [];
+    snapshot.forEach((doc) => {
+      list.push({ ...doc.data(), email: doc.id });
+    });
+    onData(list);
+  }, (err) => {
+    console.error('Firestore Allowed Users Subscription Error:', err);
+    if (onError) onError(err);
+  });
+}
+
+/**
+ * Real-time listener for Auth Settings (Strict Mode Toggle)
+ */
+export function subscribeToAuthSettings(onData, onError) {
+  if (!db) return () => {};
+
+  return onSnapshot(doc(db, 'settings', 'auth_policy'), (snapshot) => {
+    if (snapshot.exists()) {
+      onData(snapshot.data());
+    } else {
+      onData({ strictAuthEnabled: true });
+    }
+  }, (err) => {
+    console.error('Firestore Auth Settings Error:', err);
+    if (onError) onError(err);
+  });
+}
+
+/**
+ * Add or update an allowed user email in Firestore
+ */
+export async function dbAddAllowedUser(userEntry) {
+  if (!db) return false;
+  try {
+    const cleanEmail = userEntry.email.toLowerCase().trim();
+    await setDoc(doc(db, 'allowed_users', cleanEmail), {
+      email: cleanEmail,
+      note: userEntry.note || '',
+      society: userEntry.society || '',
+      addedBy: userEntry.addedBy || 'Union Admin',
+      addedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (err) {
+    console.error('Failed to add allowed user in Firestore:', err);
+    throw err;
+  }
+}
+
+/**
+ * Remove an allowed user email from Firestore
+ */
+export async function dbRemoveAllowedUser(email) {
+  if (!db) return false;
+  try {
+    const cleanEmail = email.toLowerCase().trim();
+    await deleteDoc(doc(db, 'allowed_users', cleanEmail));
+    return true;
+  } catch (err) {
+    console.error('Failed to remove allowed user in Firestore:', err);
+    throw err;
+  }
+}
+
+/**
+ * Toggle strict authentication policy in Firestore
+ */
+export async function dbUpdateAuthSettings(settings) {
+  if (!db) return false;
+  try {
+    await setDoc(doc(db, 'settings', 'auth_policy'), settings, { merge: true });
+    return true;
+  } catch (err) {
+    console.error('Failed to update auth settings in Firestore:', err);
+    throw err;
+  }
+}
+
+/**
  * Create or save a booking to Firestore
  */
 export async function dbCreateBooking(booking) {
