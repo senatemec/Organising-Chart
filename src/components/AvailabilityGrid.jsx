@@ -110,9 +110,6 @@ export default function AvailabilityGrid({
   const bookingsThisMonth = activeBookings.filter(b => b.date.startsWith(monthPrefix));
 
   const daysArray = [];
-  for (let i = 0; i < startOffset; i++) {
-    daysArray.push(null);
-  }
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     daysArray.push({ dayNumber: d, dateStr });
@@ -264,104 +261,109 @@ export default function AvailabilityGrid({
             </div>
           </div>
 
-          {/* 7-Day Monthly Calendar Grid */}
-          <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-slate-950/80">
-            
-            {/* Weekday Header */}
-            <div className="grid grid-cols-7 border-b border-white/10 bg-slate-950 text-xs font-bold text-slate-400 text-center">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                <div key={day} className="py-3 border-r border-white/5 last:border-r-0 uppercase tracking-wider text-[11px]">
-                  {day}
-                </div>
-              ))}
-            </div>
+          {/* Monthly Calendar Dates Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+            {daysArray.map((item) => {
+              const dayBookings = getBookingsForDate(item.dateStr);
+              const isSelected = selectedMonthDay === item.dateStr;
+              const isToday = item.dateStr === '2026-09-05';
 
-            {/* Calendar Days Matrix */}
-            <div className="grid grid-cols-7 divide-x divide-y divide-white/5">
-              {daysArray.map((item, index) => {
-                if (!item) {
-                  return (
-                    <div key={`empty-${index}`} className="min-h-[105px] sm:min-h-[125px] bg-slate-950/40 p-2" />
-                  );
-                }
-
-                const dayBookings = getBookingsForDate(item.dateStr);
-                const isSelected = selectedMonthDay === item.dateStr;
-                const isToday = item.dateStr === '2026-09-05';
-
-                return (
-                  <div
-                    key={item.dateStr}
-                    onClick={() => setSelectedMonthDay(item.dateStr)}
-                    className={`min-h-[105px] sm:min-h-[125px] p-2 sm:p-2.5 transition-all cursor-pointer flex flex-col justify-between ${
-                      isSelected
-                        ? 'bg-indigo-600/15 ring-2 ring-indigo-500/80'
-                        : isToday
-                        ? 'bg-slate-900/90'
-                        : 'bg-slate-950/60 hover:bg-slate-900/50'
-                    }`}
-                  >
-                    {/* Day Top Bar */}
-                    <div className="flex items-center justify-between">
+              return (
+                <div
+                  key={item.dateStr}
+                  onClick={() => setSelectedMonthDay(item.dateStr)}
+                  className={`glass-panel p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-2.5 shadow-md ${
+                    isSelected
+                      ? 'bg-indigo-600/15 border-indigo-500/80 ring-2 ring-indigo-500/50'
+                      : isToday
+                      ? 'bg-slate-900/90 border-indigo-500/40 hover:bg-slate-900'
+                      : 'bg-slate-950/70 border-white/10 hover:border-white/20 hover:bg-slate-900/50'
+                  }`}
+                >
+                  {/* Day Top Header */}
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <div className="flex items-center gap-1.5">
                       <span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
                         isToday 
                           ? 'bg-indigo-600 text-white font-extrabold shadow-sm' 
                           : isSelected
                           ? 'bg-white/15 text-white'
-                          : 'text-slate-300'
+                          : 'text-slate-200'
                       }`}>
                         {item.dayNumber}
                       </span>
-
-                      {dayBookings.length > 0 && (
-                        <span className="badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[9px] px-1.5 py-0.2">
-                          {dayBookings.length} {dayBookings.length === 1 ? 'Event' : 'Events'}
-                        </span>
-                      )}
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        {monthName.slice(0, 3)} {item.dayNumber}
+                      </span>
                     </div>
 
-                    {/* Bookings Pills List (Clicking opens details!) */}
-                    <div className="space-y-1 my-1 overflow-hidden">
-                      {dayBookings.slice(0, 2).map((b) => (
+                    {dayBookings.length > 0 ? (
+                      <span className="badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] px-2 py-0.5">
+                        {dayBookings.length} {dayBookings.length === 1 ? 'Event' : 'Events'}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-emerald-500/80 font-medium">
+                        • Open
+                      </span>
+                    )}
+                  </div>
+
+                  {/* ALL Events List on this Date */}
+                  <div className="space-y-2 flex-1">
+                    {dayBookings.length > 0 ? (
+                      dayBookings.map((b) => (
                         <div
                           key={b.id}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedEventForDetails(b);
                           }}
-                          className="bg-indigo-950/90 hover:bg-indigo-600 border border-indigo-500/40 hover:border-indigo-400 text-indigo-200 hover:text-white px-1.5 py-0.5 rounded text-[10px] font-medium truncate shadow-sm cursor-pointer transition-all hover:scale-102 flex items-center justify-between gap-1"
-                          title={`Click to view full event details: ${b.eventTitle}`}
+                          className="bg-indigo-950/90 hover:bg-indigo-600/90 border border-indigo-500/40 hover:border-indigo-300 text-indigo-200 hover:text-white p-2 rounded-xl text-xs font-medium shadow-sm cursor-pointer transition-all hover:scale-[1.02] space-y-1 group"
+                          title={`Click to view full details: ${b.eventTitle}`}
                         >
-                          <span className="truncate">
-                            <strong className="text-white">{b.venueName.split(' ')[0]}:</strong> {b.eventTitle}
-                          </span>
-                          <Eye className="w-2.5 h-2.5 opacity-60 shrink-0" />
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="font-bold text-white truncate text-[11px] leading-tight">
+                              {b.eventTitle}
+                            </span>
+                            <Eye className="w-3 h-3 opacity-60 group-hover:opacity-100 shrink-0 text-cyan-300" />
+                          </div>
+
+                          <div className="text-[10px] text-indigo-300 font-semibold truncate">
+                            {b.venueName} {b.roomNumber && `(${b.roomNumber})`} • {b.organizer}
+                          </div>
+
+                          <div className="text-[9px] text-cyan-300 font-mono flex items-center gap-1 font-medium">
+                            <Clock className="w-2.5 h-2.5 shrink-0" />
+                            <span>{formatTime12H(b.startTime)} - {formatTime12H(b.endTime)}</span>
+                          </div>
                         </div>
-                      ))}
-
-                      {dayBookings.length > 2 && (
-                        <div className="text-[9px] text-cyan-300 font-semibold px-1">
-                          +{dayBookings.length - 2} more events
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Footer Status */}
-                    <div className="text-[10px] text-slate-500 flex items-center justify-between pt-1">
-                      {dayBookings.length === 0 ? (
-                        <span className="text-emerald-500/70 text-[9px] font-medium">• Available</span>
-                      ) : (
-                        <span className="text-indigo-400 text-[9px] font-mono">
-                          {formatTime12H(dayBookings[0].startTime).replace(':00', '')}
-                        </span>
-                      )}
-                    </div>
-
+                      ))
+                    ) : (
+                      <div className="text-[11px] text-slate-500 py-3 text-center italic">
+                        No events booked
+                      </div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
 
+                  {/* Day Footer Action */}
+                  <div className="pt-1.5 border-t border-white/5 flex items-center justify-between text-[10px]">
+                    <span className="text-slate-500">
+                      {dayBookings.length > 0 ? 'Click event for details' : 'All venues free'}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSlotClick(venues[0], item.dateStr, '10:00');
+                      }}
+                      className="text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-0.5"
+                    >
+                      <Plus className="w-2.5 h-2.5" /> Book
+                    </button>
+                  </div>
+
+                </div>
+              );
+            })}
           </div>
 
           {/* Selected Day Inspector Drawer */}
