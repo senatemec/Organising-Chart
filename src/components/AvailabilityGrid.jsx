@@ -5,23 +5,34 @@ import {
   Clock, 
   Sparkles, 
   ChevronLeft, 
-  ChevronRight,
-  Info,
-  CheckCircle2,
-  Building2,
-  DoorClosed,
-  Filter,
-  Plus,
-  Layers
+  ChevronRight, 
+  Info, 
+  CheckCircle2, 
+  Building2, 
+  DoorClosed, 
+  Filter, 
+  Plus, 
+  Layers,
+  Eye
 } from 'lucide-react';
 import { timeSlots, formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
+import EventDetailsModal from './EventDetailsModal';
 
-export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
+export default function AvailabilityGrid({ 
+  venues, 
+  bookings, 
+  onSlotClick, 
+  currentUser, 
+  onAdminCancelBooking 
+}) {
   const [viewMode, setViewMode] = useState('monthly'); // 'daily' | 'monthly'
   const [selectedDate, setSelectedDate] = useState('2026-09-05');
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date('2026-09-01T00:00:00'));
   const [selectedDivision, setSelectedDivision] = useState('All');
   const [selectedMonthDay, setSelectedMonthDay] = useState('2026-09-05');
+  
+  // Selected Event to view full details modal
+  const [selectedEventForDetails, setSelectedEventForDetails] = useState(null);
 
   // Change date by offset in days (for daily matrix)
   const changeDateByDays = (days) => {
@@ -125,8 +136,8 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
             </h2>
             <p className="text-xs text-slate-400">
               {viewMode === 'monthly' 
-                ? `Month at a glance for ${monthName} ${year} • Click any day to inspect bookings` 
-                : 'Hour-by-hour availability timeline • Click any green slot to reserve'}
+                ? `Month at a glance for ${monthName} ${year} • Click any event or day to inspect details` 
+                : 'Hour-by-hour availability timeline • Click any event to inspect or click green slot to book'}
             </p>
           </div>
         </div>
@@ -309,15 +320,22 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
                       )}
                     </div>
 
-                    {/* Bookings Pills List */}
+                    {/* Bookings Pills List (Clicking opens details!) */}
                     <div className="space-y-1 my-1 overflow-hidden">
                       {dayBookings.slice(0, 2).map((b) => (
                         <div
                           key={b.id}
-                          className="bg-indigo-950/80 border border-indigo-500/40 text-indigo-200 px-1.5 py-0.5 rounded text-[10px] font-medium truncate shadow-sm"
-                          title={`${b.venueName}${b.roomNumber ? ` (${b.roomNumber})` : ''}: ${b.eventTitle}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEventForDetails(b);
+                          }}
+                          className="bg-indigo-950/90 hover:bg-indigo-600 border border-indigo-500/40 hover:border-indigo-400 text-indigo-200 hover:text-white px-1.5 py-0.5 rounded text-[10px] font-medium truncate shadow-sm cursor-pointer transition-all hover:scale-102 flex items-center justify-between gap-1"
+                          title={`Click to view full event details: ${b.eventTitle}`}
                         >
-                          <strong className="text-white">{b.venueName.split(' ')[0]}:</strong> {b.eventTitle}
+                          <span className="truncate">
+                            <strong className="text-white">{b.venueName.split(' ')[0]}:</strong> {b.eventTitle}
+                          </span>
+                          <Eye className="w-2.5 h-2.5 opacity-60 shrink-0" />
                         </div>
                       ))}
 
@@ -359,7 +377,7 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
                       {formatDateFriendly(selectedMonthDay)} — Bookings & Schedule
                     </h3>
                     <p className="text-xs text-slate-400">
-                      {selectedDayBookings.length} confirmed venue {selectedDayBookings.length === 1 ? 'reservation' : 'reservations'} on this date
+                      {selectedDayBookings.length} confirmed venue {selectedDayBookings.length === 1 ? 'reservation' : 'reservations'} on this date • Click any event card to view full details
                     </p>
                   </div>
                 </div>
@@ -384,25 +402,28 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
                 </div>
               </div>
 
-              {/* Day's Event List */}
+              {/* Day's Event List (Clickable cards to view full event details) */}
               {selectedDayBookings.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {selectedDayBookings.map((b) => (
                     <div
                       key={b.id}
-                      className="p-3.5 rounded-xl bg-slate-900/80 border border-white/10 space-y-2 text-xs hover:border-indigo-500/40 transition-colors"
+                      onClick={() => setSelectedEventForDetails(b)}
+                      className="p-3.5 rounded-xl bg-slate-900/80 border border-white/10 space-y-2 text-xs hover:border-indigo-500/60 hover:bg-slate-900 cursor-pointer transition-all hover:scale-[1.01] shadow-md group"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-[10px] font-bold text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded">
                           {b.id}
                         </span>
-                        <span className="badge badge-available text-[9px] py-0.5">
+                        <span className="badge badge-available text-[9px] py-0.5 flex items-center gap-1 group-hover:bg-emerald-500/25">
                           <CheckCircle2 className="w-2.5 h-2.5" /> Confirmed
                         </span>
                       </div>
 
                       <div>
-                        <div className="font-bold text-white text-sm line-clamp-1">{b.eventTitle}</div>
+                        <div className="font-bold text-white text-sm line-clamp-1 group-hover:text-indigo-200 transition-colors">
+                          {b.eventTitle}
+                        </div>
                         <div className="text-indigo-300 text-[11px] font-semibold">{b.organizer}</div>
                       </div>
 
@@ -417,6 +438,10 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
                           <Clock className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                           <span>{formatTime12H(b.startTime)} - {formatTime12H(b.endTime)}</span>
                         </div>
+                      </div>
+
+                      <div className="text-[10px] text-indigo-400 flex items-center justify-end gap-1 font-medium pt-1 opacity-80 group-hover:opacity-100">
+                        <Eye className="w-3 h-3" /> Click to view details
                       </div>
                     </div>
                   ))}
@@ -463,58 +488,61 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
               >
                 Tomorrow
               </button>
-            </div>
-
-            <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-white/10">
-              <button
-                onClick={() => changeDateByDays(-1)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-                title="Previous Day"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
               
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-transparent text-xs font-bold text-indigo-300 focus:outline-none px-2 cursor-pointer font-mono"
-              />
+              <div className="flex items-center gap-1.5 ml-2">
+                <button
+                  onClick={() => changeDateByDays(-1)}
+                  className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-white/10 transition-colors"
+                  title="Previous Day"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="input-field text-xs font-mono py-1 px-2.5 bg-slate-900 w-auto"
+                />
+                <button
+                  onClick={() => changeDateByDays(1)}
+                  className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-white/10 transition-colors"
+                  title="Next Day"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
 
-              <button
-                onClick={() => changeDateByDays(1)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-                title="Next Day"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+            <div className="text-xs text-slate-300 font-semibold bg-slate-900/80 px-3 py-1.5 rounded-xl border border-white/10">
+              📅 {formatDateFriendly(selectedDate)}
             </div>
           </div>
 
-          {/* Daily Legend */}
-          <div className="flex flex-wrap items-center gap-5 px-1 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3.5 h-3.5 rounded bg-emerald-500/20 border border-emerald-500/60 shadow-sm shadow-emerald-500/30" />
-              <span className="text-slate-300 font-medium">Free Slot (Click to Book)</span>
+          {/* Matrix Legend */}
+          <div className="flex items-center gap-4 text-xs text-slate-400 bg-slate-900/40 p-3 rounded-xl border border-white/5 overflow-x-auto">
+            <span className="font-semibold text-white text-[11px] mr-1">Legend:</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/50" />
+              <span>Available Slot (Click to Book)</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3.5 h-3.5 rounded bg-indigo-600 border border-indigo-400" />
-              <span className="text-slate-300 font-medium">Confirmed Booking</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-indigo-600 border border-indigo-400" />
+              <span>Occupied Event (Click to View Details)</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3.5 h-3.5 rounded bg-slate-800 border border-slate-700" />
-              <span className="text-slate-400 font-medium">Under Maintenance</span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded bg-slate-800 border border-white/10" />
+              <span>Under Maintenance</span>
             </div>
           </div>
 
-          {/* Matrix Table */}
-          <div className="glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+          {/* The Live Matrix Table */}
+          <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden shadow-2xl bg-slate-950/90">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[950px]">
+              <table className="w-full border-collapse text-left min-w-[900px]">
                 <thead>
-                  <tr className="bg-slate-950 border-b border-white/10 text-xs font-bold text-slate-400">
-                    <th className="p-4 w-64 sticky left-0 z-20 bg-slate-950 border-r border-white/10">
-                      Venue / Facility
+                  <tr className="border-b border-white/10 bg-slate-950 text-slate-300 text-xs">
+                    <th className="p-4 sticky left-0 z-20 bg-slate-950 border-r border-white/10 min-w-[200px]">
+                      Campus Venue & Capacity
                     </th>
                     {timeSlots.map((slot) => (
                       <th key={slot} className="p-3 text-center min-w-[70px] border-r border-white/5 font-mono text-[11px]">
@@ -554,7 +582,11 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
                         if (slotState.isOccupied) {
                           return (
                             <td key={slot} className="p-1 border-r border-white/5 relative group">
-                              <div className="w-full h-11 rounded-lg p-1.5 flex flex-col justify-center transition-all cursor-pointer bg-indigo-600/90 border border-indigo-400/80 text-white shadow-sm shadow-indigo-500/20">
+                              <div 
+                                onClick={() => setSelectedEventForDetails(slotState.booking)}
+                                className="w-full h-11 rounded-lg p-1.5 flex flex-col justify-center transition-all cursor-pointer bg-indigo-600/90 hover:bg-indigo-500 border border-indigo-400/80 hover:border-white/40 text-white shadow-sm shadow-indigo-500/20 hover:scale-[1.02]"
+                                title="Click to view full event details"
+                              >
                                 <span className="font-bold truncate text-[10px] block">
                                   {slotState.booking.eventTitle}
                                 </span>
@@ -563,7 +595,7 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
                                 </span>
                               </div>
 
-                              {/* Hover Tooltip */}
+                              {/* Quick Hover Tooltip */}
                               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-30 w-64 glass-panel p-3 rounded-xl border border-white/20 shadow-2xl bg-slate-950 text-xs pointer-events-none">
                                 <div className="font-bold text-white mb-0.5">{slotState.booking.eventTitle}</div>
                                 <div className="text-indigo-300 font-semibold text-[11px] mb-1">{slotState.booking.organizer}</div>
@@ -575,8 +607,8 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
                                 <div className="text-slate-400 text-[10px] font-mono">
                                   Time: {formatTime12H(slotState.booking.startTime)} - {formatTime12H(slotState.booking.endTime)}
                                 </div>
-                                <div className="text-emerald-400 text-[10px] font-bold mt-0.5 flex items-center gap-1">
-                                  <CheckCircle2 className="w-3 h-3" /> Confirmed Booking
+                                <div className="text-emerald-400 text-[10px] font-bold mt-1 flex items-center gap-1">
+                                  <Eye className="w-3 h-3" /> Click slot to view details
                                 </div>
                               </div>
                             </td>
@@ -607,6 +639,17 @@ export default function AvailabilityGrid({ venues, bookings, onSlotClick }) {
           </div>
 
         </div>
+      )}
+
+      {/* Full Event Details Modal */}
+      {selectedEventForDetails && (
+        <EventDetailsModal
+          event={selectedEventForDetails}
+          venue={venues.find(v => v.id === selectedEventForDetails.venueId)}
+          onClose={() => setSelectedEventForDetails(null)}
+          currentUser={currentUser}
+          onAdminRevokeClick={onAdminCancelBooking ? (event) => onAdminCancelBooking(event.id, 'Revoked by Union Admin from Live Matrix') : null}
+        />
       )}
 
     </div>

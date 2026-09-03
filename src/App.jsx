@@ -293,6 +293,8 @@ export default function App() {
           <AvailabilityGrid
             venues={venues}
             bookings={bookings}
+            currentUser={currentUser}
+            onAdminCancelBooking={handleAdminCancelBooking}
             onSlotClick={(venue, date, slot) => handleOpenBookingModal(venue, date, slot)}
           />
         )}
