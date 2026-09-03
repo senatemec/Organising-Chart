@@ -39,45 +39,45 @@ export default function Navbar({
     : baseNavItems;
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0B101D]/90 backdrop-blur-md border-b border-white/10 px-4 lg:px-8 py-2.5 mb-6 shadow-md">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 bg-[#0B101D]/90 backdrop-blur-md border-b border-white/10 px-3 sm:px-6 lg:px-8 py-2.5 mb-6 shadow-md">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 lg:gap-4">
         
         {/* Left: Brand Identity with MEC & Union MEC Logos */}
         <div 
           onClick={() => setActiveTab('venues')} 
-          className="flex items-center gap-3 cursor-pointer group select-none"
+          className="flex items-center gap-2.5 cursor-pointer group select-none shrink-0"
         >
           {/* Official Logos Group */}
-          <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10 group-hover:border-indigo-500/40 transition-colors">
+          <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-xl border border-white/10 group-hover:border-indigo-500/40 transition-colors">
             <img 
               src="/mec_college_logo.png" 
               alt="Govt. Model Engineering College" 
-              className="w-8 h-8 object-contain rounded-lg bg-white/95 p-0.5" 
+              className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-lg bg-white/95 p-0.5" 
             />
             <img 
               src="/union_mec_logo.png" 
               alt="Union MEC" 
-              className="w-8 h-8 object-contain rounded-lg bg-white/95 p-0.5" 
+              className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-lg bg-white/95 p-0.5" 
             />
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base text-white tracking-tight group-hover:text-indigo-300 transition-colors">
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-sm sm:text-base text-white tracking-tight group-hover:text-indigo-300 transition-colors">
                 Organizing Chart
               </span>
-              <span className="text-[10px] font-bold text-red-300 bg-red-500/20 px-2 py-0.5 rounded-full border border-red-500/40 tracking-wider">
-                UNION MEC
+              <span className="text-[9px] font-bold text-red-300 bg-red-500/20 px-1.5 py-0.2 rounded-full border border-red-500/40 tracking-wider">
+                UNION
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
+            <p className="text-[10px] text-slate-400 font-medium hidden md:block">
               Govt. Model Engineering College
             </p>
           </div>
         </div>
 
         {/* Center: Segmented Navigation */}
-        <nav className="hidden md:flex items-center bg-slate-950/80 p-1 rounded-xl border border-white/10 shadow-inner">
+        <nav className="hidden lg:flex items-center bg-slate-950/90 p-1 rounded-xl border border-white/10 shadow-inner overflow-x-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -85,7 +85,7 @@ export default function Navbar({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all ${
+                className={`relative flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-lg font-semibold text-xs transition-all whitespace-nowrap ${
                   isActive
                     ? item.isSpecialAdmin
                       ? 'bg-red-600 text-white shadow-md shadow-red-600/30'
@@ -95,24 +95,19 @@ export default function Navbar({
                     : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.04]'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : item.isSpecialAdmin ? 'text-red-400' : 'text-slate-400'}`} />
+                <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : item.isSpecialAdmin ? 'text-red-400' : 'text-slate-400'}`} />
                 <span>{item.label}</span>
-                {item.isSpecialAdmin && (
-                  <span className="text-[9px] bg-red-500/30 text-red-200 px-1.5 py-0.2 rounded font-bold border border-red-500/40">
-                    ADMIN
-                  </span>
-                )}
               </button>
             );
           })}
         </nav>
 
         {/* Right: Auth Profile / Google Sign In & Book CTA */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           
           {/* User Account / Google Sign In Status */}
           {currentUser ? (
-            <div className="flex items-center gap-2.5 bg-slate-950/90 border border-white/10 p-1 pr-2.5 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-2 bg-slate-950/90 border border-white/10 p-1 pr-2 rounded-2xl shadow-sm">
               <div 
                 className={`w-7 h-7 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border ${
                   currentUser.isUnionAdmin ? 'border-red-500/50 bg-white p-0.5' : 'border-indigo-500/40 bg-slate-900'
@@ -125,22 +120,22 @@ export default function Navbar({
                   className="w-full h-full object-contain"
                 />
               </div>
-              <div className="hidden sm:block text-left text-xs">
-                <div className="font-bold text-white leading-tight flex items-center gap-1.5">
-                  <span className="truncate max-w-[110px]">{currentUser.name}</span>
+              <div className="hidden xl:block text-left text-xs max-w-[120px]">
+                <div className="font-bold text-white leading-tight flex items-center gap-1">
+                  <span className="truncate">{currentUser.name}</span>
                   {currentUser.isUnionAdmin && (
-                    <span className="text-[9px] bg-red-500/20 text-red-300 px-1.5 py-0.2 rounded font-bold border border-red-500/40">
-                      UNION
+                    <span className="text-[8px] bg-red-500/20 text-red-300 px-1 py-0.2 rounded font-bold border border-red-500/40">
+                      ADMIN
                     </span>
                   )}
                 </div>
-                <div className="text-[10px] text-slate-400 truncate max-w-[110px] font-mono">
+                <div className="text-[9px] text-slate-400 truncate font-mono">
                   {currentUser.email}
                 </div>
               </div>
               <button
                 onClick={onLogout}
-                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-white/5 rounded-lg transition-colors ml-1"
+                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-white/5 rounded-lg transition-colors"
                 title="Sign Out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -161,21 +156,20 @@ export default function Navbar({
             </button>
           )}
 
-          {/* Book CTA */}
+          {/* Book Venue CTA Button */}
           <button
             onClick={onNewBookingClick}
-            className="btn-primary text-xs py-2 px-4 shadow-indigo-500/30"
+            className="btn-primary text-xs py-2 px-3.5 shadow-indigo-500/30 shrink-0 whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5" /> 
-            <span className="hidden sm:inline">Book Venue</span>
-            <span className="sm:hidden">Book</span>
+            <span>Book Venue</span>
           </button>
         </div>
 
       </div>
 
-      {/* Mobile Sub-Navigation Bar */}
-      <div className="md:hidden flex items-center justify-between pt-2.5 mt-2.5 border-t border-white/10 overflow-x-auto gap-1">
+      {/* Responsive Sub-Navigation Bar for medium & mobile viewports */}
+      <div className="lg:hidden flex items-center justify-between pt-2.5 mt-2.5 border-t border-white/10 overflow-x-auto gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -183,7 +177,7 @@ export default function Navbar({
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap shrink-0 ${
                 isActive 
                   ? item.isSpecialAdmin
                     ? 'bg-red-600 text-white shadow-sm'
@@ -191,7 +185,7 @@ export default function Navbar({
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-3.5 h-3.5 shrink-0" />
               <span>{item.label}</span>
             </button>
           );
