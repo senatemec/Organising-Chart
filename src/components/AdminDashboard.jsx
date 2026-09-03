@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   CheckCircle2, 
@@ -31,6 +31,7 @@ export default function AdminDashboard({
   venues, 
   allowedUsers = [],
   strictAuthEnabled = true,
+  initialSubTab = 'active-events',
   onAdminCancelBooking, 
   onAdminDeleteBooking,
   onAddAllowedUser,
@@ -38,10 +39,16 @@ export default function AdminDashboard({
   onToggleStrictAuth,
   onToggleVenueStatus 
 }) {
-  const [activeSubTab, setActiveSubTab] = useState('active-events');
+  const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
   const [cancelReasonModal, setCancelReasonModal] = useState(null);
   const [reasonText, setReasonText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
 
   // New allowed user form state
   const [newEmail, setNewEmail] = useState('');

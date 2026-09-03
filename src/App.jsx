@@ -165,9 +165,9 @@ export default function App() {
     }
   }, [currentUser]);
 
-  // Security guard: If current tab is admin/analytics and user is not union admin, bounce to venues
+  // Security guard: If current tab is admin/analytics/access-control and user is not union admin, bounce to venues
   useEffect(() => {
-    if ((activeTab === 'admin' || activeTab === 'analytics') && !currentUser?.isUnionAdmin) {
+    if ((activeTab === 'admin' || activeTab === 'analytics' || activeTab === 'access-control') && !currentUser?.isUnionAdmin) {
       setActiveTab('venues');
     }
   }, [activeTab, currentUser]);
@@ -411,13 +411,14 @@ export default function App() {
           />
         )}
 
-        {/* Tab 4: Union Admin Portal (Exclusively available to Union Mail) */}
-        {activeTab === 'admin' && currentUser?.isUnionAdmin && (
+        {/* Tab 4: Union Admin & Access Control (Exclusively available to Union Mail) */}
+        {(activeTab === 'admin' || activeTab === 'access-control') && currentUser?.isUnionAdmin && (
           <AdminDashboard
             bookings={bookings}
             venues={venues}
             allowedUsers={allowedUsers}
             strictAuthEnabled={strictAuthEnabled}
+            initialSubTab={activeTab === 'access-control' ? 'access-control' : 'active-events'}
             onAdminCancelBooking={handleAdminCancelBooking}
             onAdminDeleteBooking={handleCancelBooking}
             onAddAllowedUser={handleAddAllowedUser}

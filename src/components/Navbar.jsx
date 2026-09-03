@@ -9,7 +9,8 @@ import {
   Sparkles,
   LogIn,
   LogOut,
-  User
+  User,
+  UserCheck
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -27,11 +28,12 @@ export default function Navbar({
     { id: 'my-bookings', label: 'My Bookings', icon: Ticket },
   ];
 
-  // Admin and Analytics tabs are strictly and exclusively rendered if logged in as Union Admin (senate@mec.ac.in)
+  // Admin and Analytics tabs are strictly and exclusively rendered if logged in as Union Admin
   const navItems = currentUser?.isUnionAdmin
     ? [
         ...baseNavItems,
         { id: 'admin', label: 'Union Admin', icon: ShieldCheck, isSpecialAdmin: true },
+        { id: 'access-control', label: 'Authorized Gmails', icon: UserCheck, isSpecialAdmin: true },
         { id: 'analytics', label: 'Analytics', icon: BarChart3, isSpecialAdmin: true },
       ]
     : baseNavItems;
