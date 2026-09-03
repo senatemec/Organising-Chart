@@ -65,7 +65,6 @@ export default function GoogleAuthModal({
                                    userEmail === 'senate@mec.ac.in' || 
                                    userEmail.startsWith('senatemec@') ||
                                    userEmail.startsWith('senate@') || 
-                                   userEmail.startsWith('senatenec@') ||
                                    userEmail === 'union@mec.ac.in';
 
               const isWhitelisted = allowedUsers.some(u => (u.email || '').toLowerCase().trim() === userEmail);
@@ -122,12 +121,12 @@ export default function GoogleAuthModal({
 
   return (
     <div className="modal-overlay animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="glass-panel w-full max-w-md rounded-3xl border border-slate-200 p-6 sm:p-8 relative bg-white shadow-2xl space-y-6 text-slate-900">
+      <div className="glass-panel w-full max-w-md rounded-3xl border border-white/20 p-6 sm:p-8 relative bg-slate-950 shadow-2xl space-y-6">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-100 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-colors border border-slate-200"
+          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-900 text-slate-400 hover:text-white flex items-center justify-center transition-colors border border-white/10"
         >
           <X className="w-5 h-5" />
         </button>
@@ -135,13 +134,13 @@ export default function GoogleAuthModal({
         {/* Modal Header */}
         <div className="text-center space-y-3">
           <div className="flex items-center justify-center gap-2">
-            <img src="/mec_college_logo.png" alt="MEC Logo" className="w-10 h-10 object-contain rounded-xl bg-slate-50 border border-slate-200 p-1 shadow-xs" />
-            <img src="/union_mec_logo.png" alt="Union MEC" className="w-10 h-10 object-contain rounded-xl bg-slate-50 border border-slate-200 p-1 shadow-xs" />
+            <img src="/mec_college_logo.png" alt="MEC Logo" className="w-10 h-10 object-contain rounded-xl bg-white p-1 shadow-md" />
+            <img src="/union_mec_logo.png" alt="Union MEC" className="w-10 h-10 object-contain rounded-xl bg-white p-1 shadow-md" />
           </div>
 
           <div>
-            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Sign In with Google</h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <h2 className="text-xl font-extrabold text-white tracking-tight">Sign In with Google</h2>
+            <p className="text-xs text-slate-400 mt-1">
               Govt. Model Engineering College Venue Portal
             </p>
           </div>
@@ -149,16 +148,16 @@ export default function GoogleAuthModal({
 
         {/* Action Prompt message */}
         {intendedActionMessage && (
-          <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl flex items-center gap-2 text-xs text-blue-800">
-            <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+          <div className="bg-indigo-500/10 border border-indigo-500/20 p-3 rounded-xl flex items-center gap-2 text-xs text-indigo-300">
+            <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
             <span>{intendedActionMessage}</span>
           </div>
         )}
 
         {/* Error Notification */}
         {authError && (
-          <div className="bg-rose-50 border border-rose-200 p-3.5 rounded-xl flex items-start gap-2.5 text-xs text-rose-800 animate-fade-in">
-            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+          <div className="bg-rose-500/15 border border-rose-500/40 p-3.5 rounded-xl flex items-start gap-2.5 text-xs text-rose-300 animate-fade-in">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
             <span className="leading-relaxed">{authError}</span>
           </div>
         )}
@@ -169,18 +168,18 @@ export default function GoogleAuthModal({
             <div ref={googleBtnRef} className="flex justify-center" />
           </div>
 
-          <div className="text-[11px] text-slate-600 text-center space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-200">
-            <p className="font-semibold text-slate-900">🔒 Authorized Access Control</p>
+          <div className="text-[11px] text-slate-400 text-center space-y-1 bg-slate-900/60 p-3 rounded-xl border border-white/5">
+            <p className="font-semibold text-slate-300">🔒 Authorized Access Control</p>
             <p className="text-slate-500">
-              Only authorized Gmail accounts approved by <strong className="text-red-700">Union MEC</strong> can book campus venues.
+              Only authorized Gmail accounts approved by <strong className="text-red-400">Union MEC</strong> can book campus venues.
             </p>
           </div>
         </div>
 
         {/* Security Footer */}
-        <div className="pt-2 border-t border-slate-200 text-center">
+        <div className="pt-2 border-t border-white/10 text-center">
           <p className="text-[10px] text-slate-500">
-            Protected by Google OAuth 2.0 • Admin: <span className="font-mono text-blue-700 font-semibold">senatemec@mec.ac.in</span>
+            Protected by Google OAuth 2.0 • Admin: <span className="font-mono text-cyan-300">senatemec@mec.ac.in</span>
           </p>
         </div>
 
