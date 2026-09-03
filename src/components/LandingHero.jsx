@@ -1,11 +1,8 @@
 import React from 'react';
 import { 
   CalendarDays, 
-  ShieldCheck, 
   Sparkles, 
-  ArrowRight, 
-  Clock,
-  Check
+  ArrowRight
 } from 'lucide-react';
 
 export default function LandingHero({ 
@@ -82,47 +79,6 @@ export default function LandingHero({
           </div>
 
         </div>
-      </div>
-
-      {/* 3 Core Value Pillars */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        <div className="glass-panel p-4 rounded-xl border border-white/10 flex items-start gap-3.5 hover:border-indigo-500/30 transition-all">
-          <div className="w-9 h-9 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
-            <Clock className="w-4 h-4" />
-          </div>
-          <div className="space-y-1">
-            <h4 className="text-sm font-bold text-white">Live Slot Validation</h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Real-time conflict detection prevents double booking across hours and classrooms.
-            </p>
-          </div>
-        </div>
-
-        <div className="glass-panel p-4 rounded-xl border border-white/10 flex items-start gap-3.5 hover:border-cyan-500/30 transition-all">
-          <div className="w-9 h-9 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center shrink-0">
-            <Check className="w-4 h-4" />
-          </div>
-          <div className="space-y-1">
-            <h4 className="text-sm font-bold text-white">Instant Confirmation</h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Societies reserve slots directly with zero approval delay or administrative bottlenecks.
-            </p>
-          </div>
-        </div>
-
-        <div className="glass-panel p-4 rounded-xl border border-white/10 flex items-start gap-3.5 hover:border-red-500/30 transition-all">
-          <div className="w-9 h-9 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <div className="space-y-1">
-            <h4 className="text-sm font-bold text-white">Union MEC Oversight</h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Union admin maintains institutional oversight and can cancel bookings with a reason note.
-            </p>
-          </div>
-        </div>
-
       </div>
 
     </div>
