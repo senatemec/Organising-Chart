@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   LogIn
 } from 'lucide-react';
-import { formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
+import { formatDateFriendly, formatTime12H, formatDateTime } from '../utils/availabilityUtils';
 
 export default function MyBookings({ 
   bookings, 
@@ -165,7 +165,11 @@ export default function MyBookings({
                     </div>
                     <div className="flex items-center gap-2 font-mono text-cyan-300">
                       <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                      <span>{formatDateFriendly(b.date)} ({formatTime12H(b.startTime)} - {formatTime12H(b.endTime)})</span>
+                      <span><strong>Event:</strong> {formatDateFriendly(b.date)} ({formatTime12H(b.startTime)} - {formatTime12H(b.endTime)})</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span><strong>Booked On:</strong> {formatDateTime(b.createdAt || b.bookedAt)}</span>
                     </div>
                   </div>
 

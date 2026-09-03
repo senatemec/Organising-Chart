@@ -109,6 +109,17 @@ export default function EventDetailsModal({
             </span>
           </div>
 
+          {/* Booking Submission Timestamp */}
+          <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+            <span className="text-slate-400 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>Booking Date & Time:</span>
+            </span>
+            <span className="text-emerald-300 font-medium font-mono text-[11px]">
+              {formatDateTime(event.createdAt || event.bookedAt)}
+            </span>
+          </div>
+
           {/* Division */}
           {venue && (
             <div className="flex items-center justify-between border-b border-white/5 pb-2.5">

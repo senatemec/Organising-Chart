@@ -17,30 +17,13 @@ import {
   CalendarDays,
   Tag
 } from 'lucide-react';
-import { formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
-
-function formatSubmittedAt(isoOrDateStr) {
-  if (!isoOrDateStr) return 'Recently';
-  try {
-    const d = new Date(isoOrDateStr);
-    if (isNaN(d.getTime())) return isoOrDateStr;
-    return d.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  } catch (e) {
-    return isoOrDateStr;
-  }
-}
+import { formatDateFriendly, formatTime12H, formatDateTime } from '../utils/availabilityUtils';
 
 export default function AdminDashboard({ 
   bookings, 
   venues, 
   onAdminCancelBooking, 
+  onAdminDeleteBooking,
   onToggleVenueStatus 
 }) {
   const [activeSubTab, setActiveSubTab] = useState('active-events');
@@ -171,7 +154,7 @@ export default function AdminDashboard({
                 key={b.id}
                 className="glass-panel p-5 rounded-2xl border border-white/10 bg-slate-950 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-emerald-500/40 transition-all shadow-md"
               >
-                <div className="space-y-2.5 flex-1">
+                <div className="space-y-3 flex-1">
                   
                   {/* Top Header */}
                   <div className="flex items-center gap-2 flex-wrap">
@@ -192,37 +175,46 @@ export default function AdminDashboard({
                   </div>
 
                   {/* Scheduled Date/Time & Booking Submission Time */}
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 pt-0.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-slate-300 pt-0.5">
                     
                     {/* Venue */}
-                    <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-white/5">
-                      <Building2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                      <span className="font-semibold text-white">
-                        {b.venueName} {b.roomNumber && <span className="text-cyan-300 font-mono">({b.roomNumber})</span>}
-                      </span>
+                    <div className="flex items-center gap-2 bg-slate-900 px-3 py-2 rounded-xl border border-white/5">
+                      <Building2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <div>
+                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Venue</div>
+                        <span className="font-semibold text-white truncate block">
+                          {b.venueName} {b.roomNumber && <span className="text-cyan-300 font-mono">({b.roomNumber})</span>}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Event Scheduled Date & Time */}
-                    <div className="flex items-center gap-1.5 bg-indigo-950/70 px-3 py-1.5 rounded-lg border border-indigo-500/30 font-mono text-cyan-300">
-                      <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                      <span>
-                        <strong className="text-white font-sans font-semibold">Event:</strong> {formatDateFriendly(b.date)} ({formatTime12H(b.startTime)} - {formatTime12H(b.endTime)})
-                      </span>
+                    <div className="flex items-center gap-2 bg-indigo-950/70 px-3 py-2 rounded-xl border border-indigo-500/30">
+                      <Calendar className="w-4 h-4 text-indigo-400 shrink-0" />
+                      <div>
+                        <div className="text-[10px] text-indigo-300 uppercase font-bold tracking-wider">Event Schedule</div>
+                        <span className="font-mono text-cyan-300 font-semibold text-[11px] block">
+                          {formatDateFriendly(b.date)} • {formatTime12H(b.startTime)} - {formatTime12H(b.endTime)}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Booking Submission Timestamp */}
-                    <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-white/5 text-slate-400">
-                      <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>
-                        <strong className="text-slate-300">Booked On:</strong> {formatSubmittedAt(b.createdAt)}
-                      </span>
+                    <div className="flex items-center gap-2 bg-slate-900 px-3 py-2 rounded-xl border border-white/5">
+                      <Clock className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <div>
+                        <div className="text-[10px] text-emerald-400 uppercase font-bold tracking-wider">Booking Date & Time</div>
+                        <span className="text-slate-200 font-medium text-[11px] block">
+                          {formatDateTime(b.createdAt || b.bookedAt)}
+                        </span>
+                      </div>
                     </div>
 
                   </div>
 
                   {/* Description / Notes if available */}
                   {b.description && (
-                    <p className="text-[11px] text-slate-400 italic bg-slate-900/40 p-2 rounded-lg border border-white/5">
+                    <p className="text-[11px] text-slate-400 italic bg-slate-900/40 p-2.5 rounded-xl border border-white/5">
                       "{b.description}"
                     </p>
                   )}
@@ -230,10 +222,10 @@ export default function AdminDashboard({
                 </div>
 
                 {/* Union Admin Revoke Button */}
-                <div className="w-full md:w-auto border-t md:border-t-0 border-white/10 pt-3 md:pt-0">
+                <div className="w-full md:w-auto border-t md:border-t-0 border-white/10 pt-3 md:pt-0 shrink-0">
                   <button
                     onClick={() => setCancelReasonModal(b)}
-                    className="btn-danger w-full md:w-auto text-xs justify-center py-2 px-4 shadow-red-500/20"
+                    className="btn-danger w-full md:w-auto text-xs justify-center py-2.5 px-4 shadow-red-500/20"
                     title="Cancel this booking with reason"
                   >
                     <XCircle className="w-4 h-4" /> Revoke Permit
@@ -262,10 +254,11 @@ export default function AdminDashboard({
                 <tr className="bg-slate-950 border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider">
                   <th className="p-3.5">Tracking ID</th>
                   <th className="p-3.5">Event Title & Society</th>
-                  <th className="p-3.5">Target Venue & Room</th>
+                  <th className="p-3.5">Venue & Room</th>
                   <th className="p-3.5">Event Schedule (Date & Time)</th>
-                  <th className="p-3.5">Booked On</th>
+                  <th className="p-3.5">Booking Date & Time</th>
                   <th className="p-3.5">Status & Remarks</th>
+                  {onAdminDeleteBooking && <th className="p-3.5 text-center">Delete</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -298,14 +291,23 @@ export default function AdminDashboard({
 
                     {/* Event Schedule (Date & Time) */}
                     <td className="p-3.5 font-mono text-slate-300">
-                      <div className="font-semibold text-cyan-300">{formatDateFriendly(b.date)}</div>
-                      <div className="text-[11px] text-indigo-300 font-semibold">{formatTime12H(b.startTime)} - {formatTime12H(b.endTime)}</div>
+                      <div className="font-bold text-cyan-300 flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <span>{formatDateFriendly(b.date)}</span>
+                      </div>
+                      <div className="text-[11px] text-indigo-300 font-semibold flex items-center gap-1 mt-0.5">
+                        <Clock className="w-3 h-3 text-cyan-400 shrink-0" />
+                        <span>{formatTime12H(b.startTime)} - {formatTime12H(b.endTime)}</span>
+                      </div>
                     </td>
 
-                    {/* Booked On (Creation Date & Time) */}
-                    <td className="p-3.5 text-slate-400">
-                      <div className="text-[11px] text-slate-300 font-medium">{formatSubmittedAt(b.createdAt)}</div>
-                      <div className="text-[10px] text-slate-500">Auto-Confirmed</div>
+                    {/* Booking Date & Time (When booked) */}
+                    <td className="p-3.5 text-slate-300">
+                      <div className="text-[11px] text-emerald-300 font-medium flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>{formatDateTime(b.createdAt || b.bookedAt)}</span>
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Auto-Confirmed</div>
                     </td>
 
                     {/* Status & Remarks */}
@@ -327,6 +329,19 @@ export default function AdminDashboard({
                         </div>
                       )}
                     </td>
+
+                    {/* Admin Purge/Delete Action */}
+                    {onAdminDeleteBooking && (
+                      <td className="p-3.5 text-center">
+                        <button
+                          onClick={() => onAdminDeleteBooking(b.id)}
+                          className="p-1.5 rounded-lg bg-slate-900 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-white/5 transition-colors"
+                          title="Permanently remove this booking from database"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    )}
 
                   </tr>
                 ))}

@@ -316,6 +316,7 @@ export default function App() {
             bookings={bookings}
             venues={venues}
             onAdminCancelBooking={handleAdminCancelBooking}
+            onAdminDeleteBooking={handleCancelBooking}
             onToggleVenueStatus={handleToggleVenueStatus}
           />
         )}

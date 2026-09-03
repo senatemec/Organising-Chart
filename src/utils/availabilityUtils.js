@@ -106,3 +106,26 @@ export function formatDateFriendly(dateStr) {
     year: 'numeric'
   });
 }
+
+/**
+ * Format any timestamp or ISO string to friendly Date & Time string
+ * e.g. "Thu, Sep 3, 2026, 01:25 PM"
+ */
+export function formatDateTime(dateOrIsoStr) {
+  if (!dateOrIsoStr) return 'Sep 3, 2026, 01:25 PM';
+  try {
+    const d = new Date(dateOrIsoStr);
+    if (isNaN(d.getTime())) return String(dateOrIsoStr);
+    return d.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch (e) {
+    return String(dateOrIsoStr);
+  }
+}
