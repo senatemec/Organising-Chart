@@ -8,15 +8,34 @@ import {
   Calendar, 
   Wrench, 
   User, 
-  FileText,
-  AlertTriangle,
-  Sparkles,
-  Users,
-  Search,
-  DoorClosed,
-  Trash2
+  FileText, 
+  AlertTriangle, 
+  Sparkles, 
+  Search, 
+  DoorClosed, 
+  Trash2,
+  CalendarDays,
+  Tag
 } from 'lucide-react';
 import { formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
+
+function formatSubmittedAt(isoOrDateStr) {
+  if (!isoOrDateStr) return 'Recently';
+  try {
+    const d = new Date(isoOrDateStr);
+    if (isNaN(d.getTime())) return isoOrDateStr;
+    return d.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  } catch (e) {
+    return isoOrDateStr;
+  }
+}
 
 export default function AdminDashboard({ 
   bookings, 
@@ -36,7 +55,8 @@ export default function AdminDashboard({
     b.eventTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.organizer.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.venueName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.id.toLowerCase().includes(searchQuery.toLowerCase())
+    b.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (b.contactEmail && b.contactEmail.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleConfirmCancel = () => {
@@ -68,7 +88,7 @@ export default function AdminDashboard({
               </span>
             </div>
             <p className="text-xs text-slate-300 mt-0.5">
-              Govt. Model Engineering College • Bookings are auto-confirmed. Union Admin can revoke permits with a reason note.
+              Govt. Model Engineering College • Master booking oversight, revocation with mandatory reasons & facility maintenance.
             </p>
           </div>
         </div>
@@ -138,7 +158,7 @@ export default function AdminDashboard({
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search active bookings by title, society or venue..."
+              placeholder="Search active bookings by title, society, venue or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="input-field pl-9 py-2 text-xs"
@@ -152,49 +172,71 @@ export default function AdminDashboard({
                 className="glass-panel p-5 rounded-2xl border border-white/10 bg-slate-950 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-emerald-500/40 transition-all shadow-md"
               >
                 <div className="space-y-2.5 flex-1">
+                  
+                  {/* Top Header */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-bold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                    <span className="font-mono text-xs font-bold text-indigo-300 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">
                       {b.id}
                     </span>
                     <span className="badge badge-available">
-                      <CheckCircle2 className="w-3 h-3" /> Confirmed
-                    </span>
-                    <span className="badge bg-slate-900 text-slate-300 border border-white/10">
-                      {b.category}
+                      <CheckCircle2 className="w-3 h-3" /> Confirmed Permit
                     </span>
                   </div>
 
+                  {/* Event Title & Society */}
                   <div>
                     <h3 className="text-base font-bold text-white leading-snug">{b.eventTitle}</h3>
-                    <p className="text-xs text-indigo-300 font-semibold">{b.organizer} • <span className="text-slate-400 font-normal">{b.contactEmail}</span></p>
+                    <p className="text-xs text-indigo-300 font-semibold mt-0.5">
+                      {b.organizer} {b.contactEmail && <span className="text-slate-400 font-mono font-normal">({b.contactEmail})</span>}
+                    </p>
                   </div>
 
+                  {/* Scheduled Date/Time & Booking Submission Time */}
                   <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 pt-0.5">
+                    
+                    {/* Venue */}
                     <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-white/5">
                       <Building2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                       <span className="font-semibold text-white">
-                        {b.venueName} {b.roomNumber && `(${b.roomNumber})`}
+                        {b.venueName} {b.roomNumber && <span className="text-cyan-300 font-mono">({b.roomNumber})</span>}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-white/5 font-mono text-cyan-300">
+
+                    {/* Event Scheduled Date & Time */}
+                    <div className="flex items-center gap-1.5 bg-indigo-950/70 px-3 py-1.5 rounded-lg border border-indigo-500/30 font-mono text-cyan-300">
                       <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                      <span>{formatDateFriendly(b.date)} ({formatTime12H(b.startTime)} - {formatTime12H(b.endTime)})</span>
+                      <span>
+                        <strong className="text-white font-sans font-semibold">Event:</strong> {formatDateFriendly(b.date)} ({formatTime12H(b.startTime)} - {formatTime12H(b.endTime)})
+                      </span>
                     </div>
+
+                    {/* Booking Submission Timestamp */}
                     <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-white/5 text-slate-400">
-                      <Users className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                      <span>{b.expectedAttendees} Expected</span>
+                      <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>
+                        <strong className="text-slate-300">Booked On:</strong> {formatSubmittedAt(b.createdAt)}
+                      </span>
                     </div>
+
                   </div>
+
+                  {/* Description / Notes if available */}
+                  {b.description && (
+                    <p className="text-[11px] text-slate-400 italic bg-slate-900/40 p-2 rounded-lg border border-white/5">
+                      "{b.description}"
+                    </p>
+                  )}
+
                 </div>
 
                 {/* Union Admin Revoke Button */}
                 <div className="w-full md:w-auto border-t md:border-t-0 border-white/10 pt-3 md:pt-0">
                   <button
                     onClick={() => setCancelReasonModal(b)}
-                    className="btn-danger w-full md:w-auto text-xs justify-center py-2 px-3.5"
-                    title="Cancel this booking"
+                    className="btn-danger w-full md:w-auto text-xs justify-center py-2 px-4 shadow-red-500/20"
+                    title="Cancel this booking with reason"
                   >
-                    <XCircle className="w-4 h-4" /> Cancel Booking
+                    <XCircle className="w-4 h-4" /> Revoke Permit
                   </button>
                 </div>
               </div>
@@ -213,53 +255,79 @@ export default function AdminDashboard({
 
       {/* TAB 2: MASTER EVENT HISTORY */}
       {activeSubTab === 'all-history' && (
-        <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden shadow-xl">
+        <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden shadow-xl bg-slate-950">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-950 border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="p-3.5">Tracking ID & Category</th>
+                  <th className="p-3.5">Tracking ID</th>
                   <th className="p-3.5">Event Title & Society</th>
                   <th className="p-3.5">Target Venue & Room</th>
-                  <th className="p-3.5">Schedule</th>
+                  <th className="p-3.5">Event Schedule (Date & Time)</th>
+                  <th className="p-3.5">Booked On</th>
                   <th className="p-3.5">Status & Remarks</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {bookings.map((b) => (
                   <tr key={b.id} className="hover:bg-white/[0.02] transition-colors">
+                    
+                    {/* ID */}
                     <td className="p-3.5">
-                      <div className="font-mono font-bold text-indigo-300">{b.id}</div>
-                      <div className="text-[10px] text-slate-400">{b.category}</div>
+                      <div className="font-mono font-bold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 inline-block">
+                        {b.id}
+                      </div>
                     </td>
+
+                    {/* Title & Society */}
                     <td className="p-3.5">
                       <div className="font-bold text-white text-sm">{b.eventTitle}</div>
-                      <div className="text-slate-400 text-[11px]">{b.organizer}</div>
-                    </td>
-                    <td className="p-3.5 font-semibold text-slate-200">
-                      <div>{b.venueName}</div>
-                      {b.roomNumber && (
-                        <div className="text-cyan-400 font-mono text-[11px]">{b.roomNumber}</div>
+                      <div className="text-indigo-300 text-[11px] font-semibold">{b.organizer}</div>
+                      {b.contactEmail && (
+                        <div className="text-slate-400 text-[10px] font-mono">{b.contactEmail}</div>
                       )}
                     </td>
+
+                    {/* Venue & Room */}
+                    <td className="p-3.5 font-semibold text-slate-200">
+                      <div className="text-white font-medium">{b.venueName}</div>
+                      {b.roomNumber && (
+                        <div className="text-cyan-400 font-mono text-[11px]">Room: {b.roomNumber}</div>
+                      )}
+                    </td>
+
+                    {/* Event Schedule (Date & Time) */}
                     <td className="p-3.5 font-mono text-slate-300">
                       <div className="font-semibold text-cyan-300">{formatDateFriendly(b.date)}</div>
-                      <div className="text-[10px] text-slate-400">{formatTime12H(b.startTime)} - {formatTime12H(b.endTime)}</div>
+                      <div className="text-[11px] text-indigo-300 font-semibold">{formatTime12H(b.startTime)} - {formatTime12H(b.endTime)}</div>
                     </td>
+
+                    {/* Booked On (Creation Date & Time) */}
+                    <td className="p-3.5 text-slate-400">
+                      <div className="text-[11px] text-slate-300 font-medium">{formatSubmittedAt(b.createdAt)}</div>
+                      <div className="text-[10px] text-slate-500">Auto-Confirmed</div>
+                    </td>
+
+                    {/* Status & Remarks */}
                     <td className="p-3.5">
                       {b.status === 'confirmed' || b.status === 'approved' ? (
-                        <span className="badge badge-available">Confirmed</span>
+                        <span className="badge badge-available">
+                          <CheckCircle2 className="w-3 h-3" /> Confirmed
+                        </span>
                       ) : (
                         <div>
-                          <span className="badge badge-occupied">Cancelled</span>
+                          <span className="badge badge-occupied">
+                            <XCircle className="w-3 h-3" /> Revoked
+                          </span>
                           {b.cancellationReason && (
-                            <div className="text-[10px] text-rose-300 max-w-xs truncate mt-0.5" title={b.cancellationReason}>
-                              {b.cancellationReason}
+                            <div className="text-[10px] text-rose-300 max-w-xs truncate mt-1 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-500/20" title={b.cancellationReason}>
+                              "{b.cancellationReason}"
                             </div>
                           )}
                         </div>
                       )}
                     </td>
+
                   </tr>
                 ))}
               </tbody>
@@ -277,61 +345,86 @@ export default function AdminDashboard({
                 <img src={venue.image} alt={venue.name} className="w-14 h-14 rounded-xl object-cover border border-white/10" />
                 <div>
                   <h4 className="font-bold text-white text-sm">{venue.name}</h4>
-                  <div className="text-xs text-slate-400">{venue.location}</div>
-                  <div className="mt-1">
-                    {venue.status === 'Maintenance' ? (
-                      <span className="badge badge-maintenance">Under Maintenance</span>
-                    ) : (
-                      <span className="badge badge-available">Operational</span>
-                    )}
-                  </div>
+                  <div className="text-xs text-slate-400">{venue.location} • {venue.capacity} seats</div>
+                  <div className="text-[11px] font-mono text-cyan-400">{venue.type}</div>
                 </div>
               </div>
 
-              <button
-                onClick={() => onToggleVenueStatus(venue.id)}
-                className={`btn-secondary text-xs ${
-                  venue.status === 'Maintenance' 
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30' 
-                    : 'bg-rose-500/10 text-rose-300 border-rose-500/30 hover:bg-rose-500/20'
-                }`}
-              >
-                {venue.status === 'Maintenance' ? 'Set Operational' : 'Set Maintenance'}
-              </button>
+              <div className="flex items-center gap-3">
+                <span className={`badge ${venue.status === 'Available' ? 'badge-available' : 'badge-occupied'}`}>
+                  {venue.status}
+                </span>
+                <button
+                  onClick={() => onToggleVenueStatus(venue.id)}
+                  className={`btn-secondary text-xs py-1.5 px-3 font-semibold ${
+                    venue.status === 'Maintenance' 
+                      ? 'border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/10' 
+                      : 'border-rose-500/50 text-rose-300 hover:bg-rose-500/10'
+                  }`}
+                >
+                  {venue.status === 'Maintenance' ? 'Set Available' : 'Set Maintenance'}
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* ADMIN CANCEL MODAL WITH REASON */}
+      {/* MANDATORY CANCELLATION REASON MODAL */}
       {cancelReasonModal && (
         <div className="modal-overlay animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setCancelReasonModal(null); }}>
-          <div className="glass-panel w-full max-w-md p-6 rounded-2xl border border-rose-500/30 bg-slate-950 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-2 text-rose-400">
-              <AlertTriangle className="w-5 h-5" />
-              <h3 className="text-base font-bold text-white">Cancel Booking (Admin Override)</h3>
+          <div className="glass-panel w-full max-w-md rounded-3xl border border-rose-500/40 p-6 relative bg-slate-950 shadow-2xl space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-white">Revoke Booking Permit</h3>
+                <p className="text-xs text-slate-400">
+                  {cancelReasonModal.id} • {cancelReasonModal.venueName}
+                </p>
+              </div>
             </div>
-            
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Cancel booking <span className="text-indigo-300 font-mono font-bold">{cancelReasonModal.id}</span> for{' '}
-              <strong className="text-white">"{cancelReasonModal.eventTitle}"</strong>. Please specify the reason message.
-            </p>
 
-            <textarea
-              rows={3}
-              value={reasonText}
-              onChange={(e) => setReasonText(e.target.value)}
-              placeholder="e.g. Venue required for University Inspection / Maintenance emergency."
-              className="input-field border-rose-500/30 focus:border-rose-500 text-xs"
-              required
-            />
+            <div className="bg-slate-900 p-3 rounded-xl border border-white/10 space-y-1 text-xs">
+              <div className="font-bold text-white">{cancelReasonModal.eventTitle}</div>
+              <div className="text-slate-400">{cancelReasonModal.organizer}</div>
+              <div className="font-mono text-cyan-300 text-[11px]">
+                {formatDateFriendly(cancelReasonModal.date)} ({formatTime12H(cancelReasonModal.startTime)} - {formatTime12H(cancelReasonModal.endTime)})
+              </div>
+            </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setCancelReasonModal(null)} className="btn-secondary text-xs">
-                Keep Booking
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-rose-400" />
+                <span>Administrative Reason for Revocation:</span>
+              </label>
+              <textarea
+                rows="3"
+                value={reasonText}
+                onChange={(e) => setReasonText(e.target.value)}
+                placeholder="e.g. Venue required for official Institute Senate Meeting / Principal Address."
+                className="input-field text-xs w-full resize-none"
+              />
+              <p className="text-[11px] text-slate-500">
+                This notice will appear on the society's booking permit and release the slot.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setCancelReasonModal(null)}
+                className="btn-secondary text-xs py-2 px-4"
+              >
+                Go Back
               </button>
-              <button onClick={handleConfirmCancel} className="btn-danger text-xs py-2 px-4 shadow-rose-500/20">
-                Cancel Booking
+              <button
+                type="button"
+                onClick={handleConfirmCancel}
+                className="btn-danger text-xs py-2 px-5 font-bold"
+              >
+                Confirm Revocation
               </button>
             </div>
           </div>

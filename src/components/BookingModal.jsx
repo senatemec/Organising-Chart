@@ -107,7 +107,7 @@ export default function BookingModal({
       approvedBy: 'Auto-Confirmed',
       description: description.trim(),
       contactEmail: initialEmail || '',
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: new Date().toISOString()
     };
 
     onSubmitBooking(newBooking);
