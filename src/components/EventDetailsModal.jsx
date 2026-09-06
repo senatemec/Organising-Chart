@@ -14,7 +14,7 @@ import {
   AlertTriangle,
   Sparkles
 } from 'lucide-react';
-import { formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
+import { formatDateFriendly, formatTime12H, formatDateTime } from '../utils/availabilityUtils';
 
 export default function EventDetailsModal({ 
   event, 
