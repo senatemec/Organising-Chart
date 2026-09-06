@@ -308,7 +308,7 @@ export default function BookingModal({
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{color:'#9CA3AF'}} />
                 <input
                   type="text"
-                  placeholder="Search or select organizing body (e.g. EMF, FOSS, IEDC, NSS)..."
+                  placeholder="Search or select organizing body (e.g. Union, Principal, IEDC, EMF)..."
                   value={organizerSearch}
                   onFocus={() => setIsOrgDropdownOpen(true)}
                   onChange={(e) => {

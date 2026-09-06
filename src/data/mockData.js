@@ -173,6 +173,8 @@ export const initialVenues = [
 export const initialBookings = [];
 
 export const studentSocieties = [
+  'Union',
+  'Principal',
   'EMF',
   'TLE MEC',
   'IEDC',
