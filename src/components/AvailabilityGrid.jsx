@@ -566,7 +566,7 @@ export default function AvailabilityGrid({
                           {venue.name}
                         </div>
                         <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                          <span>{venue.type}</span> • <span className="text-indigo-400 font-semibold">{venue.capacity} seats</span>
+                          <span>{venue.type}</span> • <span className="text-indigo-400 font-semibold">{venue.capacity === 'NA' ? 'NA' : `${venue.capacity} seats`}</span>
                         </div>
                       </td>
 

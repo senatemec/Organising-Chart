@@ -68,7 +68,7 @@ export default function VenueDetailsModal({ venue, onClose, onBookClick, booking
               <span className="text-slate-400 flex items-center gap-1.5 font-medium">
                 <Users className="w-4 h-4 text-indigo-400" /> Seating Capacity
               </span>
-              <span className="font-bold text-white font-mono">{venue.capacity} Persons</span>
+              <span className="font-bold text-white font-mono">{venue.capacity === 'NA' ? 'NA' : `${venue.capacity} Persons`}</span>
             </div>
 
             <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/80 border border-white/10 text-xs">

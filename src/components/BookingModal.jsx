@@ -166,7 +166,7 @@ export default function BookingModal({
               >
                 {venues.map((v) => (
                   <option key={v.id} value={v.id} disabled={v.status === 'Maintenance'} className="bg-slate-900 text-white">
-                    {v.name} ({v.type} - Max {v.capacity} seats) {v.status === 'Maintenance' ? '[MAINTENANCE]' : ''}
+                    {v.name} ({v.type}{v.capacity && v.capacity !== 'NA' ? ` - Max ${v.capacity} seats` : ''}) {v.status === 'Maintenance' ? '[MAINTENANCE]' : ''}
                   </option>
                 ))}
               </select>

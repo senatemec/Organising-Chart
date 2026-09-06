@@ -128,7 +128,7 @@ export default function EventDetailsModal({
                 <span>Division:</span>
               </span>
               <span className="text-slate-200 font-medium">
-                {venue.type} • Capacity {venue.capacity}
+                {venue.type} • Capacity {venue.capacity === 'NA' ? 'NA' : venue.capacity}
               </span>
             </div>
           )}

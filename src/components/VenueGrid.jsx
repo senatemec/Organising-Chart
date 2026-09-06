@@ -41,7 +41,7 @@ export default function VenueGrid({ venues, onBookClick, onViewDetails, onSchedu
       venue.type.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesType = selectedType === 'All' || venue.type === selectedType;
-    const matchesCapacity = venue.capacity >= minCapacity;
+    const matchesCapacity = minCapacity === 0 || (!isNaN(Number(venue.capacity)) && Number(venue.capacity) >= minCapacity);
 
     return matchesSearch && matchesType && matchesCapacity;
   });
@@ -239,7 +239,7 @@ export default function VenueGrid({ venues, onBookClick, onViewDetails, onSchedu
                           </span>
                         </td>
                         <td className="p-3.5 font-bold text-white font-mono">
-                          {venue.capacity} seats
+                          {venue.capacity === 'NA' ? 'NA' : `${venue.capacity} seats`}
                         </td>
                         <td className="p-3.5">
                           {venue.status === 'Available' ? (

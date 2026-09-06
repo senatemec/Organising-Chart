@@ -92,7 +92,7 @@ export default function VenueCard({ venue, onBookClick, onViewDetails }) {
           <div className="flex items-center justify-between text-xs bg-slate-900/80 p-2.5 rounded-xl border border-white/5">
             <div className="flex items-center gap-2 text-slate-300">
               <Users className="w-4 h-4 text-indigo-400 shrink-0" />
-              <span>Capacity: <strong className="text-white">{venue.capacity}</strong> Seats</span>
+              <span>Capacity: <strong className="text-white">{venue.capacity}</strong>{venue.capacity === 'NA' ? '' : ' Seats'}</span>
             </div>
             <span className="badge-tag bg-slate-800 text-slate-300 text-[10px]">
               {venue.type}

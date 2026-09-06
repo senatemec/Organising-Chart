@@ -590,7 +590,7 @@ export default function AdminDashboard({
                 <img src={venue.image} alt={venue.name} className="w-14 h-14 rounded-xl object-cover border border-white/10" />
                 <div>
                   <h4 className="font-bold text-white text-sm">{venue.name}</h4>
-                  <div className="text-xs text-slate-400">{venue.location} • {venue.capacity} seats</div>
+                  <div className="text-xs text-slate-400">{venue.location} • {venue.capacity === 'NA' ? 'NA' : `${venue.capacity} seats`}</div>
                   <div className="text-[11px] font-mono text-cyan-400">{venue.type}</div>
                 </div>
               </div>
