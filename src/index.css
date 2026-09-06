@@ -379,6 +379,7 @@ button {
 
 select.input-field {
   cursor: pointer;
+  padding-right: 2.25rem;
 }
 
 /* ==========================================================================

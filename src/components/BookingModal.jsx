@@ -42,7 +42,7 @@ export default function BookingModal({
   const [eventTitle, setEventTitle] = useState('');
   
   // Organizing Body Combobox State
-  const defaultOrg = studentSocieties.includes(initialOrganizer) ? initialOrganizer : studentSocieties[0];
+  const defaultOrg = studentSocieties.includes(initialOrganizer) ? initialOrganizer : '';
   const [organizer, setOrganizer] = useState(defaultOrg);
   const [organizerSearch, setOrganizerSearch] = useState(defaultOrg);
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
@@ -99,7 +99,7 @@ export default function BookingModal({
       venueName: selectedVenue ? selectedVenue.name : '',
       roomNumber: isClassroom ? roomNumber.trim() : null,
       eventTitle: eventTitle.trim(),
-      organizer: organizer || studentSocieties[0],
+      organizer: organizer.trim() || organizerSearch.trim() || 'College Student Body',
       date,
       startTime,
       endTime,
@@ -159,18 +159,21 @@ export default function BookingModal({
               <label className="block text-xs font-semibold mb-1.5" style={{color:'#374151'}}>
                 Target Campus Venue *
               </label>
-              <select
-                value={venueId}
-                onChange={(e) => setVenueId(e.target.value)}
-                className="input-field"
-                style={{color:'#111827'}}
-              >
-                {venues.map((v) => (
-                  <option key={v.id} value={v.id} disabled={v.status === 'Maintenance'}>
-                    {v.name} ({v.type}{v.capacity && v.capacity !== 'NA' ? ` - Max ${v.capacity} seats` : ''}) {v.status === 'Maintenance' ? '[MAINTENANCE]' : ''}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={venueId}
+                  onChange={(e) => setVenueId(e.target.value)}
+                  className="input-field pr-10 text-xs font-semibold appearance-none bg-white cursor-pointer"
+                  style={{color:'#111827'}}
+                >
+                  {venues.map((v) => (
+                    <option key={v.id} value={v.id} disabled={v.status === 'Maintenance'}>
+                      {v.name} ({v.type}{v.capacity && v.capacity !== 'NA' ? ` - Max ${v.capacity} seats` : ''}) {v.status === 'Maintenance' ? '[MAINTENANCE]' : ''}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
 
             {/* Extra Room Number Field for Classrooms */}
@@ -284,10 +287,10 @@ export default function BookingModal({
               </label>
               <input
                 type="text"
-                placeholder="e.g. Annual Technical Quiz & Coding Sprint"
+                placeholder="Enter event name or title..."
                 value={eventTitle}
                 onChange={(e) => setEventTitle(e.target.value)}
-                className="input-field text-xs"
+                className="input-field text-xs font-medium"
                 style={{color:'#111827'}}
                 required
                 autoFocus
@@ -297,7 +300,7 @@ export default function BookingModal({
             {/* Searchable Organizing Body Dropdown Combobox */}
             <div className="space-y-1.5 relative" ref={orgDropdownRef}>
               <label className="block text-xs font-semibold" style={{color:'#374151'}}>
-                Organizing Body / Society *
+                Organizing Body *
               </label>
               
               {/* Typeahead Search Input */}
@@ -305,20 +308,21 @@ export default function BookingModal({
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{color:'#9CA3AF'}} />
                 <input
                   type="text"
-                  placeholder="Start typing to search organizing body (e.g. EMF, FOSS, IEDC, NSS)..."
+                  placeholder="Search or select organizing body (e.g. EMF, FOSS, IEDC, NSS)..."
                   value={organizerSearch}
                   onFocus={() => setIsOrgDropdownOpen(true)}
                   onChange={(e) => {
                     setOrganizerSearch(e.target.value);
+                    setOrganizer(e.target.value);
                     setIsOrgDropdownOpen(true);
                   }}
-                  className="input-field pl-9 pr-16 text-xs font-semibold cursor-pointer"
+                  className="input-field pl-9 pr-14 text-xs font-semibold cursor-pointer"
                   style={{color:'#111827'}}
                   required
                 />
 
                 {/* Right Action: Clear / Chevron Toggle */}
-                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-white pl-1">
                   {organizerSearch && (
                     <button
                       type="button"
@@ -327,19 +331,19 @@ export default function BookingModal({
                         setOrganizer('');
                         setIsOrgDropdownOpen(true);
                       }}
-                      className="p-1 rounded hover:bg-gray-100"
-                      style={{color:'#6B7280'}}
+                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
+                      title="Clear selection"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
-                    className="p-1 rounded hover:bg-gray-100"
-                    style={{color:'#6B7280'}}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
+                    title="Toggle options"
                   >
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOrgDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOrgDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                 </div>
               </div>
@@ -355,11 +359,11 @@ export default function BookingModal({
                           key={soc}
                           type="button"
                           onClick={() => handleSelectSociety(soc)}
-                          className={`w-full text-left px-3.5 py-2.5 text-xs flex items-center justify-between transition-colors`}
-                          style={isSelected
-                            ? { background:'#B91C1C', color:'#FFFFFF', fontWeight:'bold' }
-                            : { color:'#1F2937' }
-                          }
+                          className={`w-full text-left px-3.5 py-2.5 text-xs flex items-center justify-between transition-colors ${
+                            isSelected
+                              ? 'bg-red-700 text-white font-bold'
+                              : 'text-gray-800 hover:bg-red-50 hover:text-red-700 font-medium'
+                          }`}
                         >
                           <span>{soc}</span>
                           {isSelected && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
@@ -367,7 +371,7 @@ export default function BookingModal({
                       );
                     })
                   ) : (
-                    <div className="p-3 text-center text-xs italic" style={{color:'#6B7280'}}>
+                    <div className="p-3 text-center text-xs italic text-gray-500">
                       No matching organizing body found.
                     </div>
                   )}
