@@ -895,11 +895,10 @@ select.input-field {
 .shadow-indigo-600\/30 { box-shadow: 0 4px 18px rgba(220,38,38,0.28); }
 
 /* Misc useful combos */
-.bg-\[\\#0E1422\]\/90 { background-color: rgba(255,255,255,0.95); }
-.border-indigo-500\\/60 { border-color: rgba(239,68,68,0.6); }
-.border-emerald-500\\/60 { border-color: rgba(16,185,129,0.6); }
-.border-rose-500\\/60    { border-color: rgba(244,63,94,0.6); }
-.border-indigo-500\\/60  { border-color: rgba(239,68,68,0.6); }
+.bg-\[\#0E1422\]\/90 { background-color: rgba(255,255,255,0.95); }
+.border-indigo-500\/60 { border-color: rgba(239,68,68,0.6); }
+.border-emerald-500\/60 { border-color: rgba(16,185,129,0.6); }
+.border-rose-500\/60    { border-color: rgba(244,63,94,0.6); }
 .text-indigo-300 { color: #DC2626; }
 
 /* Extra needed utility classes */

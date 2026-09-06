@@ -349,10 +349,10 @@ export default function App() {
         <div className="fixed bottom-6 right-6 z-[2000] animate-fade-in">
           <div className={`px-4 py-3 rounded-2xl border flex items-center gap-3 text-xs font-semibold shadow-2xl backdrop-blur-md ${
             toast.type === 'error' 
-              ? 'bg-white border-red-500\/60 text-red-700' 
+              ? 'bg-white border-red-500/60 text-red-700' 
               : toast.type === 'info'
               ? 'bg-white border-gray-300 text-gray-700'
-              : 'bg-white border-emerald-500\/60 text-emerald-700'
+              : 'bg-white border-emerald-500/60 text-emerald-700'
           }`}>
             {toast.type === 'error' ? (
               <XCircle className="w-4 h-4 shrink-0" style={{color:'#DC2626'}} />
