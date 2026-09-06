@@ -342,24 +342,24 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080C15] text-slate-100 flex flex-col justify-between">
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col justify-between">
       
       {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-[2000] animate-fade-in">
           <div className={`px-4 py-3 rounded-2xl border flex items-center gap-3 text-xs font-semibold shadow-2xl backdrop-blur-md ${
             toast.type === 'error' 
-              ? 'bg-rose-950/90 border-rose-500/60 text-rose-200' 
+              ? 'bg-white border-red-500\/60 text-red-700' 
               : toast.type === 'info'
-              ? 'bg-indigo-950/90 border-indigo-500/60 text-indigo-200'
-              : 'bg-emerald-950/90 border-emerald-500/60 text-emerald-200'
+              ? 'bg-white border-gray-300 text-gray-700'
+              : 'bg-white border-emerald-500\/60 text-emerald-700'
           }`}>
             {toast.type === 'error' ? (
-              <XCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <XCircle className="w-4 h-4 shrink-0" style={{color:'#DC2626'}} />
             ) : toast.type === 'info' ? (
-              <Info className="w-4 h-4 shrink-0 text-indigo-400" />
+              <Info className="w-4 h-4 shrink-0" style={{color:'#6B7280'}} />
             ) : (
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 shrink-0" style={{color:'#10B981'}} />
             )}
             <span>{toast.message}</span>
           </div>
@@ -477,29 +477,29 @@ export default function App() {
       )}
 
       {/* Footer with Database Status Indicator */}
-      <footer className="border-t border-white/10 py-6 bg-[#070A12] text-xs text-slate-500">
+      <footer className="border-t border-gray-100 py-6 bg-white text-xs text-gray-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-lg border border-white/10">
+            <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-lg border border-gray-200">
               <img src="/mec_college_logo.png" alt="MEC" className="w-5 h-5 object-contain bg-white rounded p-0.5" />
               <img src="/union_mec_logo.png" alt="Union MEC" className="w-5 h-5 object-contain bg-white rounded p-0.5" />
             </div>
-            <div className="text-slate-400 text-left">
-              © 2026 <strong className="text-white">Govt. Model Engineering College</strong> • Managed by <strong className="text-red-400">Union MEC</strong>
+            <div className="text-gray-500 text-left">
+              © 2026 <strong className="text-gray-800">Govt. Model Engineering College</strong> • Managed by <strong style={{color:'#DC2626'}}>Union MEC</strong>
             </div>
           </div>
 
           {/* Cloud Sync Status */}
-          <div className="flex items-center gap-2 text-[11px] bg-slate-900/80 px-3 py-1 rounded-full border border-white/10">
+          <div className="flex items-center gap-2 text-[11px] bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
             {isFirebaseConfigured ? (
               <>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-emerald-300 font-medium">Cloud Database Connected (Live Sync)</span>
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{backgroundColor:'#10B981'}} />
+                <span className="font-medium" style={{color:'#059669'}}>Cloud Database Connected (Live Sync)</span>
               </>
             ) : (
               <>
-                <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                <span className="text-slate-400">Local Cache Mode (Ready for Cloud Sync)</span>
+                <span className="w-2 h-2 rounded-full" style={{backgroundColor:'#6B7280'}} />
+                <span className="text-gray-500">Local Cache Mode (Ready for Cloud Sync)</span>
               </>
             )}
           </div>

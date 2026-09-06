@@ -5,10 +5,7 @@ import {
   Ticket, 
   ShieldCheck, 
   Plus,
-  Sparkles,
-  LogIn,
   LogOut,
-  User,
   UserCheck
 } from 'lucide-react';
 
@@ -20,14 +17,12 @@ export default function Navbar({
   onLogout,
   onNewBookingClick 
 }) {
-  // Base navigation items available to regular users and guests
   const baseNavItems = [
     { id: 'venues', label: 'Venues', icon: Building2 },
     { id: 'availability', label: 'Live Schedule Matrix', icon: CalendarDays },
     { id: 'my-bookings', label: 'My Bookings', icon: Ticket },
   ];
 
-  // Admin tabs are strictly and exclusively rendered if logged in as Union Admin
   const navItems = currentUser?.isUnionAdmin
     ? [
         ...baseNavItems,
@@ -37,45 +32,55 @@ export default function Navbar({
     : baseNavItems;
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0B101D]/90 backdrop-blur-md border-b border-white/10 px-4 lg:px-8 py-2.5 mb-6 shadow-md">
+    <header className="sticky top-0 z-50 backdrop-blur-md border-b px-4 lg:px-8 py-2.5 mb-6 shadow-sm"
+      style={{
+        background: 'rgba(255,255,255,0.97)',
+        borderColor: '#E5E7EB',
+        boxShadow: '0 1px 12px rgba(0,0,0,0.07)'
+      }}
+    >
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         
-        {/* Left: Brand Identity with MEC & Union MEC Logos */}
+        {/* Left: Brand Identity */}
         <div 
           onClick={() => setActiveTab('venues')} 
           className="flex items-center gap-3 cursor-pointer group select-none shrink-0"
         >
-          {/* Official Logos Group */}
-          <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10 group-hover:border-indigo-500/40 transition-colors">
+          {/* Official Logos */}
+          <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-200 group-hover:border-red-200 transition-colors">
             <img 
               src="/mec_college_logo.png" 
               alt="Govt. Model Engineering College" 
-              className="w-8 h-8 object-contain rounded-lg bg-white/95 p-0.5" 
+              className="w-8 h-8 object-contain rounded-lg bg-white p-0.5" 
             />
             <img 
               src="/union_mec_logo.png" 
               alt="Union MEC" 
-              className="w-8 h-8 object-contain rounded-lg bg-white/95 p-0.5" 
+              className="w-8 h-8 object-contain rounded-lg bg-white p-0.5" 
             />
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base text-white tracking-tight group-hover:text-indigo-300 transition-colors">
+              <span className="font-extrabold text-base tracking-tight transition-colors"
+                style={{color:'#000000'}}
+              >
                 Organizing Chart
               </span>
-              <span className="text-[10px] font-bold text-red-300 bg-red-500/20 px-2 py-0.5 rounded-full border border-red-500/40 tracking-wider">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border tracking-wider"
+                style={{color:'#7F1D1D', background:'#FEE2E2', borderColor:'#FCA5A5'}}
+              >
                 UNION MEC
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
+            <p className="text-[10px] font-medium hidden sm:block" style={{color:'#555555'}}>
               Govt. Model Engineering College
             </p>
           </div>
         </div>
 
         {/* Center: Segmented Navigation */}
-        <nav className="hidden md:flex items-center bg-slate-950/80 p-1 rounded-xl border border-white/10 shadow-inner">
+        <nav className="hidden md:flex items-center bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-inner">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -83,20 +88,28 @@ export default function Navbar({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all ${
-                  isActive
-                    ? item.isSpecialAdmin
-                      ? 'bg-red-600 text-white shadow-md shadow-red-600/30'
-                      : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                    : item.isSpecialAdmin
-                    ? 'text-red-300 hover:text-white hover:bg-red-500/10'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-white/[0.04]'
-                }`}
+                className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all`}
+                style={isActive
+                  ? {
+                      background: '#B91C1C',
+                      color: '#FFFFFF',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.18)'
+                    }
+                  : {
+                      color: item.isSpecialAdmin ? '#7F1D1D' : '#000000',
+                      background: 'transparent'
+                    }
+                }
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : item.isSpecialAdmin ? 'text-red-400' : 'text-slate-400'}`} />
+                <Icon className="w-3.5 h-3.5" style={{color: isActive ? '#fff' : item.isSpecialAdmin ? '#EF4444' : '#9CA3AF'}} />
                 <span>{item.label}</span>
                 {item.isSpecialAdmin && (
-                  <span className="text-[9px] bg-red-500/30 text-red-200 px-1.5 py-0.2 rounded font-bold border border-red-500/40">
+                  <span className="text-[9px] px-1.5 rounded font-bold border"
+                    style={isActive
+                      ? {background:'rgba(255,255,255,0.2)', color:'#fff', borderColor:'rgba(255,255,255,0.3)'}
+                      : {background:'#FEE2E2', color:'#7F1D1D', borderColor:'#FCA5A5'}
+                    }
+                  >
                     ADMIN
                   </span>
                 )}
@@ -105,16 +118,16 @@ export default function Navbar({
           })}
         </nav>
 
-        {/* Right: Auth Profile / Google Sign In & Book CTA */}
+        {/* Right: Auth + CTA */}
         <div className="flex items-center gap-3 shrink-0">
           
-          {/* User Account / Google Sign In Status */}
           {currentUser ? (
-            <div className="flex items-center gap-2.5 bg-slate-950/90 border border-white/10 p-1 pr-2.5 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 p-1 pr-2.5 rounded-2xl shadow-xs">
               <div 
                 className={`w-7 h-7 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border ${
-                  currentUser.isUnionAdmin ? 'border-red-500/50 bg-white p-0.5' : 'border-indigo-500/40 bg-slate-900'
+                  currentUser.isUnionAdmin ? 'bg-white p-0.5' : 'bg-white'
                 }`}
+                style={{borderColor: currentUser.isUnionAdmin ? '#FCA5A5' : '#E5E7EB'}}
               >
                 <img 
                   src={currentUser.avatar} 
@@ -123,21 +136,26 @@ export default function Navbar({
                 />
               </div>
               <div className="hidden sm:block text-left text-xs">
-                <div className="font-bold text-white leading-tight flex items-center gap-1.5">
+                <div className="font-bold leading-tight flex items-center gap-1.5" style={{color:'#000000'}}>
                   <span className="truncate max-w-[110px]">{currentUser.name}</span>
                   {currentUser.isUnionAdmin && (
-                    <span className="text-[9px] bg-red-500/20 text-red-300 px-1.5 py-0.2 rounded font-bold border border-red-500/40">
+                    <span className="text-[9px] px-1.5 rounded font-bold border"
+                      style={{background:'#FEE2E2', color:'#7F1D1D', borderColor:'#FCA5A5'}}
+                    >
                       UNION
                     </span>
                   )}
                 </div>
-                <div className="text-[10px] text-slate-400 truncate max-w-[110px] font-mono">
+                <div className="text-[10px] truncate max-w-[110px] font-mono" style={{color:'#555555'}}>
                   {currentUser.email}
                 </div>
               </div>
               <button
                 onClick={onLogout}
-                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-white/5 rounded-lg transition-colors ml-1"
+                className="p-1 rounded-lg transition-colors ml-1"
+                style={{color:'#9CA3AF'}}
+                onMouseEnter={e => e.currentTarget.style.color='#DC2626'}
+                onMouseLeave={e => e.currentTarget.style.color='#9CA3AF'}
                 title="Sign Out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -146,7 +164,7 @@ export default function Navbar({
           ) : (
             <button
               onClick={() => onOpenLoginModal('Sign in with your Google account to access bookings and Union admin portal')}
-              className="btn-secondary text-xs py-1.5 px-3 bg-slate-900 border-white/10 hover:border-white/30"
+              className="btn-secondary text-xs py-1.5 px-3"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
@@ -158,10 +176,10 @@ export default function Navbar({
             </button>
           )}
 
-          {/* Book Venue CTA Button */}
+          {/* Book Venue CTA */}
           <button
             onClick={onNewBookingClick}
-            className="btn-primary text-xs py-2 px-4 shadow-indigo-500/30 whitespace-nowrap flex items-center gap-1.5"
+            className="btn-primary text-xs py-2 px-4 whitespace-nowrap flex items-center gap-1.5"
           >
             <Plus className="w-3.5 h-3.5 shrink-0" /> 
             <span>Book Venue</span>
@@ -170,8 +188,8 @@ export default function Navbar({
 
       </div>
 
-      {/* Mobile Sub-Navigation Bar */}
-      <div className="md:hidden flex items-center justify-between pt-2.5 mt-2.5 border-t border-white/10 overflow-x-auto gap-1">
+      {/* Mobile Sub-Navigation */}
+      <div className="md:hidden flex items-center justify-between pt-2.5 mt-2.5 border-t border-gray-100 overflow-x-auto gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -179,13 +197,11 @@ export default function Navbar({
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap ${
-                isActive 
-                  ? item.isSpecialAdmin
-                    ? 'bg-red-600 text-white shadow-sm'
-                    : 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all`}
+              style={isActive
+                ? { background: '#B91C1C', color: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }
+                : { color: item.isSpecialAdmin ? '#7F1D1D' : '#000000', background: 'transparent' }
+              }
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{item.label}</span>

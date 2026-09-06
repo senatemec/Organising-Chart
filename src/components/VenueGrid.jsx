@@ -83,16 +83,19 @@ export default function VenueGrid({ venues, onBookClick, onViewDetails, onSchedu
               <button
                 key={cat.id}
                 onClick={() => setSelectedType(cat.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
-                  isActive
-                    ? 'bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-600/30'
-                    : 'bg-slate-900/80 text-slate-400 border-white/10 hover:text-slate-200 hover:bg-slate-800'
-                }`}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border`}
+                style={isActive
+                  ? { background:'#B91C1C', color:'#FFFFFF', borderColor:'#7F1D1D', boxShadow:'0 1px 4px rgba(0,0,0,0.15)' }
+                  : { background:'#FFFFFF', color:'#000000', borderColor:'#E5E7EB' }
+                }
               >
                 <span>{cat.label}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                  isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
-                }`}>
+                <span className={`px-1.5 rounded-full text-[10px] font-bold`}
+                  style={isActive
+                    ? { background:'rgba(255,255,255,0.25)', color:'#fff' }
+                    : { background:'#F3F4F6', color:'#6B7280' }
+                  }
+                >
                   {count}
                 </span>
               </button>
@@ -101,19 +104,20 @@ export default function VenueGrid({ venues, onBookClick, onViewDetails, onSchedu
         </div>
 
         {/* Toolbar Header Card */}
-        <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-white/10">
+        <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4" style={{border:'1px solid #E5E7EB'}}>
           
           {/* Section Summary */}
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
-              <Building2 className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{background:'#FEE2E2', border:'1px solid #FCA5A5'}}>
+              <Building2 className="w-5 h-5" style={{color:'#DC2626'}} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white tracking-tight">
-                Campus Venues & Facilities
+              <h2 className="text-base font-bold tracking-tight" style={{color:'#000000'}}>
+                Campus Venues &amp; Facilities
               </h2>
-              <p className="text-xs text-slate-400">
-                Displaying <strong>{filteredVenues.length}</strong> of {venues.length} locations
+              <p className="text-xs" style={{color:'#555555'}}>
+                Displaying <strong style={{color:'#000000'}}>{filteredVenues.length}</strong> of {venues.length} locations
               </p>
             </div>
           </div>
@@ -123,7 +127,7 @@ export default function VenueGrid({ venues, onBookClick, onViewDetails, onSchedu
             
             {/* Search Input Box */}
             <div className="relative flex-1 sm:w-64">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style={{color:'#9CA3AF'}} />
               <input
                 type="text"
                 placeholder="Search Casa, Elga, Ground, CL2, Classrooms..."
@@ -134,7 +138,8 @@ export default function VenueGrid({ venues, onBookClick, onViewDetails, onSchedu
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2"
+                  style={{color:'#9CA3AF'}}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -142,41 +147,43 @@ export default function VenueGrid({ venues, onBookClick, onViewDetails, onSchedu
             </div>
 
             {/* Capacity Dropdown */}
-            <div className="flex items-center gap-1.5 bg-slate-900/90 px-3 py-2 rounded-xl border border-white/10 text-xs">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs"
+              style={{background:'#F9FAFB', borderColor:'#E5E7EB'}}>
+              <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" style={{color:'#DC2626'}} />
               <select
                 value={minCapacity}
                 onChange={(e) => setMinCapacity(Number(e.target.value))}
-                className="bg-transparent text-slate-200 focus:outline-none font-medium cursor-pointer text-xs"
+                className="bg-transparent focus:outline-none font-medium cursor-pointer text-xs"
+                style={{color:'#374151'}}
               >
-                <option value={0} className="bg-slate-900 text-white">Capacity: Any</option>
-                <option value={75} className="bg-slate-900 text-white">75+ seats</option>
-                <option value={150} className="bg-slate-900 text-white">150+ seats</option>
-                <option value={500} className="bg-slate-900 text-white">500+ seats</option>
-                <option value={1000} className="bg-slate-900 text-white">1000+ seats</option>
+                <option value={0}>Capacity: Any</option>
+                <option value={75}>75+ seats</option>
+                <option value={150}>150+ seats</option>
+                <option value={500}>500+ seats</option>
+                <option value={1000}>1000+ seats</option>
               </select>
             </div>
 
-            {/* View Mode Toggle (Grid vs Table List) */}
-            <div className="hidden sm:flex items-center bg-slate-950 p-1 rounded-xl border border-white/10">
+            {/* View Mode Toggle */}
+            <div className="hidden sm:flex items-center p-1 rounded-xl border" style={{background:'#F3F4F6', borderColor:'#E5E7EB'}}>
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  viewMode === 'grid' 
-                    ? 'bg-indigo-600 text-white shadow-sm' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`p-1.5 rounded-lg transition-colors`}
+                style={viewMode === 'grid'
+                  ? { background:'#B91C1C', color:'#fff', boxShadow:'0 1px 3px rgba(0,0,0,0.15)' }
+                  : { color:'#555555' }
+                }
                 title="Grid View"
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  viewMode === 'list' 
-                    ? 'bg-indigo-600 text-white shadow-sm' 
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`p-1.5 rounded-lg transition-colors`}
+                style={viewMode === 'list'
+                  ? { background:'#B91C1C', color:'#fff', boxShadow:'0 1px 3px rgba(0,0,0,0.15)' }
+                  : { color:'#555555' }
+                }
                 title="Dense List View"
               >
                 <List className="w-4 h-4" />
@@ -201,89 +208,76 @@ export default function VenueGrid({ venues, onBookClick, onViewDetails, onSchedu
               ))}
             </div>
           ) : (
-            /* Dense Table / List View */
-            <div className="glass-panel rounded-2xl border border-white/10 overflow-hidden shadow-xl">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-slate-950 border-b border-white/10 text-slate-400 font-bold uppercase tracking-wider">
-                      <th className="p-3.5">Venue & Location</th>
-                      <th className="p-3.5">Division</th>
-                      <th className="p-3.5">Capacity</th>
-                      <th className="p-3.5">Status</th>
-                      <th className="p-3.5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {filteredVenues.map((venue) => (
-                      <tr key={venue.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="p-3.5">
-                          <div className="flex items-center gap-3">
-                            <img 
-                              src={venue.image} 
-                              alt={venue.name} 
-                              className="w-12 h-12 rounded-xl object-cover border border-white/10 shrink-0" 
-                            />
-                            <div>
-                              <div className="font-bold text-white text-sm">{venue.name}</div>
-                              <div className="text-slate-400 flex items-center gap-1 mt-0.5">
-                                <MapPin className="w-3 h-3 text-cyan-400" />
-                                <span>{venue.location}</span>
-                              </div>
+          /* Dense Table/List View */
+          <div className="glass-panel rounded-2xl border overflow-hidden shadow-md" style={{borderColor:'#E5E7EB'}}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b font-bold uppercase tracking-wider" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#9CA3AF'}}>
+                    <th className="p-3.5">Venue &amp; Location</th>
+                    <th className="p-3.5">Division</th>
+                    <th className="p-3.5">Capacity</th>
+                    <th className="p-3.5">Status</th>
+                    <th className="p-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredVenues.map((venue) => (
+                    <tr key={venue.id} className="border-b transition-colors hover:bg-gray-50" style={{borderColor:'#F3F4F6'}}>
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={venue.image} 
+                            alt={venue.name} 
+                            className="w-12 h-12 rounded-xl object-cover border shrink-0" 
+                            style={{borderColor:'#E5E7EB'}}
+                          />
+                          <div>
+                            <div className="font-bold text-sm" style={{color:'#111827'}}>{venue.name}</div>
+                            <div className="flex items-center gap-1 mt-0.5" style={{color:'#9CA3AF'}}>
+                              <MapPin className="w-3 h-3" style={{color:'#DC2626'}} />
+                              <span>{venue.location}</span>
                             </div>
                           </div>
-                        </td>
-                        <td className="p-3.5">
-                          <span className="badge bg-slate-900 border-white/10 text-indigo-300 font-semibold">
-                            {venue.type}
-                          </span>
-                        </td>
-                        <td className="p-3.5 font-bold text-white font-mono">
-                          {venue.capacity === 'NA' ? 'NA' : `${venue.capacity} seats`}
-                        </td>
-                        <td className="p-3.5">
-                          {venue.status === 'Available' ? (
-                            <span className="badge badge-available">Available</span>
-                          ) : (
-                            <span className="badge badge-maintenance">Maintenance</span>
-                          )}
-                        </td>
-                        <td className="p-3.5 text-right">
-                          <div className="inline-flex items-center gap-2">
-                            <button
-                              onClick={() => onViewDetails(venue)}
-                              className="btn-secondary text-xs py-1.5 px-2.5"
-                            >
-                              Details
-                            </button>
-                            <button
-                              onClick={() => onBookClick(venue)}
-                              disabled={venue.status === 'Maintenance'}
-                              className="btn-primary text-xs py-1.5 px-3"
-                            >
-                              Book
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </td>
+                      <td className="p-3.5">
+                        <span className="badge" style={{background:'#FEE2E2', color:'#B91C1C', border:'1px solid #FCA5A5'}}>
+                          {venue.type}
+                        </span>
+                      </td>
+                      <td className="p-3.5 font-bold font-mono" style={{color:'#111827'}}>
+                        {venue.capacity === 'NA' ? 'NA' : `${venue.capacity} seats`}
+                      </td>
+                      <td className="p-3.5">
+                        {venue.status === 'Available' ? (
+                          <span className="badge badge-available">Available</span>
+                        ) : (
+                          <span className="badge badge-maintenance">Maintenance</span>
+                        )}
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <button onClick={() => onViewDetails(venue)} className="btn-secondary text-xs py-1.5 px-2.5">Details</button>
+                          <button onClick={() => onBookClick(venue)} disabled={venue.status === 'Maintenance'} className="btn-primary text-xs py-1.5 px-3">Book</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </div>
           )
         ) : (
-          /* Empty Search State */
-          <div className="glass-panel p-12 text-center rounded-2xl border border-white/10 space-y-3 bg-slate-950">
-            <Building2 className="w-12 h-12 text-slate-600 mx-auto" />
-            <h3 className="text-base font-bold text-white">No Matching Venues Found</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              We couldn't find any campus venues matching "<strong className="text-slate-200">{searchTerm}</strong>".
+          /* Empty State */
+          <div className="glass-panel p-12 text-center rounded-2xl space-y-3" style={{border:'1px solid #E5E7EB'}}>
+            <Building2 className="w-12 h-12 mx-auto" style={{color:'#D1D5DB'}} />
+            <h3 className="text-base font-bold" style={{color:'#111827'}}>No Matching Venues Found</h3>
+            <p className="text-xs max-w-sm mx-auto" style={{color:'#6B7280'}}>
+              We couldn't find any campus venues matching "<strong style={{color:'#374151'}}>{searchTerm}</strong>".
             </p>
-            <button
-              onClick={handleResetFilters}
-              className="btn-secondary text-xs mt-2"
-            >
+            <button onClick={handleResetFilters} className="btn-secondary text-xs mt-2">
               Reset All Filters
             </button>
           </div>

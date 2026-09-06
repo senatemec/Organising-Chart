@@ -15,7 +15,7 @@ export default function VenueCard({ venue, onBookClick, onViewDetails }) {
       case 'Available':
         return (
           <span className="badge badge-available">
-            <span className="pulse-dot bg-emerald-400" /> Available
+            <span className="pulse-dot" style={{backgroundColor:'#10B981'}} /> Available
           </span>
         );
       case 'Occupied':
@@ -27,47 +27,65 @@ export default function VenueCard({ venue, onBookClick, onViewDetails }) {
     }
   };
 
-  const getTypeColor = (type) => {
+  const getTypeStyle = (type) => {
     switch (type) {
       case 'Auditorium':
-        return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
+        return { bg: '#FEE2E2', color: '#B91C1C', border: '#FCA5A5' };
       case 'Activity Division':
-        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+        return { bg: '#D1FAE5', color: '#065F46', border: '#6EE7B7' };
       case 'Seminar Hall':
-        return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
+        return { bg: '#DBEAFE', color: '#1E40AF', border: '#93C5FD' };
       case 'Computer Lab':
-        return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
+        return { bg: '#EDE9FE', color: '#5B21B6', border: '#C4B5FD' };
       case 'Classrooms':
-        return 'bg-violet-500/20 text-violet-300 border-violet-500/30';
+        return { bg: '#FEF3C7', color: '#92400E', border: '#FCD34D' };
       default:
-        return 'bg-slate-800 text-slate-300 border-white/10';
+        return { bg: '#F3F4F6', color: '#374151', border: '#D1D5DB' };
     }
   };
 
+  const typeStyle = getTypeStyle(venue.type);
+
   return (
-    <div className="glass-panel glass-panel-hover flex flex-col justify-between overflow-hidden group border border-white/10 rounded-2xl bg-slate-950/70 shadow-md">
+    <div 
+      className="glass-panel glass-panel-hover flex flex-col justify-between overflow-hidden group rounded-2xl"
+      style={{boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}
+    >
       <div>
-        {/* Cover Image & Header Overlay */}
-        <div className="relative h-44 w-full overflow-hidden bg-slate-900">
+        {/* Cover Image */}
+        <div className="relative h-44 w-full overflow-hidden" style={{background:'#F3F4F6'}}>
           <img 
             src={venue.image} 
             alt={venue.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
+            className="w-full h-full object-cover"
+            style={{opacity: 0.92}}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-black/50" />
+          {/* Subtle gradient overlay for text readability */}
+          <div className="absolute inset-0" style={{
+            background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)'
+          }} />
           
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-            <span className={`badge border font-bold text-[11px] backdrop-blur-md ${getTypeColor(venue.type)}`}>
+            <span className="badge border font-bold text-[11px]"
+              style={{
+                background: typeStyle.bg,
+                color: typeStyle.color,
+                borderColor: typeStyle.border,
+                backdropFilter: 'blur(8px)'
+              }}
+            >
               {venue.type}
             </span>
             {getStatusBadge(venue.status)}
           </div>
 
-          {/* Location Chip over image bottom */}
-          <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5 text-slate-200 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 font-medium w-full">
-              <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          {/* Location chip */}
+          <div className="absolute bottom-2.5 left-3 right-3">
+            <div className="flex items-center gap-1.5 text-xs text-white px-2.5 py-1 rounded-lg font-medium w-full"
+              style={{background:'rgba(0,0,0,0.55)', backdropFilter:'blur(8px)'}}
+            >
+              <MapPin className="w-3.5 h-3.5 shrink-0" style={{color:'#FCA5A5'}} />
               <span className="truncate">{venue.location}</span>
             </div>
           </div>
@@ -78,31 +96,33 @@ export default function VenueCard({ venue, onBookClick, onViewDetails }) {
           
           {/* Title */}
           <div>
-            <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">
+            <h3 className="text-base font-bold line-clamp-1" style={{color:'#000000'}}>
               {venue.name}
             </h3>
             {venue.requiresRoomNumber && (
-              <p className="text-[11px] text-cyan-300 font-medium mt-0.5">
+              <p className="text-[11px] font-medium mt-0.5" style={{color:'#DC2626'}}>
                 • Specify Room Number during booking
               </p>
             )}
           </div>
 
-          {/* Quick Capacity Info */}
-          <div className="flex items-center justify-between text-xs bg-slate-900/80 p-2.5 rounded-xl border border-white/5">
-            <div className="flex items-center gap-2 text-slate-300">
-              <Users className="w-4 h-4 text-indigo-400 shrink-0" />
-              <span>Capacity: <strong className="text-white">{venue.capacity}</strong>{venue.capacity === 'NA' ? '' : ' Seats'}</span>
+          {/* Capacity Info */}
+          <div className="flex items-center justify-between text-xs p-2.5 rounded-xl border"
+            style={{background:'#F9FAFB', borderColor:'#E5E7EB'}}
+          >
+            <div className="flex items-center gap-2" style={{color:'#000000'}}>
+              <Users className="w-4 h-4 shrink-0" style={{color:'#B91C1C'}} />
+              <span>Capacity: <strong style={{color:'#000000'}}>{venue.capacity}</strong>{venue.capacity === 'NA' ? '' : ' Seats'}</span>
             </div>
-            <span className="badge-tag bg-slate-800 text-slate-300 text-[10px]">
+            <span className="badge-tag" style={{background:'#F3F4F6', color:'#555555', borderColor:'#E5E7EB'}}>
               {venue.type}
             </span>
           </div>
 
-          {/* Division Badge */}
+          {/* Division label */}
           <div className="pt-0.5">
-            <span className="text-[11px] text-slate-400 font-medium">
-              Division: <strong className="text-slate-200">{venue.type}</strong>
+            <span className="text-[11px] font-medium" style={{color:'#777777'}}>
+              Division: <strong style={{color:'#000000'}}>{venue.type}</strong>
             </span>
           </div>
 
@@ -110,10 +130,10 @@ export default function VenueCard({ venue, onBookClick, onViewDetails }) {
       </div>
 
       {/* Action Footer */}
-      <div className="p-3 bg-slate-900/90 border-t border-white/10 flex items-center gap-2">
+      <div className="p-3 border-t flex items-center gap-2" style={{background:'#FAFAFA', borderColor:'#F3F4F6'}}>
         <button
           onClick={() => onViewDetails(venue)}
-          className="btn-secondary flex-1 justify-center text-xs py-2 bg-slate-800/80 hover:bg-slate-700/80"
+          className="btn-secondary flex-1 justify-center text-xs py-2"
         >
           <Info className="w-3.5 h-3.5" /> Details
         </button>
