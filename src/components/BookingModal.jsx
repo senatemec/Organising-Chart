@@ -41,10 +41,9 @@ export default function BookingModal({
   const [endTime, setEndTime] = useState('13:00');
   const [eventTitle, setEventTitle] = useState('');
   
-  // Organizing Body Combobox State
-  const defaultOrg = studentSocieties.includes(initialOrganizer) ? initialOrganizer : '';
-  const [organizer, setOrganizer] = useState(defaultOrg);
-  const [organizerSearch, setOrganizerSearch] = useState(defaultOrg);
+  // Organizing Body Combobox State (starts completely blank)
+  const [organizer, setOrganizer] = useState('');
+  const [organizerSearch, setOrganizerSearch] = useState('');
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
   const orgDropdownRef = useRef(null);
 
@@ -304,8 +303,11 @@ export default function BookingModal({
               </label>
               
               {/* Typeahead Search Input */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{color:'#9CA3AF'}} />
+              <div className="relative w-full" style={{ position: 'relative' }}>
+                <Search 
+                  className="w-3.5 h-3.5 pointer-events-none" 
+                  style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', zIndex: 1 }} 
+                />
                 <input
                   type="text"
                   placeholder="Search or select organizing body (e.g. Union, Principal, IEDC, EMF)..."
@@ -316,13 +318,27 @@ export default function BookingModal({
                     setOrganizer(e.target.value);
                     setIsOrgDropdownOpen(true);
                   }}
-                  className="input-field pl-9 pr-14 text-xs font-semibold cursor-pointer"
-                  style={{color:'#111827'}}
+                  className="input-field text-xs font-semibold cursor-pointer"
+                  style={{ 
+                    width: '100%',
+                    paddingLeft: '2.5rem', 
+                    paddingRight: '4.5rem', 
+                    color: '#111827' 
+                  }}
                   required
                 />
 
                 {/* Right Action: Clear / Chevron Toggle */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 bg-white pl-1">
+                <div 
+                  className="flex items-center gap-1 bg-white"
+                  style={{ 
+                    position: 'absolute', 
+                    right: '10px', 
+                    top: '50%', 
+                    transform: 'translateY(-50%)',
+                    zIndex: 2
+                  }}
+                >
                   {organizerSearch && (
                     <button
                       type="button"
@@ -331,8 +347,8 @@ export default function BookingModal({
                         setOrganizer('');
                         setIsOrgDropdownOpen(true);
                       }}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
-                      title="Clear selection"
+                      className="p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
+                      title="Clear text"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -340,8 +356,8 @@ export default function BookingModal({
                   <button
                     type="button"
                     onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
-                    title="Toggle options"
+                    className="p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
+                    title="Toggle dropdown options"
                   >
                     <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOrgDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>

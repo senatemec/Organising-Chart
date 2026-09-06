@@ -470,7 +470,7 @@ export default function App() {
           initialDate={bookingModalInitialData.date}
           initialTime={bookingModalInitialData.time}
           initialEmail={currentUser?.email || ''}
-          initialOrganizer={currentUser?.society || currentUser?.name || ''}
+          initialOrganizer=""
           onClose={() => setBookingModalOpen(false)}
           onSubmitBooking={handleCreateBooking}
         />
