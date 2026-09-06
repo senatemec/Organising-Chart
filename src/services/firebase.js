@@ -10,6 +10,7 @@ import {
   deleteDoc, 
   query 
 } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { initialVenues, initialBookings } from '../data/mockData';
 
 // Firebase configuration with environment variables and project defaults
@@ -30,15 +31,31 @@ export const isFirebaseConfigured = Boolean(
 
 let db = null;
 let app = null;
+let auth = null;
+let googleAuthProvider = null;
 
 if (isFirebaseConfigured) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     db = getFirestore(app);
+    auth = getAuth(app);
+    googleAuthProvider = new GoogleAuthProvider();
   } catch (err) {
     console.error('Firebase initialization error:', err);
   }
 }
+
+/**
+ * Sign in using Firebase Google Auth Popup
+ */
+export async function signInWithFirebaseGoogle() {
+  if (!auth || !googleAuthProvider) {
+    throw new Error('Firebase Auth is not initialized');
+  }
+  const result = await signInWithPopup(auth, googleAuthProvider);
+  return result.user;
+}
+
 
 /**
  * Seed default campus venues to Firestore if collection is empty
