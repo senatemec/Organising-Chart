@@ -139,8 +139,8 @@ export default function GoogleAuthModal({
           </div>
 
           <div>
-            <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Sign In with Google</h2>
-            <p className="text-xs text-gray-600 mt-1">
+            <h2 className="text-xl font-extrabold tracking-tight" style={{ color: '#000000' }}>Sign In with Google</h2>
+            <p className="text-xs mt-1" style={{ color: '#4B5563' }}>
               Govt. Model Engineering College Venue Portal
             </p>
           </div>
@@ -148,30 +148,30 @@ export default function GoogleAuthModal({
 
         {/* Action Prompt message */}
         {intendedActionMessage && (
-          <div className="bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-2 text-xs text-red-800">
+          <div className="border p-3 rounded-xl flex items-center gap-2 text-xs font-semibold" style={{ background: '#FFF5F5', borderColor: '#FECACA', color: '#991B1B' }}>
             <Sparkles className="w-4 h-4 text-red-600 shrink-0" />
-            <span className="font-semibold">{intendedActionMessage}</span>
+            <span>{intendedActionMessage}</span>
           </div>
         )}
 
         {/* Error Notification */}
         {authError && (
-          <div className="bg-red-50 border border-red-300 p-3.5 rounded-xl flex items-start gap-2.5 text-xs text-red-900 animate-fade-in">
+          <div className="border p-3.5 rounded-xl flex items-start gap-2.5 text-xs animate-fade-in" style={{ background: '#FFF5F5', borderColor: '#FCA5A5', color: '#7F1D1D' }}>
             <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
             <span className="leading-relaxed font-semibold">{authError}</span>
           </div>
         )}
 
         {/* Official Google GIS Button Container */}
-        <div className="space-y-4">
-          <div className="flex flex-col items-center justify-center min-h-[50px]">
-            <div ref={googleBtnRef} className="flex justify-center" />
+        <div className="space-y-4" style={{ colorScheme: 'light' }}>
+          <div className="flex flex-col items-center justify-center min-h-[48px]" style={{ colorScheme: 'light' }}>
+            <div ref={googleBtnRef} className="flex justify-center" style={{ colorScheme: 'light' }} />
           </div>
 
-          <div className="text-[11px] text-gray-600 text-center space-y-1 bg-gray-50 p-3 rounded-xl border border-gray-200">
-            <p className="font-bold text-gray-800">🔒 Authorized Access Control</p>
-            <p className="text-gray-600">
-              Only authorized Gmail accounts approved by <strong className="text-red-700 font-bold">Union MEC</strong> can book campus venues.
+          <div className="text-[11px] text-center space-y-1 p-3 rounded-xl border" style={{ background: '#F9FAFB', borderColor: '#E5E7EB', color: '#4B5563' }}>
+            <p className="font-bold" style={{ color: '#111827' }}>🔒 Authorized Access Control</p>
+            <p style={{ color: '#4B5563' }}>
+              Only authorized Gmail accounts approved by <strong className="font-bold" style={{ color: '#B91C1C' }}>Union MEC</strong> can book campus venues.
             </p>
           </div>
         </div>
