@@ -421,6 +421,8 @@ select.input-field {
 .flex-wrap { flex-wrap: wrap; }
 .flex-1 { flex: 1 1 0%; }
 .shrink-0 { flex-shrink: 0; }
+.shrink { flex-shrink: 1; }
+.grow { flex-grow: 1; }
 .items-start { align-items: flex-start; }
 .items-center { align-items: center; }
 .items-end { align-items: flex-end; }
@@ -522,10 +524,14 @@ select.input-field {
 .mr-2  { margin-right: 0.5rem; }
 .ml-0\.5 { margin-left: 0.125rem; }
 .ml-2  { margin-left: 0.5rem; }
+.-mx-3 { margin-left: -0.75rem; margin-right: -0.75rem; }
+.-mx-4 { margin-left: -1rem; margin-right: -1rem; }
 
 /* Sizing */
 .w-full  { width: 100%; }
 .w-auto  { width: auto; }
+.min-w-0 { min-width: 0; }
+.max-w-full { max-width: 100%; }
 .w-3\.5  { width: 0.875rem; }
 .w-4     { width: 1rem; }
 .w-5     { width: 1.25rem; }
@@ -776,6 +782,7 @@ select.input-field {
 .text-rose-300\/80 { color: rgba(252,165,165,0.8); }
 
 /* Typography Sizing & Weights */
+.text-\[8px\]  { font-size: 0.5rem; }
 .text-\[9px\]  { font-size: 0.5625rem; }
 .text-\[10px\] { font-size: 0.625rem; }
 .text-\[11px\] { font-size: 0.6875rem; }
@@ -870,18 +877,45 @@ select.input-field {
 .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .backdrop-blur-sm { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 
+/* No Scrollbar Utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Responsive */
 @media (min-width: 640px) {
+  .sm\:inline { display: inline; }
+  .sm\:inline-flex { display: inline-flex; }
   .sm\:block  { display: block; }
   .sm\:flex   { display: flex; }
   .sm\:hidden { display: none; }
   .sm\:flex-row { flex-direction: row; }
+  .sm\:w-7  { width: 1.75rem; }
+  .sm\:w-8  { width: 2rem; }
   .sm\:w-64 { width: 16rem; }
+  .sm\:h-7  { height: 1.75rem; }
+  .sm\:h-8  { height: 2rem; }
+  .sm\:rounded-lg { border-radius: var(--radius-md); }
+  .sm\:gap-2 { gap: 0.5rem; }
+  .sm\:gap-3 { gap: 0.75rem; }
+  .sm\:gap-4 { gap: 1rem; }
+  .sm\:px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .sm\:px-4 { padding-left: 1rem; padding-right: 1rem; }
+  .sm\:py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .sm\:py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+  .sm\:pr-2\.5 { padding-right: 0.625rem; }
+  .sm\:mb-6 { margin-bottom: 1.5rem; }
+  .sm\:-mx-4 { margin-left: -1rem; margin-right: -1rem; }
   .sm\:text-base { font-size: 1rem; }
   .sm\:p-10 { padding: 2.5rem; }
 }
 
 @media (min-width: 768px) {
+  .md\:inline-flex { display: inline-flex; }
   .md\:flex   { display: flex; }
   .md\:hidden { display: none; }
   .md\:block  { display: block; }

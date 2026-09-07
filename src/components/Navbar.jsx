@@ -32,55 +32,55 @@ export default function Navbar({
     : baseNavItems;
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md border-b px-4 lg:px-8 py-2.5 mb-6 shadow-sm"
+    <header className="sticky top-0 z-50 backdrop-blur-md border-b px-3 sm:px-4 lg:px-8 py-2 sm:py-2.5 mb-3 sm:mb-6 shadow-sm w-full max-w-full overflow-hidden"
       style={{
         background: 'rgba(255,255,255,0.97)',
         borderColor: '#E5E7EB',
         boxShadow: '0 1px 12px rgba(0,0,0,0.07)'
       }}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4 w-full">
         
         {/* Left: Brand Identity */}
         <div 
           onClick={() => setActiveTab('venues')} 
-          className="flex items-center gap-3 cursor-pointer group select-none shrink-0"
+          className="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none min-w-0 shrink"
         >
           {/* Official Logos */}
-          <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-200 group-hover:border-red-200 transition-colors">
+          <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 p-1 rounded-xl border border-gray-200 group-hover:border-red-200 transition-colors shrink-0">
             <img 
               src="/mec_college_logo.png" 
               alt="Govt. Model Engineering College" 
-              className="w-8 h-8 object-contain rounded-lg bg-white p-0.5" 
+              className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-md sm:rounded-lg bg-white p-0.5" 
             />
             <img 
               src="/union_mec_logo.png" 
               alt="Union MEC" 
-              className="w-8 h-8 object-contain rounded-lg bg-white p-0.5" 
+              className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-md sm:rounded-lg bg-white p-0.5" 
             />
           </div>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base tracking-tight transition-colors"
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="font-extrabold text-sm sm:text-base tracking-tight truncate"
                 style={{color:'#000000'}}
               >
                 Organizing Chart
               </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border tracking-wider"
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border tracking-wider hidden md:inline-flex"
                 style={{color:'#7F1D1D', background:'#FEE2E2', borderColor:'#FCA5A5'}}
               >
                 UNION MEC
               </span>
             </div>
-            <p className="text-[10px] font-medium hidden sm:block" style={{color:'#555555'}}>
+            <p className="text-[10px] font-medium hidden sm:block truncate" style={{color:'#555555'}}>
               Govt. Model Engineering College
             </p>
           </div>
         </div>
 
         {/* Center: Segmented Navigation */}
-        <nav className="hidden md:flex items-center bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-inner">
+        <nav className="hidden md:flex items-center bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-inner shrink-0">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -119,12 +119,12 @@ export default function Navbar({
         </nav>
 
         {/* Right: Auth + CTA */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           
           {currentUser ? (
-            <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 p-1 pr-2.5 rounded-2xl shadow-xs">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 bg-gray-50 border border-gray-200 p-1 sm:pr-2.5 rounded-2xl shadow-xs shrink-0">
               <div 
-                className={`w-7 h-7 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border ${
+                className={`w-6 h-6 sm:w-7 sm:h-7 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border ${
                   currentUser.isUnionAdmin ? 'bg-white p-0.5' : 'bg-white'
                 }`}
                 style={{borderColor: currentUser.isUnionAdmin ? '#FCA5A5' : '#E5E7EB'}}
@@ -135,7 +135,7 @@ export default function Navbar({
                   className="w-full h-full object-contain"
                 />
               </div>
-              <div className="hidden sm:block text-left text-xs">
+              <div className="hidden md:block text-left text-xs">
                 <div className="font-bold leading-tight flex items-center gap-1.5" style={{color:'#000000'}}>
                   <span className="truncate max-w-[110px]">{currentUser.name}</span>
                   {currentUser.isUnionAdmin && (
@@ -152,7 +152,7 @@ export default function Navbar({
               </div>
               <button
                 onClick={onLogout}
-                className="p-1 rounded-lg transition-colors ml-1"
+                className="p-1 rounded-lg transition-colors ml-0.5"
                 style={{color:'#9CA3AF'}}
                 onMouseEnter={e => e.currentTarget.style.color='#DC2626'}
                 onMouseLeave={e => e.currentTarget.style.color='#9CA3AF'}
@@ -164,7 +164,7 @@ export default function Navbar({
           ) : (
             <button
               onClick={() => onOpenLoginModal('Sign in with your Google account to access bookings and Union admin portal')}
-              className="btn-secondary text-xs py-1.5 px-3 font-bold"
+              className="btn-secondary text-xs py-1.5 px-2.5 sm:px-3 font-bold shrink-0 flex items-center gap-1.5"
               style={{ color: '#000000', backgroundColor: '#FFFFFF', borderColor: '#D1D5DB' }}
             >
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
@@ -180,17 +180,18 @@ export default function Navbar({
           {/* Book Venue CTA */}
           <button
             onClick={onNewBookingClick}
-            className="btn-primary text-xs py-2 px-4 whitespace-nowrap flex items-center gap-1.5"
+            className="btn-primary text-xs py-1.5 sm:py-2 px-2.5 sm:px-4 whitespace-nowrap flex items-center gap-1 sm:gap-1.5 shrink-0"
           >
             <Plus className="w-3.5 h-3.5 shrink-0" /> 
-            <span>Book Venue</span>
+            <span className="hidden sm:inline">Book Venue</span>
+            <span className="sm:hidden">Book</span>
           </button>
         </div>
 
       </div>
 
       {/* Mobile Sub-Navigation */}
-      <div className="md:hidden flex items-center justify-between pt-2.5 mt-2.5 border-t border-gray-100 overflow-x-auto gap-1">
+      <div className="md:hidden flex items-center justify-start gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:-mx-4 sm:px-4 pt-2 mt-2 border-t border-gray-100">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -198,7 +199,7 @@ export default function Navbar({
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all`}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap shrink-0 transition-all`}
               style={isActive
                 ? { background: '#B91C1C', color: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }
                 : { color: item.isSpecialAdmin ? '#7F1D1D' : '#000000', background: 'transparent' }
@@ -206,6 +207,16 @@ export default function Navbar({
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{item.label}</span>
+              {item.isSpecialAdmin && (
+                <span className="text-[8px] px-1 rounded font-bold border"
+                  style={isActive
+                    ? {background:'rgba(255,255,255,0.2)', color:'#fff', borderColor:'rgba(255,255,255,0.3)'}
+                    : {background:'#FEE2E2', color:'#7F1D1D', borderColor:'#FCA5A5'}
+                  }
+                >
+                  ADMIN
+                </span>
+              )}
             </button>
           );
         })}
