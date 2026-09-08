@@ -160,7 +160,7 @@ export const initialVenues = [
     id: 'cir',
     name: 'CIR (Centre for Industrial Relations)',
     type: 'Seminar Hall',
-    capacity: 90,
+    capacity: 48,
     location: 'Placement & Corporate Block',
     status: 'Available',
     image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',

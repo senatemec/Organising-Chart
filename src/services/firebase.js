@@ -10,6 +10,13 @@ import {
   deleteDoc, 
   query 
 } from 'firebase/firestore';
+import {
+  getAuth,
+  signInWithCredential,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged
+} from 'firebase/auth';
 import { initialVenues, initialBookings } from '../data/mockData';
 
 // Firebase configuration with environment variables and project defaults
@@ -30,14 +37,51 @@ export const isFirebaseConfigured = Boolean(
 
 let db = null;
 let app = null;
+let auth = null;
 
 if (isFirebaseConfigured) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     db = getFirestore(app);
+    auth = getAuth(app);
   } catch (err) {
     console.error('Firebase initialization error:', err);
   }
+}
+
+/**
+ * Sign in to Firebase Auth using Google OAuth ID Token (Credential)
+ */
+export async function dbSignInWithGoogleCredential(idToken) {
+  if (!auth) return null;
+  try {
+    const credential = GoogleAuthProvider.credential(idToken);
+    const userCredential = await signInWithCredential(auth, credential);
+    return userCredential.user;
+  } catch (err) {
+    console.warn('Firebase Auth credential link notice:', err);
+    return null;
+  }
+}
+
+/**
+ * Sign out from Firebase Auth
+ */
+export async function dbSignOut() {
+  if (!auth) return;
+  try {
+    await signOut(auth);
+  } catch (err) {
+    console.warn('Firebase Auth signOut notice:', err);
+  }
+}
+
+/**
+ * Listen to Firebase Auth state
+ */
+export function subscribeToAuthState(onUserChanged) {
+  if (!auth) return () => {};
+  return onAuthStateChanged(auth, onUserChanged);
 }
 
 /**

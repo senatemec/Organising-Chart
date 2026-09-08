@@ -23,7 +23,8 @@ import {
   dbUpdateVenueStatus,
   dbAddAllowedUser,
   dbRemoveAllowedUser,
-  dbUpdateAuthSettings
+  dbUpdateAuthSettings,
+  dbSignOut
 } from './services/firebase';
 
 import { CheckCircle2, AlertCircle, Info, Sparkles, XCircle, Cloud, Database } from 'lucide-react';
@@ -202,9 +203,12 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await dbSignOut();
+    } catch (e) {}
     setCurrentUser(null);
-    if (activeTab === 'admin') {
+    if (activeTab === 'admin' || activeTab === 'access-control') {
       setActiveTab('venues');
     }
     showToast('Signed out successfully.', 'info');

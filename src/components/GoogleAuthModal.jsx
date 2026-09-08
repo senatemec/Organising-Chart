@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, ShieldCheck, Lock, AlertCircle, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { dbSignInWithGoogleCredential } from '../services/firebase';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '339715089734-il7f8qb0mrpg7nlm35edqutdnu7761ov.apps.googleusercontent.com';
 
@@ -54,8 +55,15 @@ export default function GoogleAuthModal({
       setAuthError(null);
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
-        callback: (response) => {
+        callback: async (response) => {
           if (response.credential) {
+            // Authenticate directly with Firebase Auth backend
+            try {
+              await dbSignInWithGoogleCredential(response.credential);
+            } catch (authErr) {
+              console.warn('Firebase Auth backend sync notice:', authErr);
+            }
+
             const payload = parseJwt(response.credential);
             if (payload && payload.email) {
               const userEmail = payload.email.toLowerCase().trim();

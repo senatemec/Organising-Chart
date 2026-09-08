@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    // Senate / Union Master Admins
+    function isUnionAdmin() {
+      return isAuthenticated() && (
+        getUserEmail() == 'senatemec@mec.ac.in' ||
+        getUserEmail() == 'senate@mec.ac.in' ||
+        getUserEmail() == 'union@mec.ac.in'
+      );
+    }
+
+    // Whitelisted organizing bodies or Union Admins
+    function isWhitelisted() {
+      return isAuthenticated() && (
+        isUnionAdmin() ||
+        exists(/databases/$(database)/documents/allowed_users/$(getUserEmail()))
+      );
+    }
+
+    // Venues: Publicly readable for campus schedule viewing; only Union Admins can edit/add/delete
+    match /venues/{venueId} {
+      allow read: if true;
+      allow write: if isUnionAdmin();
+    }
+
+    // Bookings: Publicly readable for live schedule matrix;
+    // - Create: Only authenticated and whitelisted users or Union Admins
+    // - Update / Delete: Union Admin or the user who created the booking
+    match /bookings/{bookingId} {
+      allow read: if true;
+      allow create: if isWhitelisted();
+      allow update, delete: if isUnionAdmin() || (isAuthenticated() && resource.data.userEmail.lower() == getUserEmail());
+    }
+
+    // Allowed Users (Whitelist):
+    // - Read: Authenticated users
+    // - Write / Delete: Only Union Admin
+    match /allowed_users/{email} {
+      allow read: if isAuthenticated();
+      allow write, delete: if isUnionAdmin();
+    }
+
+    // Settings (Auth policy, strict mode):
+    // - Read: Everyone
+    // - Write: Only Union Admin
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isUnionAdmin();
+    }
+  }
+}
