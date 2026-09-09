@@ -6,7 +6,7 @@ export const initialVenues = [
     capacity: 120,
     location: 'Main Academic Block (Ground Floor)',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=80',
+    image: '/internal.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -66,7 +66,7 @@ export const initialVenues = [
     capacity: 'na',
     location: 'Central Campus Plaza',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+    image: '/amphi.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -91,7 +91,7 @@ export const initialVenues = [
     capacity: 60,
     location: 'First Floor',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
+    image: '/cl1.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -127,7 +127,7 @@ export const initialVenues = [
     capacity: 65,
     location: 'Skill & Innovation Center',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80',
+    image: '/sdpk.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
