@@ -32,11 +32,18 @@ import { CheckCircle2, AlertCircle, Info, Sparkles, XCircle, Cloud, Database } f
 export default function App() {
   // Persistent State with Smart Migration
   const [venues, setVenues] = useState(() => {
-    const saved = localStorage.getItem('cs_venues_v9');
+    const saved = localStorage.getItem('cs_venues_v11');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 10) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= 10) {
+          return initialVenues.map(initV => {
+            const savedV = parsed.find(v => v.id === initV.id);
+            if (!savedV) return initV;
+            const image = (initV.image && initV.image.startsWith('/')) ? initV.image : (savedV.image || initV.image);
+            return { ...initV, ...savedV, image };
+          });
+        }
       } catch (e) {}
     }
     return initialVenues;
@@ -117,7 +124,17 @@ export default function App() {
 
       const unsubscribeVenues = subscribeToVenues((liveVenues) => {
         if (liveVenues && liveVenues.length > 0) {
-          setVenues(liveVenues);
+          const merged = initialVenues.map(initV => {
+            const liveV = liveVenues.find(v => v.id === initV.id);
+            if (!liveV) return initV;
+            const image = (initV.image && initV.image.startsWith('/')) ? initV.image : (liveV.image || initV.image);
+            return {
+              ...initV,
+              ...liveV,
+              image
+            };
+          });
+          setVenues(merged);
         }
       });
 
@@ -143,7 +160,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('cs_venues_v9', JSON.stringify(venues));
+    localStorage.setItem('cs_venues_v11', JSON.stringify(venues));
   }, [venues]);
 
   useEffect(() => {
