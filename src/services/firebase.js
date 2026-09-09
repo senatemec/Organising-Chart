@@ -97,6 +97,13 @@ export async function seedInitialFirestoreData() {
       for (const venue of initialVenues) {
         await setDoc(doc(db, 'venues', venue.id), venue);
       }
+    } else {
+      // Sync official images if they are local assets
+      for (const venue of initialVenues) {
+        if (venue.image && venue.image.startsWith('/')) {
+          await setDoc(doc(db, 'venues', venue.id), { image: venue.image }, { merge: true });
+        }
+      }
     }
   } catch (err) {
     console.warn('Firestore initial venue seed check:', err);

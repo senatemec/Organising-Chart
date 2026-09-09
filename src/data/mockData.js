@@ -30,7 +30,7 @@ export const initialVenues = [
     capacity: 'NA',
     location: 'Student Activity Block (Ground Floor)',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80',
+    image: '/casa.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -42,7 +42,7 @@ export const initialVenues = [
     capacity: 'na',
     location: 'Management & Technology Wing',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=1200&q=80',
+    image: '/elga.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -139,7 +139,7 @@ export const initialVenues = [
     capacity: 70,
     location: 'IT Block (Ground Floor)',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
+    image: '/ccf.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -163,7 +163,7 @@ export const initialVenues = [
     capacity: 48,
     location: 'Placement & Corporate Block',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',
+    image: '/cir.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
