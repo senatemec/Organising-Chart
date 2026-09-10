@@ -699,6 +699,7 @@ export default function AvailabilityGrid({
           onClose={() => setSelectedEventForDetails(null)}
           currentUser={currentUser}
           onAdminRevokeClick={onAdminCancelBooking ? (event) => onAdminCancelBooking(event.id, 'Revoked by Union Admin from Live Matrix') : null}
+          allBookings={bookings}
         />
       )}
 

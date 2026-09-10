@@ -234,12 +234,18 @@ export async function dbUpdateAuthSettings(settings) {
 }
 
 /**
- * Create or save a booking to Firestore
+ * Create or save a booking (or batch array of bookings) to Firestore
  */
-export async function dbCreateBooking(booking) {
+export async function dbCreateBooking(bookingOrList) {
   if (!db) return false;
   try {
-    await setDoc(doc(db, 'bookings', booking.id), booking);
+    if (Array.isArray(bookingOrList)) {
+      await Promise.all(
+        bookingOrList.map(b => setDoc(doc(db, 'bookings', b.id), b))
+      );
+    } else {
+      await setDoc(doc(db, 'bookings', bookingOrList.id), bookingOrList);
+    }
     return true;
   } catch (err) {
     console.error('Failed to create booking in Firestore:', err);

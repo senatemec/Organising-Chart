@@ -21,11 +21,26 @@ export default function EventDetailsModal({
   venue, 
   onClose, 
   currentUser,
-  onAdminRevokeClick 
+  onAdminRevokeClick,
+  allBookings = []
 }) {
   if (!event) return null;
 
   const isConfirmed = event.status === 'confirmed' || event.status === 'approved';
+
+  // Find sister venue bookings that belong to the same event
+  const sisterBookings = allBookings.filter(b => {
+    if (b.id === event.id) return false;
+    if (event.eventId && b.eventId) {
+      return b.eventId === event.eventId;
+    }
+    return Boolean(
+      b.eventTitle && event.eventTitle &&
+      b.eventTitle.toLowerCase().trim() === event.eventTitle.toLowerCase().trim() &&
+      b.organizer === event.organizer &&
+      b.date === event.date
+    );
+  });
 
   return (
     <div 
@@ -44,11 +59,21 @@ export default function EventDetailsModal({
 
         {/* Modal Header */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg border"
               style={{background:'#FEE2E2', color:'#7F1D1D', borderColor:'#FCA5A5'}}>
               {event.id}
             </span>
+            {event.eventId && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-gray-100 text-gray-700">
+                Event: {event.eventId}
+              </span>
+            )}
+            {sisterBookings.length > 0 && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-red-100 text-red-800 border-red-200">
+                Multi-Venue ({sisterBookings.length + 1} Venues)
+              </span>
+            )}
             {isConfirmed ? (
               <span className="badge badge-available text-[11px] py-0.5">
                 <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Confirmed Reservation
@@ -146,6 +171,33 @@ export default function EventDetailsModal({
           </div>
 
         </div>
+
+        {/* Multi-Venue Sister Bookings */}
+        {sisterBookings.length > 0 && (
+          <div className="space-y-2 p-4 rounded-2xl border text-xs" style={{background:'#FEF2F2', borderColor:'#FECACA'}}>
+            <div className="flex items-center gap-1.5 font-bold" style={{color:'#991B1B'}}>
+              <Sparkles className="w-3.5 h-3.5" style={{color:'#DC2626'}} />
+              <span>Other Venues Booked for this Event ({sisterBookings.length}):</span>
+            </div>
+            <div className="space-y-1.5 pt-1">
+              {sisterBookings.map((b) => (
+                <div key={b.id} className="p-2.5 rounded-xl border bg-white flex items-center justify-between gap-2 shadow-xs" style={{borderColor:'#FCA5A5'}}>
+                  <div>
+                    <div className="font-bold text-[11px]" style={{color:'#111827'}}>
+                      {b.venueName} {b.roomNumber && <span className="font-mono text-red-700">({b.roomNumber})</span>}
+                    </div>
+                    <div className="text-[10px] text-gray-500 font-mono">
+                      {formatDateFriendly(b.date)} • {formatTime12H(b.startTime)} - {formatTime12H(b.endTime)}
+                    </div>
+                  </div>
+                  <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200">
+                    {b.id}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Event Notes / Agenda (if available) */}
         {event.description && (

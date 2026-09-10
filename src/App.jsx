@@ -295,17 +295,30 @@ export default function App() {
     setBookingModalOpen(true);
   };
 
-  // Add new booking (Instantly Confirmed & synced with Firestore)
-  const handleCreateBooking = async (newBooking) => {
-    setBookings([newBooking, ...bookings]);
-    if (isFirebaseConfigured) {
-      try {
-        await dbCreateBooking(newBooking);
-      } catch (e) {
-        console.error('Firebase create error:', e);
+  // Add new booking(s) (Instantly Confirmed & synced with Firestore)
+  const handleCreateBooking = async (bookingOrList) => {
+    if (Array.isArray(bookingOrList)) {
+      setBookings([...bookingOrList, ...bookings]);
+      if (isFirebaseConfigured) {
+        try {
+          await dbCreateBooking(bookingOrList);
+        } catch (e) {
+          console.error('Firebase batch create error:', e);
+        }
       }
+      const eventTitle = bookingOrList[0]?.eventTitle || 'Event';
+      showToast(`Event "${eventTitle}" confirmed across ${bookingOrList.length} venues!`, 'success');
+    } else {
+      setBookings([bookingOrList, ...bookings]);
+      if (isFirebaseConfigured) {
+        try {
+          await dbCreateBooking(bookingOrList);
+        } catch (e) {
+          console.error('Firebase create error:', e);
+        }
+      }
+      showToast(`Booking ${bookingOrList.id} confirmed for ${bookingOrList.venueName}!`, 'success');
     }
-    showToast(`Booking ${newBooking.id} confirmed for ${newBooking.venueName}!`, 'success');
   };
 
   // Union Admin Cancel with message
@@ -487,11 +500,17 @@ export default function App() {
         <BookingModal
           venues={venues}
           existingBookings={bookings}
+          currentUser={currentUser}
+          allowedUsers={allowedUsers}
           initialVenue={bookingModalInitialData.venue}
           initialDate={bookingModalInitialData.date}
           initialTime={bookingModalInitialData.time}
           initialEmail={currentUser?.email || ''}
-          initialOrganizer=""
+          initialOrganizer={
+            currentUser?.society || 
+            allowedUsers.find(u => (u.email || '').toLowerCase().trim() === (currentUser?.email || '').toLowerCase().trim())?.society || 
+            (currentUser?.isUnionAdmin ? 'College Union Senate' : '')
+          }
           onClose={() => setBookingModalOpen(false)}
           onSubmitBooking={handleCreateBooking}
         />

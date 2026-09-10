@@ -213,6 +213,11 @@ export default function AdminDashboard({
                     <span className="font-mono text-xs font-bold text-red-900 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200">
                       {b.id}
                     </span>
+                    {b.eventId && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-red-50 text-red-800 border-red-200">
+                        Event: {b.eventId}
+                      </span>
+                    )}
                     <span className="badge badge-available">
                       <CheckCircle2 className="w-3 h-3" /> Confirmed Permit
                     </span>
@@ -322,6 +327,11 @@ export default function AdminDashboard({
                       <div className="font-mono font-bold text-red-900 bg-red-50 px-2 py-0.5 rounded border border-red-200 inline-block">
                         {b.id}
                       </div>
+                      {b.eventId && (
+                        <div className="text-[9px] font-mono font-bold text-red-700 mt-1">
+                          {b.eventId}
+                        </div>
+                      )}
                     </td>
 
                     {/* Title & Society */}

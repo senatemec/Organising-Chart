@@ -141,10 +141,17 @@ export default function MyBookings({
                 <div className="space-y-3">
                   
                   {/* Top Header */}
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-red-900 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200">
-                      {b.id}
-                    </span>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono text-xs font-bold text-red-900 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200">
+                        {b.id}
+                      </span>
+                      {b.eventId && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-red-50 text-red-800 border-red-200">
+                          Package: {b.eventId}
+                        </span>
+                      )}
+                    </div>
                     {isConfirmed ? (
                       <span className="badge badge-available">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed Permit
