@@ -455,7 +455,7 @@ export default function App() {
       />
 
       {/* Main Workspace Container */}
-      <main className="max-w-7xl mx-auto px-4 lg:px-8 pb-16 flex-1 w-full space-y-6">
+      <main className="max-w-7xl mx-auto px-2.5 sm:px-4 lg:px-8 pb-16 flex-1 w-full space-y-4 sm:space-y-6">
         
         {/* Tab 1: Venues & Landing Showcase */}
         {activeTab === 'venues' && (

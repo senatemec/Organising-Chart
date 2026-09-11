@@ -122,34 +122,34 @@ export default function AvailabilityGrid({
     <div className="space-y-6">
       
       {/* Top Header & View Switcher */}
-      <div className="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-gray-200 shadow-sm bg-white">
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+      <div className="glass-panel p-3.5 sm:p-5 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 border border-gray-200 shadow-sm bg-white">
+        <div className="flex items-center gap-2.5 sm:gap-3 w-full md:w-auto">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border"
             style={{background:'#FEE2E2', borderColor:'#FCA5A5'}}>
             {viewMode === 'monthly' ? (
-              <CalendarDays className="w-5 h-5" style={{color:'#DC2626'}} />
+              <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5" style={{color:'#DC2626'}} />
             ) : (
-              <Clock className="w-5 h-5" style={{color:'#DC2626'}} />
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" style={{color:'#DC2626'}} />
             )}
           </div>
-          <div>
-            <h2 className="text-base font-bold tracking-tight" style={{color:'#000000'}}>
+          <div className="min-w-0">
+            <h2 className="text-sm sm:text-base font-bold tracking-tight truncate" style={{color:'#000000'}}>
               {viewMode === 'monthly' ? 'Monthly Venue Schedule Overview' : 'Daily Hourly Venue Matrix'}
             </h2>
-            <p className="text-xs" style={{color:'#555555'}}>
+            <p className="text-[11px] sm:text-xs line-clamp-1" style={{color:'#555555'}}>
               {viewMode === 'monthly' 
-                ? `Month at a glance for ${monthName} ${year} • Click any event or day to inspect details` 
-                : 'Hour-by-hour availability timeline • Click any event to inspect or click green slot to book'}
+                ? `Month at a glance for ${monthName} ${year} • Click any event to inspect` 
+                : 'Hour-by-hour timeline • Click event or green slot to book'}
             </p>
           </div>
         </div>
 
         {/* Right View Switcher Toggle */}
-        <div className="flex items-center gap-2.5 w-full md:w-auto">
-          <div className="flex items-center p-1 rounded-xl border text-xs" style={{background:'#F3F4F6', borderColor:'#E5E7EB'}}>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="grid grid-cols-2 sm:flex items-center p-1 rounded-xl border text-xs w-full md:w-auto" style={{background:'#F3F4F6', borderColor:'#E5E7EB'}}>
             <button
               onClick={() => setViewMode('monthly')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold transition-all`}
+              className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg font-semibold transition-all text-[11px] sm:text-xs`}
               style={viewMode === 'monthly'
                 ? { background: '#B91C1C', color: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }
                 : { color: '#4B5563', background: 'transparent' }
@@ -160,7 +160,7 @@ export default function AvailabilityGrid({
             </button>
             <button
               onClick={() => setViewMode('daily')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-semibold transition-all`}
+              className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg font-semibold transition-all text-[11px] sm:text-xs`}
               style={viewMode === 'daily'
                 ? { background: '#B91C1C', color: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }
                 : { color: '#4B5563', background: 'transparent' }
@@ -177,46 +177,48 @@ export default function AvailabilityGrid({
           VIEW 1: MONTHLY CALENDAR OVERVIEW
           ========================================================================= */}
       {viewMode === 'monthly' && (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           
           {/* Monthly Controls Bar */}
-          <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-gray-200 bg-white shadow-xs">
+          <div className="glass-panel p-3 sm:p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 border border-gray-200 bg-white shadow-xs">
             
             {/* Month Navigator */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => changeMonth(-1)}
-                className="p-2 rounded-xl bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
-                title="Previous Month"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              
-              <div className="px-4 py-1.5 bg-gray-50 rounded-xl border border-gray-200 text-center min-w-[170px]">
-                <span className="font-extrabold text-sm" style={{color:'#000000'}}>{monthName} {year}</span>
-              </div>
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <button
+                  onClick={() => changeMonth(-1)}
+                  className="p-1.5 sm:p-2 rounded-xl bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
+                  title="Previous Month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                
+                <div className="px-3 sm:px-4 py-1.5 bg-gray-50 rounded-xl border border-gray-200 text-center min-w-[130px] sm:min-w-[170px]">
+                  <span className="font-extrabold text-xs sm:text-sm" style={{color:'#000000'}}>{monthName} {year}</span>
+                </div>
 
-              <button
-                onClick={() => changeMonth(1)}
-                className="p-2 rounded-xl bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
-                title="Next Month"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+                <button
+                  onClick={() => changeMonth(1)}
+                  className="p-1.5 sm:p-2 rounded-xl bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
+                  title="Next Month"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
 
               <button
                 onClick={() => {
                   setCurrentMonthDate(new Date('2026-09-01T00:00:00'));
                   setSelectedMonthDay('2026-09-05');
                 }}
-                className="btn-secondary text-xs py-1.5 px-3 ml-2"
+                className="btn-secondary text-[11px] sm:text-xs py-1.5 px-2.5 sm:px-3 ml-auto sm:ml-2 font-semibold"
               >
                 Current Month
               </button>
             </div>
 
             {/* Division Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto text-xs pb-1 md:pb-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] sm:text-xs pb-1 md:pb-0 no-scrollbar">
               <span className="text-[11px] font-semibold mr-1 hidden sm:inline" style={{color:'#6B7280'}}>Division:</span>
               {[
                 { id: 'All', label: 'All Venues' },
@@ -230,7 +232,7 @@ export default function AvailabilityGrid({
                   <button
                     key={div.id}
                     onClick={() => setSelectedDivision(div.id)}
-                    className={`px-3 py-1.5 rounded-lg font-semibold transition-all border`}
+                    className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg font-semibold transition-all border whitespace-nowrap shrink-0`}
                     style={isSelected
                       ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
                       : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
@@ -245,32 +247,32 @@ export default function AvailabilityGrid({
           </div>
 
           {/* Month Summary KPI Badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="glass-panel p-3.5 rounded-xl border border-gray-200 bg-white shadow-xs text-xs">
-              <div style={{color:'#6B7280'}}>Total Bookings in {monthName}</div>
-              <div className="text-xl font-extrabold mt-0.5" style={{color:'#000000'}}>{bookingsThisMonth.length} Confirmed</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+            <div className="glass-panel p-2.5 sm:p-3.5 rounded-xl border border-gray-200 bg-white shadow-xs text-[11px] sm:text-xs">
+              <div style={{color:'#6B7280'}}>Total Bookings</div>
+              <div className="text-base sm:text-xl font-extrabold mt-0.5 truncate" style={{color:'#000000'}}>{bookingsThisMonth.length} Confirmed</div>
             </div>
-            <div className="glass-panel p-3.5 rounded-xl border border-gray-200 bg-white shadow-xs text-xs">
+            <div className="glass-panel p-2.5 sm:p-3.5 rounded-xl border border-gray-200 bg-white shadow-xs text-[11px] sm:text-xs">
               <div style={{color:'#6B7280'}}>Registered Facilities</div>
-              <div className="text-xl font-extrabold mt-0.5" style={{color:'#B91C1C'}}>{venues.length} Facilities</div>
+              <div className="text-base sm:text-xl font-extrabold mt-0.5 truncate" style={{color:'#B91C1C'}}>{venues.length} Facilities</div>
             </div>
-            <div className="glass-panel p-3.5 rounded-xl border border-gray-200 bg-white shadow-xs text-xs">
+            <div className="glass-panel p-2.5 sm:p-3.5 rounded-xl border border-gray-200 bg-white shadow-xs text-[11px] sm:text-xs">
               <div style={{color:'#6B7280'}}>Activity Division Events</div>
-              <div className="text-xl font-extrabold mt-0.5" style={{color:'#059669'}}>
+              <div className="text-base sm:text-xl font-extrabold mt-0.5 truncate" style={{color:'#059669'}}>
                 {bookingsThisMonth.filter(b => {
                   const v = venues.find(ven => ven.id === b.venueId);
                   return v && v.type === 'Activity Division';
                 }).length} Active
               </div>
             </div>
-            <div className="glass-panel p-3.5 rounded-xl border border-gray-200 bg-white shadow-xs text-xs">
+            <div className="glass-panel p-2.5 sm:p-3.5 rounded-xl border border-gray-200 bg-white shadow-xs text-[11px] sm:text-xs">
               <div style={{color:'#6B7280'}}>Conflict Engine</div>
-              <div className="text-xl font-extrabold mt-0.5" style={{color:'#374151'}}>Zero Clashes</div>
+              <div className="text-base sm:text-xl font-extrabold mt-0.5 truncate" style={{color:'#374151'}}>Zero Clashes</div>
             </div>
           </div>
 
           {/* Monthly Calendar Dates Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2.5 sm:gap-3.5">
             {daysArray.map((item) => {
               const dayBookings = getBookingsForDate(item.dateStr);
               const isSelected = selectedMonthDay === item.dateStr;
@@ -280,33 +282,30 @@ export default function AvailabilityGrid({
                 <div
                   key={item.dateStr}
                   onClick={() => setSelectedMonthDay(item.dateStr)}
-                  className="rounded-2xl transition-all cursor-pointer flex flex-col justify-between space-y-2.5"
+                  className="rounded-2xl transition-all cursor-pointer flex flex-col justify-between space-y-2 p-2.5 sm:p-3.5"
                   style={isSelected
                     ? {
                         background: '#FFF5F5',
                         border: '2px solid #DC2626',
-                        padding: '0.9rem',
                         boxShadow: '0 4px 18px rgba(220,38,38,0.18)'
                       }
                     : isToday
                     ? {
                         background: '#FFF8F8',
                         border: '1.5px solid #FCA5A5',
-                        padding: '0.9rem',
                         boxShadow: '0 3px 12px rgba(220,38,38,0.10)'
                       }
                     : {
                         background: '#F8F9FA',
                         border: '1.5px solid #E5E7EB',
-                        padding: '0.9rem',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                       }
                   }
                 >
                   {/* Day Top Header */}
-                  <div className="flex items-center justify-between border-b pb-2" style={{borderColor: isSelected || isToday ? '#FECACA' : '#E5E7EB'}}>
+                  <div className="flex items-center justify-between border-b pb-1.5 sm:pb-2" style={{borderColor: isSelected || isToday ? '#FECACA' : '#E5E7EB'}}>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center`}
+                      <span className={`text-[11px] sm:text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center`}
                         style={isToday
                           ? { background: '#DC2626', color: '#FFFFFF', fontWeight: '800' }
                           : isSelected
@@ -316,10 +315,10 @@ export default function AvailabilityGrid({
                       >
                         {item.dayNumber}
                       </span>
-                      <span className="text-[12px] font-bold" style={{color:'#111827'}}>
+                      <span className="text-[11px] sm:text-[12px] font-bold" style={{color:'#111827'}}>
                         {monthName.slice(0, 3)} {item.dayNumber}
                       </span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border"
+                      <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded border"
                         style={{background:'#FEE2E2', color:'#B91C1C', borderColor:'#FCA5A5'}}
                       >
                         {new Date(item.dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
@@ -327,13 +326,13 @@ export default function AvailabilityGrid({
                     </div>
 
                     {dayBookings.length > 0 ? (
-                      <span className="badge font-bold text-[10px] px-2 py-0.5"
+                      <span className="badge font-bold text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5"
                         style={{background:'#FEE2E2', color:'#B91C1C', borderColor:'#FCA5A5'}}
                       >
                         {dayBookings.length} {dayBookings.length === 1 ? 'Event' : 'Events'}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold" style={{color:'#059669'}}>
+                      <span className="text-[9px] sm:text-[10px] font-semibold" style={{color:'#059669'}}>
                         • Open
                       </span>
                     )}
@@ -508,36 +507,38 @@ export default function AvailabilityGrid({
           VIEW 2: DAILY HOURLY MATRIX
           ========================================================================= */}
       {viewMode === 'daily' && (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           
           {/* Daily Date Controls Bar */}
-          <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-gray-200 bg-white shadow-xs">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setDatePreset('today')}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border"
-                style={selectedDate === '2026-09-05'
-                  ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
-                  : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
-                }
-              >
-                Today
-              </button>
-              <button
-                onClick={() => setDatePreset('tomorrow')}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border"
-                style={selectedDate === '2026-09-06'
-                  ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
-                  : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
-                }
-              >
-                Tomorrow
-              </button>
+          <div className="glass-panel p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 border border-gray-200 bg-white shadow-xs">
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <button
+                  onClick={() => setDatePreset('today')}
+                  className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all border"
+                  style={selectedDate === '2026-09-05'
+                    ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
+                    : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
+                  }
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setDatePreset('tomorrow')}
+                  className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all border"
+                  style={selectedDate === '2026-09-06'
+                    ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
+                    : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
+                  }
+                >
+                  Tomorrow
+                </button>
+              </div>
               
-              <div className="flex items-center gap-1.5 ml-2">
+              <div className="flex items-center gap-1 sm:gap-1.5 ml-auto sm:ml-2">
                 <button
                   onClick={() => changeDateByDays(-1)}
-                  className="p-1.5 rounded-lg bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
+                  className="p-1 sm:p-1.5 rounded-lg bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
                   title="Previous Day"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -546,12 +547,12 @@ export default function AvailabilityGrid({
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="input-field text-xs font-mono py-1 px-2.5 w-auto"
+                  className="input-field text-[11px] sm:text-xs font-mono py-1 px-2 sm:px-2.5 w-auto"
                   style={{color:'#111827'}}
                 />
                 <button
                   onClick={() => changeDateByDays(1)}
-                  className="p-1.5 rounded-lg bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
+                  className="p-1 sm:p-1.5 rounded-lg bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
                   title="Next Day"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -559,13 +560,13 @@ export default function AvailabilityGrid({
               </div>
             </div>
 
-            <div className="text-xs font-semibold px-3 py-1.5 rounded-xl border" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#111827'}}>
+            <div className="text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-center sm:text-left" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#111827'}}>
               📅 {formatDateFriendly(selectedDate)}
             </div>
           </div>
 
           {/* Matrix Legend */}
-          <div className="flex items-center gap-4 text-xs p-3 rounded-xl border overflow-x-auto" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#6B7280'}}>
+          <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs p-2.5 sm:p-3 rounded-xl border overflow-x-auto no-scrollbar whitespace-nowrap" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#6B7280'}}>
             <span className="font-bold text-[11px] mr-1" style={{color:'#111827'}}>Legend:</span>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded" style={{background:'#D1FAE5', border:'1px solid #10B981'}} />
@@ -582,16 +583,16 @@ export default function AvailabilityGrid({
           </div>
 
           {/* The Live Matrix Table */}
-          <div className="glass-panel rounded-2xl border overflow-hidden shadow-xl bg-white" style={{borderColor:'#E5E7EB'}}>
+          <div className="glass-panel rounded-2xl border overflow-hidden shadow-sm sm:shadow-xl bg-white" style={{borderColor:'#E5E7EB'}}>
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left min-w-[900px]">
+              <table className="w-full border-collapse text-left min-w-[700px] sm:min-w-[900px]">
                 <thead>
-                  <tr className="border-b text-xs font-bold uppercase tracking-wider" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#4B5563'}}>
-                    <th className="p-4 sticky left-0 z-20 border-r min-w-[200px]" style={{background:'#F9FAFB', borderColor:'#E5E7EB'}}>
-                      Campus Venue &amp; Capacity
+                  <tr className="border-b text-[11px] sm:text-xs font-bold uppercase tracking-wider" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#4B5563'}}>
+                    <th className="p-2.5 sm:p-4 sticky left-0 z-20 border-r min-w-[130px] sm:min-w-[190px] max-w-[140px] sm:max-w-[200px]" style={{background:'#F9FAFB', borderColor:'#E5E7EB'}}>
+                      Campus Venue
                     </th>
                     {timeSlots.map((slot) => (
-                      <th key={slot} className="p-3 text-center min-w-[70px] border-r font-mono text-[11px]" style={{borderColor:'#E5E7EB'}}>
+                      <th key={slot} className="p-2 sm:p-3 text-center min-w-[55px] sm:min-w-[70px] border-r font-mono text-[10px] sm:text-[11px]" style={{borderColor:'#E5E7EB'}}>
                         {formatTime12H(slot).replace(':00', '')}
                       </th>
                     ))}
@@ -602,12 +603,12 @@ export default function AvailabilityGrid({
                     <tr key={venue.id} className="hover:bg-gray-50/50 transition-colors">
                       
                       {/* Sticky Venue Header Column */}
-                      <td className="p-4 sticky left-0 z-10 border-r backdrop-blur-md" style={{background:'#FFFFFF', borderColor:'#E5E7EB'}}>
-                        <div className="font-bold truncate max-w-[200px]" style={{color:'#111827'}} title={venue.name}>
+                      <td className="p-2 sm:p-3.5 sticky left-0 z-10 border-r backdrop-blur-md max-w-[130px] sm:max-w-[190px]" style={{background:'#FFFFFF', borderColor:'#E5E7EB'}}>
+                        <div className="font-bold truncate text-xs sm:text-sm" style={{color:'#111827'}} title={venue.name}>
                           {venue.name}
                         </div>
-                        <div className="text-[11px] flex items-center gap-1 mt-0.5" style={{color:'#6B7280'}}>
-                          <span>{venue.type}</span> • <span className="font-semibold" style={{color:'#B91C1C'}}>{venue.capacity === 'NA' ? 'NA' : `${venue.capacity} seats`}</span>
+                        <div className="text-[10px] sm:text-[11px] flex items-center gap-1 mt-0.5 truncate" style={{color:'#6B7280'}}>
+                          <span className="truncate">{venue.type}</span> • <span className="font-semibold shrink-0" style={{color:'#B91C1C'}}>{venue.capacity === 'NA' ? 'NA' : `${venue.capacity} seats`}</span>
                         </div>
                       </td>
 
@@ -617,8 +618,8 @@ export default function AvailabilityGrid({
                         
                         if (venue.status === 'Maintenance') {
                           return (
-                            <td key={slot} className="p-1 border-r text-center" style={{borderColor:'#F3F4F6', background:'#F9FAFB'}}>
-                              <div className="w-full h-11 rounded-lg border flex items-center justify-center text-[10px] font-medium" style={{background:'#F3F4F6', borderColor:'#E5E7EB', color:'#9CA3AF'}}>
+                            <td key={slot} className="p-0.5 sm:p-1 border-r text-center min-w-[55px] sm:min-w-[70px]" style={{borderColor:'#F3F4F6', background:'#F9FAFB'}}>
+                              <div className="w-full h-9 sm:h-11 rounded-md sm:rounded-lg border flex items-center justify-center text-[9px] sm:text-[10px] font-medium" style={{background:'#F3F4F6', borderColor:'#E5E7EB', color:'#9CA3AF'}}>
                                 Maint
                               </div>
                             </td>
@@ -627,17 +628,17 @@ export default function AvailabilityGrid({
 
                         if (slotState.isOccupied) {
                           return (
-                            <td key={slot} className="p-1 border-r relative group" style={{borderColor:'#F3F4F6'}}>
+                            <td key={slot} className="p-0.5 sm:p-1 border-r relative group min-w-[55px] sm:min-w-[70px]" style={{borderColor:'#F3F4F6'}}>
                               <div 
                                 onClick={() => setSelectedEventForDetails(slotState.booking)}
-                                className="w-full h-11 rounded-lg p-1.5 flex flex-col justify-center transition-all cursor-pointer border text-white shadow-xs hover:scale-[1.02]"
+                                className="w-full h-9 sm:h-11 rounded-md sm:rounded-lg p-1 sm:p-1.5 flex flex-col justify-center transition-all cursor-pointer border text-white shadow-xs hover:scale-[1.02]"
                                 style={{background:'#DC2626', borderColor:'#B91C1C'}}
                                 title="Click to view full event details"
                               >
-                                <span className="font-bold truncate text-[10px] block text-white">
+                                <span className="font-bold truncate text-[9px] sm:text-[10px] block text-white leading-tight">
                                   {slotState.booking.eventTitle}
                                 </span>
-                                <span className="text-[9px] opacity-90 truncate block text-red-100 font-medium">
+                                <span className="text-[8px] sm:text-[9px] opacity-90 truncate block text-red-100 font-medium leading-tight">
                                   {slotState.booking.organizer}
                                 </span>
                               </div>
@@ -664,16 +665,16 @@ export default function AvailabilityGrid({
 
                         {/* Free Slot */}
                         return (
-                          <td key={slot} className="p-1 border-r" style={{borderColor:'#F3F4F6'}}>
+                          <td key={slot} className="p-0.5 sm:p-1 border-r min-w-[55px] sm:min-w-[70px]" style={{borderColor:'#F3F4F6'}}>
                             <button
                               onClick={() => onSlotClick(venue, selectedDate, slot)}
-                              className="w-full h-11 rounded-lg transition-all flex items-center justify-center group border"
+                              className="w-full h-9 sm:h-11 rounded-md sm:rounded-lg transition-all flex items-center justify-center group border"
                               style={{background:'#F0FDF4', borderColor:'#DCFCE7'}}
                               onMouseEnter={(e) => { e.currentTarget.style.background = '#DCFCE7'; e.currentTarget.style.borderColor = '#86EFAC'; }}
                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F0FDF4'; e.currentTarget.style.borderColor = '#DCFCE7'; }}
                               title={`Book ${venue.name} at ${formatTime12H(slot)}`}
                             >
-                              <span className="text-[10px] font-bold opacity-0 group-hover:opacity-100" style={{color:'#166534'}}>
+                              <span className="text-[9px] sm:text-[10px] font-bold opacity-0 group-hover:opacity-100" style={{color:'#166534'}}>
                                 + Book
                               </span>
                             </button>
