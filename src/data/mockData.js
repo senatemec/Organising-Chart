@@ -79,7 +79,7 @@ export const initialVenues = [
     location: 'Academic Blocks',
     status: 'Available',
     requiresRoomNumber: true,
-    image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80',
+    image: '/classroom.jpeg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -91,7 +91,7 @@ export const initialVenues = [
     capacity: 60,
     location: 'First Floor',
     status: 'Available',
-    image: '/cl1.jpg',
+    image: '/cl1.jpeg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -103,7 +103,7 @@ export const initialVenues = [
     capacity: 60,
     location: 'First Floor',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=80',
+    image: '/cl2.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -115,7 +115,7 @@ export const initialVenues = [
     capacity: 60,
     location: 'Electronics & Media Wing',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=1200&q=80',
+    image: '/mediahall.jpeg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
