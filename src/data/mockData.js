@@ -151,7 +151,7 @@ export const initialVenues = [
     capacity: 70,
     location: 'IT Block (1st Floor)',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80',
+    image: '/cir.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
