@@ -17,7 +17,7 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import { initialVenues, initialBookings } from '../data/mockData';
+import { initialVenues, initialBookings, initialAllowedUsers } from '../data/mockData';
 
 // Firebase configuration with environment variables and project defaults
 const firebaseConfig = {
@@ -85,7 +85,7 @@ export function subscribeToAuthState(onUserChanged) {
 }
 
 /**
- * Seed default campus venues to Firestore if collection is empty
+ * Seed default campus venues and authorized accounts to Firestore if empty
  */
 export async function seedInitialFirestoreData() {
   if (!db) return;
@@ -105,8 +105,28 @@ export async function seedInitialFirestoreData() {
         }
       }
     }
+
+    // Seed/sync authorized club Gmails whitelist
+    const usersSnap = await getDocs(collection(db, 'allowed_users'));
+    if (usersSnap.empty) {
+      console.log('Seeding authorized club Gmail accounts to Firestore...');
+      for (const user of initialAllowedUsers) {
+        await setDoc(doc(db, 'allowed_users', user.email.toLowerCase().trim()), {
+          society: user.society,
+          note: user.note,
+          createdAt: new Date().toISOString()
+        });
+      }
+    } else {
+      for (const user of initialAllowedUsers) {
+        await setDoc(doc(db, 'allowed_users', user.email.toLowerCase().trim()), {
+          society: user.society,
+          note: user.note
+        }, { merge: true });
+      }
+    }
   } catch (err) {
-    console.warn('Firestore initial venue seed check:', err);
+    console.warn('Firestore initial data seed check:', err);
   }
 }
 

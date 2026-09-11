@@ -9,7 +9,7 @@ import MyBookings from './components/MyBookings';
 import AnalyticsView from './components/AnalyticsView';
 import GoogleAuthModal from './components/GoogleAuthModal';
 
-import { initialVenues, initialBookings } from './data/mockData';
+import { initialVenues, initialBookings, initialAllowedUsers } from './data/mockData';
 import { 
   isFirebaseConfigured, 
   seedInitialFirestoreData, 
@@ -62,14 +62,22 @@ export default function App() {
 
   // Allowed Users (Whitelist of authorized booking accounts)
   const [allowedUsers, setAllowedUsers] = useState(() => {
-    const saved = localStorage.getItem('cs_allowed_users_v1');
+    const saved = localStorage.getItem('cs_allowed_users_v2');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const merged = [...parsed];
+          for (const initU of initialAllowedUsers) {
+            if (!merged.some(u => u.email.toLowerCase() === initU.email.toLowerCase())) {
+              merged.push(initU);
+            }
+          }
+          return merged;
+        }
       } catch (e) {}
     }
-    return [];
+    return initialAllowedUsers;
   });
 
   // Strict Whitelist Auth Policy
@@ -168,7 +176,7 @@ export default function App() {
   }, [bookings]);
 
   useEffect(() => {
-    localStorage.setItem('cs_allowed_users_v1', JSON.stringify(allowedUsers));
+    localStorage.setItem('cs_allowed_users_v2', JSON.stringify(allowedUsers));
   }, [allowedUsers]);
 
   useEffect(() => {

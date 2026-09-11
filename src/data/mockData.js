@@ -172,6 +172,31 @@ export const initialVenues = [
 
 export const initialBookings = [];
 
+export const initialAllowedUsers = [
+  { email: 'emf@mec.ac.in', society: 'EMF', note: 'EMF Representative' },
+  { email: 'tle@mec.ac.in', society: 'TLE MEC', note: 'TLE MEC Representative' },
+  { email: 'iedcmec@gmail.com', society: 'IEDC', note: 'IEDC Representative' },
+  { email: 'theilluminatiquiz@gmail.com', society: 'TIQ', note: 'TIQ Representative' },
+  { email: 'gdcmeofficial@gmail.com', society: 'GDC MEC', note: 'GDC MEC Representative' },
+  { email: 'reachmecmun@gmail.com', society: 'MUNSOC MEC', note: 'MUNSOC MEC Representative' },
+  { email: 'fortitudemec2026@gmail.com', society: 'FORTITUDE MEC', note: 'FORTITUDE MEC Representative' },
+  { email: 'reachtinkerhubmec@gmail.com', society: 'Tinkerhub MEC', note: 'Tinkerhub MEC Representative' },
+  { email: 'ieee@mec.ac.in', society: 'IEEE MEC', note: 'IEEE MEC Representative' },
+  { email: 'reachtedxmec@gmail.com', society: 'TEDxMEC', note: 'TEDxMEC Representative' },
+  { email: 'nsdc@mec.ac.in', society: 'NSDC MEC', note: 'NSDC MEC Representative' },
+  { email: 'macs@mec.ac.in', society: 'MACS MEC', note: 'MACS MEC Representative' },
+  { email: 'foss@mec.ac.in', society: 'FOSS MEC', note: 'FOSS MEC Representative' },
+  { email: 'mixedsignals@mec.ac.in', society: 'Mixed Signals MEC', note: 'Mixed Signals MEC Representative' },
+  { email: 'bhoomitrasena@mec.ac.in', society: 'Bhoomitrasena', note: 'Bhoomitrasena Representative' },
+  { email: 'bharatham.mec25@gmail.com', society: 'Bharatham', note: 'Bharatham Representative' },
+  { email: 'thebookthieves@mec.ac.in', society: 'TBT', note: 'TBT Representative' },
+  { email: 'yuvamec26@gmail.com', society: 'Yuva', note: 'Yuva Representative' },
+  { email: 'reachdebateclubmec@gmail.com', society: 'D.E.B.A.T.E Club', note: 'D.E.B.A.T.E Club Representative' },
+  { email: 'gdgc@mec.ac.in', society: 'GDGC MEC', note: 'GDGC MEC Representative' },
+  { email: 'sae@mec.ac.in', society: 'SAE MEC', note: 'SAE MEC Representative' },
+  { email: 'ietesf.mec@gmail.com', society: 'IETE', note: 'IETE Representative' }
+];
+
 export const studentSocieties = [
   'Union',
   'Principal',
@@ -187,7 +212,7 @@ export const studentSocieties = [
   'Tinkerhub MEC',
   'IEEE MEC',
   'TEDxMEC',
-  'NSDCMEC',
+  'NSDC MEC',
   'MACS MEC',
   'FOSS MEC',
   'Mixed Signals MEC',
