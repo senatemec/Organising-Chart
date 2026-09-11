@@ -18,7 +18,7 @@ export const initialVenues = [
     capacity: 800,
     location: 'External Auditorium',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80',
+    image: '/external.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -54,7 +54,7 @@ export const initialVenues = [
     capacity: 2500,
     location: 'Main Sports Complex & Grounds',
     status: 'Available',
-    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80',
+    image: '/ground.jpg',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
