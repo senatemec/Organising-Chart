@@ -6,7 +6,7 @@ export const initialVenues = [
     capacity: 120,
     location: 'Main Academic Block (Ground Floor)',
     status: 'Available',
-    image: '/internal.jpg',
+    image: '/internal.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -18,7 +18,7 @@ export const initialVenues = [
     capacity: 800,
     location: 'External Auditorium',
     status: 'Available',
-    image: '/external.jpg',
+    image: '/external.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -30,7 +30,7 @@ export const initialVenues = [
     capacity: 'NA',
     location: 'Student Activity Block (Ground Floor)',
     status: 'Available',
-    image: '/casa.jpg',
+    image: '/casa.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -42,7 +42,7 @@ export const initialVenues = [
     capacity: 'na',
     location: 'Management & Technology Wing',
     status: 'Available',
-    image: '/elga.jpg',
+    image: '/elga.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -54,7 +54,7 @@ export const initialVenues = [
     capacity: 2500,
     location: 'Main Sports Complex & Grounds',
     status: 'Available',
-    image: '/ground.jpg',
+    image: '/ground.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -66,7 +66,7 @@ export const initialVenues = [
     capacity: 'na',
     location: 'Central Campus Plaza',
     status: 'Available',
-    image: '/amphi.jpg',
+    image: '/amphi.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -79,7 +79,7 @@ export const initialVenues = [
     location: 'Academic Blocks',
     status: 'Available',
     requiresRoomNumber: true,
-    image: '/classroom.jpeg',
+    image: '/classroom.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -91,7 +91,7 @@ export const initialVenues = [
     capacity: 60,
     location: 'First Floor',
     status: 'Available',
-    image: '/cl1.jpeg',
+    image: '/cl1.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -103,7 +103,7 @@ export const initialVenues = [
     capacity: 60,
     location: 'First Floor',
     status: 'Available',
-    image: '/cl2.jpg',
+    image: '/cl2.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -115,7 +115,7 @@ export const initialVenues = [
     capacity: 60,
     location: 'Electronics & Media Wing',
     status: 'Available',
-    image: '/mediahall.jpeg',
+    image: '/mediahall.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -127,7 +127,7 @@ export const initialVenues = [
     capacity: 65,
     location: 'Skill & Innovation Center',
     status: 'Available',
-    image: '/sdpk.jpg',
+    image: '/sdpk.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -139,7 +139,7 @@ export const initialVenues = [
     capacity: 70,
     location: 'IT Block (Ground Floor)',
     status: 'Available',
-    image: '/ccf.jpg',
+    image: '/ccf.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -151,7 +151,7 @@ export const initialVenues = [
     capacity: 70,
     location: 'IT Block (1st Floor)',
     status: 'Available',
-    image: '/cir.jpg',
+    image: '/cir.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''
@@ -163,7 +163,7 @@ export const initialVenues = [
     capacity: 48,
     location: 'Placement & Corporate Block',
     status: 'Available',
-    image: '/cir.jpg',
+    image: '/cir.webp',
     amenities: [],
     contactPerson: '',
     contactPhone: ''

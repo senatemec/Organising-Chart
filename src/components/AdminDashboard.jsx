@@ -113,8 +113,8 @@ export default function AdminDashboard({
       <div className="glass-panel p-6 rounded-3xl border border-gray-200 bg-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3.5">
           <div className="flex items-center gap-1.5 bg-gray-50 p-1.5 rounded-2xl border border-gray-200 shrink-0">
-            <img src="/mec_college_logo.png" alt="MEC" className="w-9 h-9 object-contain rounded-lg bg-white p-0.5 border border-gray-200" />
-            <img src="/union_mec_logo.png" alt="Union MEC" className="w-9 h-9 object-contain rounded-lg bg-white p-0.5 border border-gray-200" />
+            <img src="/mec_college_logo.webp" alt="MEC" className="w-9 h-9 object-contain rounded-lg bg-white p-0.5 border border-gray-200" />
+            <img src="/union_mec_logo.webp" alt="Union MEC" className="w-9 h-9 object-contain rounded-lg bg-white p-0.5 border border-gray-200" />
           </div>
           <div>
             <div className="flex items-center gap-2">

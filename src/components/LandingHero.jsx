@@ -44,8 +44,8 @@ export default function LandingHero({
             style={{boxShadow: '0 1px 6px rgba(0,0,0,0.07)'}}
           >
             <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
-              <img src="/mec_college_logo.png" alt="MEC" className="w-5 h-5 object-contain rounded bg-white p-0.5" />
-              <img src="/union_mec_logo.png" alt="Union MEC" className="w-5 h-5 object-contain rounded bg-white p-0.5" />
+              <img src="/mec_college_logo.webp" alt="MEC" className="w-5 h-5 object-contain rounded bg-white p-0.5" />
+              <img src="/union_mec_logo.webp" alt="Union MEC" className="w-5 h-5 object-contain rounded bg-white p-0.5" />
             </div>
             <span className="font-semibold" style={{color:'#000000'}}>Govt. Model Engineering College</span>
             <span style={{color:'#D1D5DB'}}>•</span>

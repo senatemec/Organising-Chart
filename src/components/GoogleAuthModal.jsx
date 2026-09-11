@@ -88,7 +88,7 @@ export default function GoogleAuthModal({
               const account = {
                 name: payload.name || userEmail.split('@')[0],
                 email: userEmail,
-                avatar: payload.picture || (isSenateAdmin ? '/union_mec_logo.png' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'),
+                avatar: payload.picture || (isSenateAdmin ? '/union_mec_logo.webp' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'),
                 isUnionAdmin: isSenateAdmin,
                 society: matchedUser?.society || (isSenateAdmin ? 'Union Senate' : 'Authorized Organizer'),
                 role: isSenateAdmin ? 'Union Senate Executive' : (matchedUser?.note || 'Authorized Organizer')
@@ -142,8 +142,8 @@ export default function GoogleAuthModal({
         {/* Modal Header */}
         <div className="text-center space-y-3">
           <div className="flex items-center justify-center gap-2">
-            <img src="/mec_college_logo.png" alt="MEC Logo" className="w-10 h-10 object-contain rounded-xl bg-white p-1 border border-gray-200 shadow-sm" />
-            <img src="/union_mec_logo.png" alt="Union MEC" className="w-10 h-10 object-contain rounded-xl bg-white p-1 border border-gray-200 shadow-sm" />
+            <img src="/mec_college_logo.webp" alt="MEC Logo" className="w-10 h-10 object-contain rounded-xl bg-white p-1 border border-gray-200 shadow-sm" />
+            <img src="/union_mec_logo.webp" alt="Union MEC" className="w-10 h-10 object-contain rounded-xl bg-white p-1 border border-gray-200 shadow-sm" />
           </div>
 
           <div>

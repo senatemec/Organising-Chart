@@ -32,7 +32,7 @@ import { CheckCircle2, AlertCircle, Info, Sparkles, XCircle, Cloud, Database } f
 export default function App() {
   // Persistent State with Smart Migration
   const [venues, setVenues] = useState(() => {
-    const saved = localStorage.getItem('cs_venues_v14');
+    const saved = localStorage.getItem('cs_venues_v15');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -162,7 +162,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('cs_venues_v14', JSON.stringify(venues));
+    localStorage.setItem('cs_venues_v15', JSON.stringify(venues));
   }, [venues]);
 
   useEffect(() => {
@@ -563,8 +563,8 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-lg border border-gray-200">
-              <img src="/mec_college_logo.png" alt="MEC" className="w-5 h-5 object-contain bg-white rounded p-0.5" />
-              <img src="/union_mec_logo.png" alt="Union MEC" className="w-5 h-5 object-contain bg-white rounded p-0.5" />
+              <img src="/mec_college_logo.webp" alt="MEC" className="w-5 h-5 object-contain bg-white rounded p-0.5" />
+              <img src="/union_mec_logo.webp" alt="Union MEC" className="w-5 h-5 object-contain bg-white rounded p-0.5" />
             </div>
             <div className="text-gray-500 text-left">
               © 2026 <strong className="text-gray-800">Govt. Model Engineering College</strong> • Managed by <strong style={{color:'#DC2626'}}>Union MEC</strong>

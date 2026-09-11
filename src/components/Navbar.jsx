@@ -49,12 +49,12 @@ export default function Navbar({
           {/* Official Logos */}
           <div className="flex items-center gap-1 sm:gap-2 bg-gray-50 p-1 rounded-xl border border-gray-200 group-hover:border-red-200 transition-colors shrink-0">
             <img 
-              src="/mec_college_logo.png" 
+              src="/mec_college_logo.webp" 
               alt="Govt. Model Engineering College" 
               className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-md sm:rounded-lg bg-white p-0.5" 
             />
             <img 
-              src="/union_mec_logo.png" 
+              src="/union_mec_logo.webp" 
               alt="Union MEC" 
               className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-md sm:rounded-lg bg-white p-0.5" 
             />
