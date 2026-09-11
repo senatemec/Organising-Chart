@@ -8,6 +8,8 @@ import AdminDashboard from './components/AdminDashboard';
 import MyBookings from './components/MyBookings';
 import AnalyticsView from './components/AnalyticsView';
 import GoogleAuthModal from './components/GoogleAuthModal';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import { initialVenues, initialBookings, initialAllowedUsers } from './data/mockData';
 import { 
@@ -587,6 +589,10 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Vercel Web Analytics & Speed Performance Monitoring */}
+      <Analytics />
+      <SpeedInsights />
 
     </div>
   );
