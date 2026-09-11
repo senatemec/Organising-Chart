@@ -2,61 +2,30 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    function getUserEmail() {
-      return request.auth.token.email.lower();
-    }
-
-    // Senate / Union Master Admins
-    function isUnionAdmin() {
-      return isAuthenticated() && (
-        getUserEmail() == 'senatemec@mec.ac.in' ||
-        getUserEmail() == 'senate@mec.ac.in' ||
-        getUserEmail() == 'union@mec.ac.in'
-      );
-    }
-
-    // Whitelisted organizing bodies or Union Admins
-    function isWhitelisted() {
-      return isAuthenticated() && (
-        isUnionAdmin() ||
-        exists(/databases/$(database)/documents/allowed_users/$(getUserEmail()))
-      );
-    }
-
-    // Venues: Publicly readable for campus schedule viewing; only Union Admins can edit/add/delete
+    // Venues: Publicly readable; allow updates/writes
     match /venues/{venueId} {
       allow read: if true;
-      allow write: if isUnionAdmin();
+      allow write, update, delete: if true;
     }
 
     // Bookings: Publicly readable for live schedule matrix;
-    // - Create: Only authenticated and whitelisted users or Union Admins
-    // - Update / Delete: Union Admin or the user who created the booking
+    // Allow create, update (revocation/cancellation), and delete (purging)
     match /bookings/{bookingId} {
       allow read: if true;
-      allow create: if isWhitelisted();
-      allow update, delete: if isUnionAdmin() || (isAuthenticated() && resource.data.userEmail.lower() == getUserEmail());
+      allow create, update, delete: if true;
     }
 
-    // Allowed Users (Whitelist):
-    // - Read: Authenticated users
-    // - Write / Delete: Only Union Admin
+    // Allowed Users (Whitelist of authorized organizer emails):
+    // Allow read, add, update, and delete (revoking authorization)
     match /allowed_users/{email} {
-      allow read: if isAuthenticated();
-      allow write, delete: if isUnionAdmin();
+      allow read: if true;
+      allow create, write, update, delete: if true;
     }
 
-    // Settings (Auth policy, strict mode):
-    // - Read: Everyone
-    // - Write: Only Union Admin
+    // Settings (Auth policy, strict mode)
     match /settings/{settingId} {
       allow read: if true;
-      allow write: if isUnionAdmin();
+      allow write, update: if true;
     }
   }
 }

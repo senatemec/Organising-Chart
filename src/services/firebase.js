@@ -106,23 +106,18 @@ export async function seedInitialFirestoreData() {
       }
     }
 
-    // Seed/sync authorized club Gmails whitelist
+    // Seed authorized club Gmails whitelist only if collection is empty (first initialization)
     const usersSnap = await getDocs(collection(db, 'allowed_users'));
     if (usersSnap.empty) {
-      console.log('Seeding authorized club Gmail accounts to Firestore...');
+      console.log('Seeding initial authorized club Gmail accounts to Firestore...');
       for (const user of initialAllowedUsers) {
-        await setDoc(doc(db, 'allowed_users', user.email.toLowerCase().trim()), {
+        const cleanEmail = user.email.toLowerCase().trim();
+        await setDoc(doc(db, 'allowed_users', cleanEmail), {
+          email: cleanEmail,
           society: user.society,
           note: user.note,
           createdAt: new Date().toISOString()
         });
-      }
-    } else {
-      for (const user of initialAllowedUsers) {
-        await setDoc(doc(db, 'allowed_users', user.email.toLowerCase().trim()), {
-          society: user.society,
-          note: user.note
-        }, { merge: true });
       }
     }
   } catch (err) {

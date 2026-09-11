@@ -42,6 +42,7 @@ export default function AdminDashboard({
   const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
   const [cancelReasonModal, setCancelReasonModal] = useState(null);
   const [reasonText, setReasonText] = useState('');
+  const [revokeWholePackage, setRevokeWholePackage] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -70,7 +71,19 @@ export default function AdminDashboard({
     if (cancelReasonModal) {
       onAdminCancelBooking(
         cancelReasonModal.id, 
-        reasonText || 'Cancelled by Union Admin: Administrative priority / Official college requirement.'
+        reasonText || 'Cancelled by Union Admin: Administrative priority / Official college requirement.',
+        revokeWholePackage
+      );
+      setCancelReasonModal(null);
+      setReasonText('');
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (cancelReasonModal && onAdminDeleteBooking) {
+      onAdminDeleteBooking(
+        cancelReasonModal.id,
+        revokeWholePackage
       );
       setCancelReasonModal(null);
       setReasonText('');
@@ -626,65 +639,101 @@ export default function AdminDashboard({
       )}
 
       {/* MANDATORY CANCELLATION REASON MODAL */}
-      {cancelReasonModal && (
-        <div className="modal-overlay animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setCancelReasonModal(null); }}>
-          <div className="glass-panel w-full max-w-md rounded-3xl border border-gray-200 p-6 relative bg-white shadow-2xl space-y-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5" />
+      {cancelReasonModal && (() => {
+        const siblingBookings = cancelReasonModal.eventId
+          ? bookings.filter(b => b.eventId === cancelReasonModal.eventId)
+          : [];
+        const isPackage = cancelReasonModal.eventId && siblingBookings.length > 1;
+
+        return (
+          <div className="modal-overlay animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setCancelReasonModal(null); }}>
+            <div className="glass-panel w-full max-w-md rounded-3xl border border-gray-200 p-6 relative bg-white shadow-2xl space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-gray-900">Revoke Booking Permit</h3>
+                  <p className="text-xs text-gray-600">
+                    {cancelReasonModal.id} • {cancelReasonModal.venueName}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-extrabold text-gray-900">Revoke Booking Permit</h3>
-                <p className="text-xs text-gray-600">
-                  {cancelReasonModal.id} • {cancelReasonModal.venueName}
+
+              <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1.5 text-xs">
+                <div className="font-bold text-gray-900">{cancelReasonModal.eventTitle}</div>
+                <div className="text-gray-600 font-semibold">{cancelReasonModal.organizer}</div>
+                <div className="font-mono text-red-700 text-[11px] font-bold">
+                  {formatDateFriendly(cancelReasonModal.date)} ({formatTime12H(cancelReasonModal.startTime)} - {formatTime12H(cancelReasonModal.endTime)})
+                </div>
+                {isPackage && (
+                  <div className="mt-2 pt-2 border-t border-gray-200 text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200 space-y-1.5">
+                    <span className="font-bold block">📦 Multi-Venue Event Package ({cancelReasonModal.eventId})</span>
+                    <p className="text-gray-700 text-[10px]">
+                      Part of an event package with {siblingBookings.length} venues ({siblingBookings.map(b => b.venueName).join(', ')}).
+                    </p>
+                    <label className="flex items-center gap-2 mt-1 text-gray-900 font-bold cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={revokeWholePackage}
+                        onChange={(e) => setRevokeWholePackage(e.target.checked)}
+                        className="rounded text-red-600 focus:ring-red-500"
+                      />
+                      <span>Revoke all {siblingBookings.length} venues in this package</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-red-600" />
+                  <span>Administrative Reason for Revocation:</span>
+                </label>
+                <textarea
+                  rows="3"
+                  value={reasonText}
+                  onChange={(e) => setReasonText(e.target.value)}
+                  placeholder="e.g. Venue required for official Institute Senate Meeting / Principal Address."
+                  className="input-field text-xs w-full resize-none"
+                />
+                <p className="text-[11px] text-gray-500">
+                  This notice will appear on the society's booking permit and release the slot.
                 </p>
               </div>
-            </div>
 
-            <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-1 text-xs">
-              <div className="font-bold text-gray-900">{cancelReasonModal.eventTitle}</div>
-              <div className="text-gray-600 font-semibold">{cancelReasonModal.organizer}</div>
-              <div className="font-mono text-red-700 text-[11px] font-bold">
-                {formatDateFriendly(cancelReasonModal.date)} ({formatTime12H(cancelReasonModal.startTime)} - {formatTime12H(cancelReasonModal.endTime)})
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100 flex-wrap">
+                {onAdminDeleteBooking && (
+                  <button
+                    type="button"
+                    onClick={handleConfirmDelete}
+                    className="text-xs text-gray-500 hover:text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition-colors font-semibold"
+                    title="Purge completely from database"
+                  >
+                    Delete Permanently
+                  </button>
+                )}
+                <div className="flex items-center gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => setCancelReasonModal(null)}
+                    className="btn-secondary text-xs py-2 px-3"
+                  >
+                    Go Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmCancel}
+                    className="btn-danger text-xs py-2 px-4 font-bold"
+                  >
+                    Confirm Revocation
+                  </button>
+                </div>
               </div>
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-red-600" />
-                <span>Administrative Reason for Revocation:</span>
-              </label>
-              <textarea
-                rows="3"
-                value={reasonText}
-                onChange={(e) => setReasonText(e.target.value)}
-                placeholder="e.g. Venue required for official Institute Senate Meeting / Principal Address."
-                className="input-field text-xs w-full resize-none"
-              />
-              <p className="text-[11px] text-gray-500">
-                This notice will appear on the society's booking permit and release the slot.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setCancelReasonModal(null)}
-                className="btn-secondary text-xs py-2 px-4"
-              >
-                Go Back
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmCancel}
-                className="btn-danger text-xs py-2 px-5 font-bold"
-              >
-                Confirm Revocation
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
     </div>
   );

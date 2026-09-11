@@ -230,6 +230,7 @@ export default function BookingModal({
       approvedBy: 'Auto-Confirmed',
       description: description.trim(),
       contactEmail: initialEmail || '',
+      userEmail: initialEmail || '',
       createdAt: new Date().toISOString()
     };
 
@@ -262,6 +263,7 @@ export default function BookingModal({
         approvedBy: 'Auto-Confirmed',
         description: description.trim(),
         contactEmail: initialEmail || '',
+        userEmail: initialEmail || '',
         createdAt: new Date().toISOString()
       };
     });

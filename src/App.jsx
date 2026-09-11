@@ -62,18 +62,12 @@ export default function App() {
 
   // Allowed Users (Whitelist of authorized booking accounts)
   const [allowedUsers, setAllowedUsers] = useState(() => {
-    const saved = localStorage.getItem('cs_allowed_users_v2');
+    const saved = localStorage.getItem('cs_allowed_users_v3');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const merged = [...parsed];
-          for (const initU of initialAllowedUsers) {
-            if (!merged.some(u => u.email.toLowerCase() === initU.email.toLowerCase())) {
-              merged.push(initU);
-            }
-          }
-          return merged;
+        if (Array.isArray(parsed)) {
+          return parsed;
         }
       } catch (e) {}
     }
@@ -176,7 +170,7 @@ export default function App() {
   }, [bookings]);
 
   useEffect(() => {
-    localStorage.setItem('cs_allowed_users_v2', JSON.stringify(allowedUsers));
+    localStorage.setItem('cs_allowed_users_v3', JSON.stringify(allowedUsers));
   }, [allowedUsers]);
 
   useEffect(() => {
@@ -261,10 +255,12 @@ export default function App() {
     showToast(`Granted booking authorization to ${cleanEmail}`, 'success');
   };
 
-  // Remove Allowed User from Whitelist
+  // Remove Allowed User from Whitelist (Revoke access)
   const handleRemoveAllowedUser = async (email) => {
     const cleanEmail = email.toLowerCase().trim();
-    setAllowedUsers(allowedUsers.filter(u => u.email.toLowerCase() !== cleanEmail));
+    const updated = allowedUsers.filter(u => u.email.toLowerCase() !== cleanEmail);
+    setAllowedUsers(updated);
+    localStorage.setItem('cs_allowed_users_v3', JSON.stringify(updated));
 
     if (isFirebaseConfigured) {
       try {
@@ -329,40 +325,78 @@ export default function App() {
     }
   };
 
-  // Union Admin Cancel with message
-  const handleAdminCancelBooking = async (bookingId, reason) => {
+  // Union Admin Cancel/Revoke with message and multi-venue package support
+  const handleAdminCancelBooking = async (bookingId, reason, cancelWholePackage = false) => {
+    const targetBooking = bookings.find(b => b.id === bookingId);
+    const eventIdToCancel = (cancelWholePackage && targetBooking?.eventId) ? targetBooking.eventId : null;
+
     const updates = {
       status: 'cancelled',
       cancelledBy: currentUser?.email || 'Union Admin',
-      cancellationReason: reason
+      cancellationReason: reason || 'Cancelled by Union Admin: Administrative requirement / Priority adjustment.'
     };
 
-    setBookings(bookings.map((b) => b.id === bookingId ? { ...b, ...updates } : b));
+    let updatedBookings;
+    let targetList = [];
+    if (eventIdToCancel) {
+      targetList = bookings.filter(b => b.eventId === eventIdToCancel);
+      updatedBookings = bookings.map(b => b.eventId === eventIdToCancel ? { ...b, ...updates } : b);
+    } else {
+      targetList = bookings.filter(b => b.id === bookingId);
+      updatedBookings = bookings.map(b => b.id === bookingId ? { ...b, ...updates } : b);
+    }
+
+    setBookings(updatedBookings);
+    localStorage.setItem('cs_bookings_v8', JSON.stringify(updatedBookings));
     
     if (isFirebaseConfigured) {
       try {
-        await dbUpdateBooking(bookingId, updates);
+        await Promise.all(targetList.map(b => dbUpdateBooking(b.id, updates)));
       } catch (e) {
         console.error('Firebase update error:', e);
       }
     }
 
-    showToast(`Booking ${bookingId} cancelled by Union Admin.`, 'error');
+    showToast(
+      eventIdToCancel
+        ? `Event package ${eventIdToCancel} (${targetList.length} venues) revoked by Union Admin.`
+        : `Booking permit ${bookingId} revoked by Union Admin.`,
+      'error'
+    );
   };
 
   // Student cancel own booking / Admin purge booking
-  const handleCancelBooking = async (bookingId) => {
-    setBookings(bookings.filter(b => b.id !== bookingId));
+  const handleCancelBooking = async (bookingId, deleteWholePackage = false) => {
+    const targetBooking = bookings.find(b => b.id === bookingId);
+    const eventIdToDelete = (deleteWholePackage && targetBooking?.eventId) ? targetBooking.eventId : null;
+
+    let updatedBookings;
+    let deletedList = [];
+    if (eventIdToDelete) {
+      deletedList = bookings.filter(b => b.eventId === eventIdToDelete);
+      updatedBookings = bookings.filter(b => b.eventId !== eventIdToDelete);
+    } else {
+      deletedList = bookings.filter(b => b.id === bookingId);
+      updatedBookings = bookings.filter(b => b.id !== bookingId);
+    }
+
+    setBookings(updatedBookings);
+    localStorage.setItem('cs_bookings_v8', JSON.stringify(updatedBookings));
 
     if (isFirebaseConfigured) {
       try {
-        await dbDeleteBooking(bookingId);
+        await Promise.all(deletedList.map(b => dbDeleteBooking(b.id)));
       } catch (e) {
         console.error('Firebase delete error:', e);
       }
     }
 
-    showToast(`Booking ${bookingId} deleted.`, 'info');
+    showToast(
+      eventIdToDelete
+        ? `Event package ${eventIdToDelete} purged completely.`
+        : `Booking ${bookingId} permanently deleted.`,
+      'info'
+    );
   };
 
   // Toggle Maintenance Status (Admin only)
