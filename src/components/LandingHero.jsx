@@ -2,14 +2,12 @@ import React from 'react';
 import { 
   CalendarDays, 
   Sparkles, 
-  ArrowRight,
-  MapPin,
-  Clock,
-  CheckCircle2
+  MapPin, 
+  Clock, 
+  CheckCircle2 
 } from 'lucide-react';
 
 export default function LandingHero({ 
-  onExploreClick, 
   onScheduleClick, 
   onBookClick 
 }) {
@@ -95,15 +93,6 @@ export default function LandingHero({
             >
               <CalendarDays className="w-4 h-4" style={{color:'#DC2626'}} />
               <span>Live Schedule Matrix</span>
-            </button>
-
-            <button
-              onClick={onExploreClick}
-              className="btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-4 border-transparent bg-transparent w-full sm:w-auto justify-center"
-              style={{color:'#6B7280'}}
-            >
-              <span>Explore Facilities</span>
-              <ArrowRight className="w-4 h-4 ml-0.5" />
             </button>
           </div>
 

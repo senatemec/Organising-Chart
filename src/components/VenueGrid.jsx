@@ -58,10 +58,6 @@ export default function VenueGrid({ venues, onBookClick, onViewDetails, onSchedu
       {/* 1. Hero Showcase on Landing Page */}
       <LandingHero
         totalVenues={venues.length}
-        onExploreClick={() => {
-          const el = document.getElementById('venues-showcase');
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }}
         onScheduleClick={onScheduleClick}
         onBookClick={() => onBookClick(venues[0])}
       />

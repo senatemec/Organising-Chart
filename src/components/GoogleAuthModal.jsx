@@ -107,6 +107,7 @@ export default function GoogleAuthModal({
 
       // Clear existing button container and render Google official button
       googleBtnRef.current.innerHTML = '';
+      const buttonWidth = Math.min(300, Math.max(240, window.innerWidth - 80));
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         type: 'standard',
         theme: 'outline',
@@ -114,7 +115,7 @@ export default function GoogleAuthModal({
         text: 'signin_with',
         shape: 'pill',
         logo_alignment: 'left',
-        width: 320
+        width: buttonWidth
       });
 
       // Trigger Google One-Tap prompt automatically
@@ -129,14 +130,14 @@ export default function GoogleAuthModal({
 
   return (
     <div className="modal-overlay animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="glass-panel w-full max-w-md rounded-3xl border border-gray-200 p-6 sm:p-8 relative bg-white shadow-2xl space-y-6">
+      <div className="glass-panel w-full max-w-md rounded-2xl sm:rounded-3xl border border-gray-200 p-5 sm:p-7 md:p-8 relative bg-white shadow-2xl space-y-5 sm:space-y-6">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200 flex items-center justify-center transition-colors border border-gray-200"
+          className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200 flex items-center justify-center transition-colors border border-gray-200"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Modal Header */}

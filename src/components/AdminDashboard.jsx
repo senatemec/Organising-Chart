@@ -110,15 +110,15 @@ export default function AdminDashboard({
     <div className="space-y-6">
       
       {/* Admin Header Banner */}
-      <div className="glass-panel p-6 rounded-3xl border border-gray-200 bg-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-center gap-3.5">
+      <div className="glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-200 bg-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 bg-gray-50 p-1.5 rounded-2xl border border-gray-200 shrink-0">
-            <img src="/mec_college_logo.webp" alt="MEC" className="w-9 h-9 object-contain rounded-lg bg-white p-0.5 border border-gray-200" />
-            <img src="/union_mec_logo.webp" alt="Union MEC" className="w-9 h-9 object-contain rounded-lg bg-white p-0.5 border border-gray-200" />
+            <img src="/mec_college_logo.webp" alt="MEC" className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-lg bg-white p-0.5 border border-gray-200" />
+            <img src="/union_mec_logo.webp" alt="Union MEC" className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-lg bg-white p-0.5 border border-gray-200" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Union MEC Executive Portal</h2>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-extrabold text-gray-900 tracking-tight truncate">Union MEC Executive Portal</h2>
               <span className="badge font-bold text-[10px]" style={{ background: '#FEE2E2', color: '#B91C1C', borderColor: '#FCA5A5' }}>
                 ADMIN CONTROL
               </span>
@@ -130,27 +130,27 @@ export default function AdminDashboard({
         </div>
 
         {/* Quick Stats */}
-        <div className="flex items-center gap-3 text-xs">
-          <div className="bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-200 text-center">
-            <div className="text-emerald-700 font-extrabold text-lg">{activeBookings.length}</div>
-            <div className="text-gray-600 text-[10px] font-semibold">Active Bookings</div>
+        <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-3 text-xs w-full md:w-auto">
+          <div className="bg-gray-50 px-2.5 sm:px-3.5 py-2 rounded-xl border border-gray-200 text-center">
+            <div className="text-emerald-700 font-extrabold text-base sm:text-lg">{activeBookings.length}</div>
+            <div className="text-gray-600 text-[10px] font-semibold truncate">Active Bookings</div>
           </div>
-          <div className="bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-200 text-center">
-            <div className="text-red-700 font-extrabold text-lg">{allowedUsers.length + 1}</div>
-            <div className="text-gray-600 text-[10px] font-semibold">Allowed Accounts</div>
+          <div className="bg-gray-50 px-2.5 sm:px-3.5 py-2 rounded-xl border border-gray-200 text-center">
+            <div className="text-red-700 font-extrabold text-base sm:text-lg">{allowedUsers.length + 1}</div>
+            <div className="text-gray-600 text-[10px] font-semibold truncate">Allowed Accts</div>
           </div>
-          <div className="bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-200 text-center">
-            <div className="text-gray-900 font-extrabold text-lg">{venues.length}</div>
-            <div className="text-gray-600 text-[10px] font-semibold">Total Venues</div>
+          <div className="bg-gray-50 px-2.5 sm:px-3.5 py-2 rounded-xl border border-gray-200 text-center">
+            <div className="text-gray-900 font-extrabold text-base sm:text-lg">{venues.length}</div>
+            <div className="text-gray-600 text-[10px] font-semibold truncate">Total Venues</div>
           </div>
         </div>
       </div>
 
       {/* Sub-Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-gray-200 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-gray-200 pb-2 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveSubTab('active-events')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
             activeSubTab === 'active-events'
               ? 'bg-red-600 text-white shadow-sm'
               : 'text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 border border-gray-200'

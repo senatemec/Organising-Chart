@@ -381,8 +381,8 @@ export default function AvailabilityGrid({
                   </div>
 
                   {/* Day Footer Action */}
-                  <div className="pt-1.5 border-t flex items-center justify-between text-[10px]" style={{borderColor: isSelected || isToday ? '#FECACA' : '#E5E7EB'}}>
-                    <span style={{color:'#6B7280'}}>
+                  <div className="pt-2 border-t flex items-center justify-between gap-1 text-[10px]" style={{borderColor: isSelected || isToday ? '#FECACA' : '#E5E7EB'}}>
+                    <span className="font-medium truncate" style={{color:'#6B7280'}}>
                       {dayBookings.length > 0 ? 'Click to inspect' : 'Free all day'}
                     </span>
                     <button
@@ -390,10 +390,26 @@ export default function AvailabilityGrid({
                         e.stopPropagation();
                         onSlotClick(venues[0], item.dateStr, '10:00');
                       }}
-                      className="font-semibold flex items-center gap-0.5"
-                      style={{color:'#DC2626'}}
+                      className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all duration-150 shadow-xs hover:shadow-sm active:scale-95 group/btn"
+                      style={{
+                        background: '#FEF2F2',
+                        color: '#B91C1C',
+                        border: '1px solid #FECACA'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#DC2626';
+                        e.currentTarget.style.color = '#FFFFFF';
+                        e.currentTarget.style.borderColor = '#DC2626';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#FEF2F2';
+                        e.currentTarget.style.color = '#B91C1C';
+                        e.currentTarget.style.borderColor = '#FECACA';
+                      }}
+                      title={`Book a venue on ${formatDateFriendly(item.dateStr)}`}
                     >
-                      <Plus className="w-2.5 h-2.5" /> Book
+                      <Plus className="w-3 h-3 transition-transform duration-200 group-hover/btn:rotate-90 stroke-[2.5]" />
+                      <span>Book</span>
                     </button>
                   </div>
 
@@ -436,9 +452,9 @@ export default function AvailabilityGrid({
                   </button>
                   <button
                     onClick={() => onSlotClick(venues[0], selectedMonthDay, '10:00')}
-                    className="btn-primary text-xs py-1.5 px-3.5"
+                    className="btn-primary text-xs py-1.5 px-3.5 flex items-center gap-1.5 font-bold shadow-sm hover:shadow-md transition-all active:scale-95 group"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5 transition-transform group-hover:rotate-90 stroke-[2.5]" />
                     <span>Book on this Date</span>
                   </button>
                 </div>
