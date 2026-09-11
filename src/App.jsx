@@ -12,12 +12,13 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import { initialVenues, initialBookings, initialAllowedUsers } from './data/mockData';
+import { formatDateFriendly } from './utils/availabilityUtils';
 import { 
   isFirebaseConfigured, 
   seedInitialFirestoreData, 
   subscribeToBookings, 
   subscribeToVenues, 
-  subscribeToAllowedUsers,
+  subscribeToAllowedUsers, 
   subscribeToAuthSettings,
   dbCreateBooking, 
   dbUpdateBooking, 
@@ -401,6 +402,109 @@ export default function App() {
     );
   };
 
+  // Admin Block All Venues for a Date (Campus-Wide Lockdown / Event Reservation)
+  const handleBlockAllVenues = async ({
+    date,
+    eventTitle = 'Campus-Wide Event (All Venues Blocked)',
+    organizer = 'College Student Union (Union MEC)',
+    startTime = '08:00',
+    endTime = '20:00',
+    description = 'All campus facilities reserved by College Union / Administration.',
+    autoRevokeConflicts = true
+  }) => {
+    const blockEventId = `BLK-${date.replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const nowIso = new Date().toISOString();
+
+    // Find any existing active bookings on that date
+    const conflictingBookings = bookings.filter(b => 
+      b.date === date && 
+      (b.status === 'confirmed' || b.status === 'approved') &&
+      !b.isDayBlock &&
+      !(b.eventId && b.eventId.startsWith('BLK-'))
+    );
+
+    let updatedBookings = [...bookings];
+
+    // If auto-revoke is enabled, cancel conflicting bookings with explanation
+    if (autoRevokeConflicts && conflictingBookings.length > 0) {
+      const cancelUpdates = {
+        status: 'cancelled',
+        cancelledBy: currentUser?.email || 'Union Admin',
+        cancellationReason: `Cancelled due to Day-Wide Campus Block: "${eventTitle}" on ${formatDateFriendly(date)}.`
+      };
+
+      updatedBookings = updatedBookings.map(b => {
+        if (b.date === date && (b.status === 'confirmed' || b.status === 'approved') && !b.isDayBlock && !(b.eventId && b.eventId.startsWith('BLK-'))) {
+          return { ...b, ...cancelUpdates };
+        }
+        return b;
+      });
+
+      if (isFirebaseConfigured) {
+        try {
+          await Promise.all(conflictingBookings.map(b => dbUpdateBooking(b.id, cancelUpdates)));
+        } catch (e) {
+          console.error('Firebase cancel conflicts error:', e);
+        }
+      }
+    }
+
+    // Create block entries for ALL registered venues in the system
+    const newBlockBookings = venues.map((venue, idx) => ({
+      id: `BK-BLK-${date.replace(/-/g, '')}-${idx + 1}-${Math.floor(100 + Math.random() * 900)}`,
+      eventId: blockEventId,
+      isDayBlock: true,
+      venueId: venue.id,
+      venueName: venue.name,
+      roomNumber: null,
+      eventTitle: eventTitle.trim(),
+      organizer: organizer.trim(),
+      date,
+      startTime,
+      endTime,
+      status: 'confirmed',
+      approvedBy: 'Union Admin (Campus Lockdown)',
+      description: description.trim(),
+      contactEmail: currentUser?.email || 'union@mec.ac.in',
+      userEmail: currentUser?.email || 'union@mec.ac.in',
+      createdAt: nowIso
+    }));
+
+    updatedBookings = [...newBlockBookings, ...updatedBookings];
+    setBookings(updatedBookings);
+    localStorage.setItem('cs_bookings_v8', JSON.stringify(updatedBookings));
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbCreateBooking(newBlockBookings);
+      } catch (e) {
+        console.error('Firebase day block create error:', e);
+      }
+    }
+
+    showToast(`All ${venues.length} campus venues blocked for ${formatDateFriendly(date)} ("${eventTitle}")!`, 'success');
+  };
+
+  // Admin Unblock All Venues for a Date
+  const handleUnblockDay = async (blockEventId) => {
+    const blockList = bookings.filter(b => b.eventId === blockEventId || (b.isDayBlock && b.eventId === blockEventId));
+    const targetDate = blockList[0]?.date;
+    const updatedBookings = bookings.filter(b => b.eventId !== blockEventId);
+
+    setBookings(updatedBookings);
+    localStorage.setItem('cs_bookings_v8', JSON.stringify(updatedBookings));
+
+    if (isFirebaseConfigured) {
+      try {
+        await Promise.all(blockList.map(b => dbDeleteBooking(b.id)));
+      } catch (e) {
+        console.error('Firebase unblock delete error:', e);
+      }
+    }
+
+    showToast(targetDate ? `All venues unlocked for ${formatDateFriendly(targetDate)}.` : 'Day block released successfully.', 'info');
+  };
+
   // Toggle Maintenance Status (Admin only)
   const handleToggleVenueStatus = async (venueId) => {
     const target = venues.find(v => v.id === venueId);
@@ -474,6 +578,8 @@ export default function App() {
             bookings={bookings}
             currentUser={currentUser}
             onAdminCancelBooking={handleAdminCancelBooking}
+            onBlockAllVenues={handleBlockAllVenues}
+            onUnblockDay={handleUnblockDay}
             onSlotClick={(venue, date, slot) => handleOpenBookingModal(venue, date, slot)}
           />
         )}
@@ -499,6 +605,8 @@ export default function App() {
             initialSubTab={activeTab === 'access-control' ? 'access-control' : 'active-events'}
             onAdminCancelBooking={handleAdminCancelBooking}
             onAdminDeleteBooking={handleCancelBooking}
+            onBlockAllVenues={handleBlockAllVenues}
+            onUnblockDay={handleUnblockDay}
             onAddAllowedUser={handleAddAllowedUser}
             onRemoveAllowedUser={handleRemoveAllowedUser}
             onToggleStrictAuth={handleToggleStrictAuth}

@@ -13,7 +13,11 @@ import {
   Filter, 
   Plus, 
   Layers,
-  Eye
+  Eye,
+  Lock,
+  Unlock,
+  ShieldAlert,
+  AlertTriangle
 } from 'lucide-react';
 import { timeSlots, formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
 import EventDetailsModal from './EventDetailsModal';
@@ -23,7 +27,9 @@ export default function AvailabilityGrid({
   bookings, 
   onSlotClick, 
   currentUser, 
-  onAdminCancelBooking 
+  onAdminCancelBooking,
+  onBlockAllVenues,
+  onUnblockDay 
 }) {
   const [viewMode, setViewMode] = useState('monthly'); // 'daily' | 'monthly'
   const [selectedDate, setSelectedDate] = useState('2026-09-05');
@@ -33,6 +39,15 @@ export default function AvailabilityGrid({
   
   // Selected Event to view full details modal
   const [selectedEventForDetails, setSelectedEventForDetails] = useState(null);
+
+  // Quick Day Block Modal State (for Union Admin directly from Schedule Matrix)
+  const [quickBlockModalOpen, setQuickBlockModalOpen] = useState(false);
+  const [quickBlockTargetDate, setQuickBlockTargetDate] = useState('2026-09-05');
+  const [quickBlockTitle, setQuickBlockTitle] = useState('College Union Day 2026');
+  const [quickBlockOrganizer, setQuickBlockOrganizer] = useState('College Student Union (Union MEC)');
+  const [quickBlockStartTime, setQuickBlockStartTime] = useState('08:00');
+  const [quickBlockEndTime, setQuickBlockEndTime] = useState('20:00');
+  const [quickBlockAutoRevoke, setQuickBlockAutoRevoke] = useState(true);
 
   // Change date by offset in days (for daily matrix)
   const changeDateByDays = (days) => {
@@ -277,6 +292,8 @@ export default function AvailabilityGrid({
               const dayBookings = getBookingsForDate(item.dateStr);
               const isSelected = selectedMonthDay === item.dateStr;
               const isToday = item.dateStr === '2026-09-05';
+              const dayBlock = dayBookings.find(b => (b.isDayBlock || (b.eventId && b.eventId.startsWith('BLK-'))));
+              const isDayBlocked = Boolean(dayBlock);
 
               return (
                 <div
@@ -294,6 +311,12 @@ export default function AvailabilityGrid({
                         background: '#FFF8F8',
                         border: '1.5px solid #FCA5A5',
                         boxShadow: '0 3px 12px rgba(220,38,38,0.10)'
+                      }
+                    : isDayBlocked
+                    ? {
+                        background: '#FFF5F5',
+                        border: '1.5px solid #F87171',
+                        boxShadow: '0 2px 10px rgba(220,38,38,0.08)'
                       }
                     : {
                         background: '#F8F9FA',
@@ -325,7 +348,13 @@ export default function AvailabilityGrid({
                       </span>
                     </div>
 
-                    {dayBookings.length > 0 ? (
+                    {isDayBlocked ? (
+                      <span className="badge font-bold text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 flex items-center gap-1"
+                        style={{background:'#FEE2E2', color:'#991B1B', borderColor:'#FCA5A5'}}
+                      >
+                        <Lock className="w-2.5 h-2.5 text-red-600" /> Day Block
+                      </span>
+                    ) : dayBookings.length > 0 ? (
                       <span className="badge font-bold text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5"
                         style={{background:'#FEE2E2', color:'#B91C1C', borderColor:'#FCA5A5'}}
                       >
@@ -419,46 +448,98 @@ export default function AvailabilityGrid({
           </div>
 
           {/* Selected Day Inspector Drawer */}
-          {selectedMonthDay && (
-            <div className="glass-panel p-5 rounded-2xl border space-y-4 shadow-xl animate-fade-in bg-white"
-              style={{borderColor:'#FCA5A5'}}>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center border"
-                    style={{background:'#FEE2E2', borderColor:'#FCA5A5'}}>
-                    <Calendar className="w-4 h-4" style={{color:'#DC2626'}} />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold" style={{color:'#000000'}}>
-                      {formatDateFriendly(selectedMonthDay)} — Bookings & Schedule
-                    </h3>
-                    <p className="text-xs" style={{color:'#555555'}}>
-                      {selectedDayBookings.length} confirmed venue {selectedDayBookings.length === 1 ? 'reservation' : 'reservations'} on this date • Click any event card to view full details
-                    </p>
-                  </div>
-                </div>
+          {selectedMonthDay && (() => {
+            const selectedDayBlockBooking = selectedDayBookings.find(b => (b.isDayBlock || (b.eventId && b.eventId.startsWith('BLK-'))));
+            const isSelectedDayBlocked = Boolean(selectedDayBlockBooking);
 
-                {/* Switch to Hourly Matrix for this day */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setSelectedDate(selectedMonthDay);
-                      setViewMode('daily');
-                    }}
-                    className="btn-secondary text-xs py-1.5 px-3"
-                  >
-                    <Clock className="w-3.5 h-3.5" style={{color:'#DC2626'}} />
-                    <span>View Hourly Timeline</span>
-                  </button>
-                  <button
-                    onClick={() => onSlotClick(venues[0], selectedMonthDay, '10:00')}
-                    className="btn-primary text-xs py-1.5 px-3.5 flex items-center gap-1.5 font-bold shadow-sm hover:shadow-md transition-all active:scale-95 group"
-                  >
-                    <Plus className="w-3.5 h-3.5 transition-transform group-hover:rotate-90 stroke-[2.5]" />
-                    <span>Book on this Date</span>
-                  </button>
+            return (
+              <div className="glass-panel p-5 rounded-2xl border space-y-4 shadow-xl animate-fade-in bg-white"
+                style={{borderColor:'#FCA5A5'}}>
+                
+                {/* Lockdown Active Banner in Inspector */}
+                {isSelectedDayBlocked && (
+                  <div className="bg-red-50 border border-red-300 p-3.5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 border border-red-300 flex items-center justify-center shrink-0">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-extrabold text-gray-900 text-sm flex items-center gap-2">
+                          <span>Campus-Wide Lockdown Active: {selectedDayBlockBooking.eventTitle}</span>
+                          <span className="badge font-bold text-[10px]" style={{ background: '#FEE2E2', color: '#991B1B', borderColor: '#FCA5A5' }}>
+                            ALL VENUES BLOCKED
+                          </span>
+                        </div>
+                        <p className="text-red-800 text-[11px] font-medium mt-0.5">
+                          All campus facilities reserved by {selectedDayBlockBooking.organizer} ({formatTime12H(selectedDayBlockBooking.startTime)} - {formatTime12H(selectedDayBlockBooking.endTime)})
+                        </p>
+                      </div>
+                    </div>
+                    {currentUser?.isUnionAdmin && onUnblockDay && (
+                      <button
+                        onClick={() => onUnblockDay(selectedDayBlockBooking.eventId)}
+                        className="btn-secondary text-xs py-1.5 px-3 font-bold hover:bg-red-100 hover:text-red-800 border-red-300 shrink-0 flex items-center gap-1.5"
+                      >
+                        <Unlock className="w-3.5 h-3.5 text-red-600" />
+                        <span>Unblock All Venues</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center border"
+                      style={{background:'#FEE2E2', borderColor:'#FCA5A5'}}>
+                      <Calendar className="w-4 h-4" style={{color:'#DC2626'}} />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold" style={{color:'#000000'}}>
+                        {formatDateFriendly(selectedMonthDay)} — Bookings & Schedule
+                      </h3>
+                      <p className="text-xs" style={{color:'#555555'}}>
+                        {selectedDayBookings.length} confirmed venue {selectedDayBookings.length === 1 ? 'reservation' : 'reservations'} on this date • Click any event card to view full details
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions Bar */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Admin Block Day CTA */}
+                    {currentUser?.isUnionAdmin && !isSelectedDayBlocked && (
+                      <button
+                        onClick={() => {
+                          setQuickBlockTargetDate(selectedMonthDay);
+                          setQuickBlockTitle('College Union Day 2026');
+                          setQuickBlockModalOpen(true);
+                        }}
+                        className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                        title="Block all campus venues for this date"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-red-600" />
+                        <span>Block All Venues</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        setSelectedDate(selectedMonthDay);
+                        setViewMode('daily');
+                      }}
+                      className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                    >
+                      <Clock className="w-3.5 h-3.5" style={{color:'#DC2626'}} />
+                      <span>View Hourly Timeline</span>
+                    </button>
+                    <button
+                      onClick={() => onSlotClick(venues[0], selectedMonthDay, '10:00')}
+                      className="btn-primary text-xs py-1.5 px-3.5 flex items-center gap-1.5 font-bold shadow-sm hover:shadow-md transition-all active:scale-95 group"
+                    >
+                      <Plus className="w-3.5 h-3.5 transition-transform group-hover:rotate-90 stroke-[2.5]" />
+                      <span>Book on this Date</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
 
               {/* Day's Event List (Clickable cards to view full event details) */}
               {selectedDayBookings.length > 0 ? (
@@ -514,7 +595,8 @@ export default function AvailabilityGrid({
                 </div>
               )}
             </div>
-          )}
+          );
+        })()}
 
         </div>
       )}
@@ -522,64 +604,115 @@ export default function AvailabilityGrid({
       {/* =========================================================================
           VIEW 2: DAILY HOURLY MATRIX
           ========================================================================= */}
-      {viewMode === 'daily' && (
-        <div className="space-y-4 sm:space-y-6">
-          
-          {/* Daily Date Controls Bar */}
-          <div className="glass-panel p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 border border-gray-200 bg-white shadow-xs">
-            <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <button
-                  onClick={() => setDatePreset('today')}
-                  className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all border"
-                  style={selectedDate === '2026-09-05'
-                    ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
-                    : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
-                  }
-                >
-                  Today
-                </button>
-                <button
-                  onClick={() => setDatePreset('tomorrow')}
-                  className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all border"
-                  style={selectedDate === '2026-09-06'
-                    ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
-                    : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
-                  }
-                >
-                  Tomorrow
-                </button>
+      {viewMode === 'daily' && (() => {
+        const dailyDayBlock = activeBookings.find(b => b.date === selectedDate && (b.isDayBlock || (b.eventId && b.eventId.startsWith('BLK-'))));
+
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            
+            {/* Daily Date Controls Bar */}
+            <div className="glass-panel p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 border border-gray-200 bg-white shadow-xs">
+              <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <button
+                    onClick={() => setDatePreset('today')}
+                    className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all border"
+                    style={selectedDate === '2026-09-05'
+                      ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
+                      : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
+                    }
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => setDatePreset('tomorrow')}
+                    className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all border"
+                    style={selectedDate === '2026-09-06'
+                      ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
+                      : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
+                    }
+                  >
+                    Tomorrow
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-1 sm:gap-1.5 ml-auto sm:ml-2">
+                  <button
+                    onClick={() => changeDateByDays(-1)}
+                    className="p-1 sm:p-1.5 rounded-lg bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
+                    title="Previous Day"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="input-field text-[11px] sm:text-xs font-mono py-1 px-2 sm:px-2.5 w-auto"
+                    style={{color:'#111827'}}
+                  />
+                  <button
+                    onClick={() => changeDateByDays(1)}
+                    className="p-1 sm:p-1.5 rounded-lg bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
+                    title="Next Day"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              
-              <div className="flex items-center gap-1 sm:gap-1.5 ml-auto sm:ml-2">
-                <button
-                  onClick={() => changeDateByDays(-1)}
-                  className="p-1 sm:p-1.5 rounded-lg bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
-                  title="Previous Day"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="input-field text-[11px] sm:text-xs font-mono py-1 px-2 sm:px-2.5 w-auto"
-                  style={{color:'#111827'}}
-                />
-                <button
-                  onClick={() => changeDateByDays(1)}
-                  className="p-1 sm:p-1.5 rounded-lg bg-gray-50 text-gray-700 hover:text-red-700 hover:bg-gray-100 border border-gray-200 transition-colors"
-                  title="Next Day"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+
+              <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
+                {currentUser?.isUnionAdmin && !dailyDayBlock && (
+                  <button
+                    onClick={() => {
+                      setQuickBlockTargetDate(selectedDate);
+                      setQuickBlockTitle('College Union Day 2026');
+                      setQuickBlockModalOpen(true);
+                    }}
+                    className="btn-secondary text-[11px] sm:text-xs py-1 sm:py-1.5 px-2.5 sm:px-3 flex items-center gap-1.5 font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                    title="Block all campus venues for this date"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-red-600" />
+                    <span>Block Date</span>
+                  </button>
+                )}
+
+                <div className="text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-center sm:text-left" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#111827'}}>
+                  📅 {formatDateFriendly(selectedDate)}
+                </div>
               </div>
             </div>
 
-            <div className="text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-center sm:text-left" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#111827'}}>
-              📅 {formatDateFriendly(selectedDate)}
-            </div>
-          </div>
+            {/* Day Lockdown Active Banner in Daily Matrix */}
+            {dailyDayBlock && (
+              <div className="bg-red-50 border border-red-300 p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-red-100 text-red-700 border border-red-300 flex items-center justify-center shrink-0">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-extrabold text-gray-900 text-sm flex items-center gap-2">
+                      <span>Campus-Wide Lockdown Active: {dailyDayBlock.eventTitle}</span>
+                      <span className="badge font-bold text-[10px]" style={{ background: '#FEE2E2', color: '#991B1B', borderColor: '#FCA5A5' }}>
+                        ALL VENUES BLOCKED
+                      </span>
+                    </div>
+                    <p className="text-red-800 text-[11px] font-medium mt-0.5">
+                      All campus facilities reserved by {dailyDayBlock.organizer} ({formatTime12H(dailyDayBlock.startTime)} - {formatTime12H(dailyDayBlock.endTime)})
+                    </p>
+                  </div>
+                </div>
+                {currentUser?.isUnionAdmin && onUnblockDay && (
+                  <button
+                    onClick={() => onUnblockDay(dailyDayBlock.eventId)}
+                    className="btn-secondary text-xs py-1.5 px-3 font-bold hover:bg-red-100 hover:text-red-800 border-red-300 shrink-0 flex items-center gap-1.5"
+                  >
+                    <Unlock className="w-3.5 h-3.5 text-red-600" />
+                    <span>Unblock All Venues</span>
+                  </button>
+                )}
+              </div>
+            )}
 
           {/* Matrix Legend */}
           <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs p-2.5 sm:p-3 rounded-xl border overflow-x-auto no-scrollbar whitespace-nowrap" style={{background:'#F9FAFB', borderColor:'#E5E7EB', color:'#6B7280'}}>
@@ -706,7 +839,8 @@ export default function AvailabilityGrid({
           </div>
 
         </div>
-      )}
+        );
+      })()}
 
       {/* Full Event Details Modal */}
       {selectedEventForDetails && (
@@ -718,6 +852,140 @@ export default function AvailabilityGrid({
           onAdminRevokeClick={onAdminCancelBooking ? (event) => onAdminCancelBooking(event.id, 'Revoked by Union Admin from Live Matrix') : null}
           allBookings={bookings}
         />
+      )}
+
+      {/* QUICK BLOCK ALL VENUES MODAL (Admin) */}
+      {quickBlockModalOpen && (
+        <div className="modal-overlay animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setQuickBlockModalOpen(false); }}>
+          <div className="glass-panel w-full max-w-lg rounded-3xl border border-red-200 p-5 sm:p-7 relative bg-white shadow-2xl space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-gray-900">Block All Campus Venues for a Day</h3>
+                <p className="text-xs text-gray-600">
+                  {formatDateFriendly(quickBlockTargetDate)} • Full Campus Lockdown ({venues.length} Facilities)
+                </p>
+              </div>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (onBlockAllVenues) {
+                  onBlockAllVenues({
+                    date: quickBlockTargetDate,
+                    eventTitle: quickBlockTitle.trim(),
+                    organizer: quickBlockOrganizer.trim(),
+                    startTime: quickBlockStartTime,
+                    endTime: quickBlockEndTime,
+                    description: `All campus facilities reserved for ${quickBlockTitle.trim()}`,
+                    autoRevokeConflicts: quickBlockAutoRevoke
+                  });
+                }
+                setQuickBlockModalOpen(false);
+              }}
+              className="space-y-4 text-xs"
+            >
+              <div className="space-y-1.5">
+                <label className="font-bold text-gray-700">Lockdown Reason / Event Title:</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. College Day 2026, Union Arts Fest..."
+                  value={quickBlockTitle}
+                  onChange={(e) => setQuickBlockTitle(e.target.value)}
+                  className="input-field text-xs w-full"
+                />
+                <div className="flex items-center gap-1 flex-wrap pt-1">
+                  {['College Day 2026', 'Union Arts Fest', 'Tech Symposium', 'Union Elections', 'Sports Meet'].map(preset => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setQuickBlockTitle(preset)}
+                      className={`text-[10px] px-2 py-0.5 rounded-lg border font-semibold ${
+                        quickBlockTitle === preset
+                          ? 'bg-red-50 text-red-800 border-red-300'
+                          : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-gray-700">Authority / Organizing Body:</label>
+                <select
+                  value={quickBlockOrganizer}
+                  onChange={(e) => setQuickBlockOrganizer(e.target.value)}
+                  className="input-field text-xs w-full cursor-pointer"
+                >
+                  <option value="College Student Union (Union MEC)">College Student Union (Union MEC)</option>
+                  <option value="Principal & Senate Office">Principal &amp; Senate Office</option>
+                  <option value="Staff Council & Administration">Staff Council &amp; Administration</option>
+                  <option value="Physical Education Dept">Physical Education Dept</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-700">Start Time:</label>
+                  <select
+                    value={quickBlockStartTime}
+                    onChange={(e) => setQuickBlockStartTime(e.target.value)}
+                    className="input-field text-xs font-mono w-full"
+                  >
+                    {['08:00', '09:00', '10:00', '11:00', '12:00'].map(t => (
+                      <option key={t} value={t}>{formatTime12H(t)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-700">End Time:</label>
+                  <select
+                    value={quickBlockEndTime}
+                    onChange={(e) => setQuickBlockEndTime(e.target.value)}
+                    className="input-field text-xs font-mono w-full"
+                  >
+                    {['17:00', '18:00', '19:00', '20:00', '21:00', '22:00'].map(t => (
+                      <option key={t} value={t}>{formatTime12H(t)}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 pt-2 border-t border-gray-100 font-bold text-gray-800 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={quickBlockAutoRevoke}
+                  onChange={(e) => setQuickBlockAutoRevoke(e.target.checked)}
+                  className="rounded text-red-600 focus:ring-red-500"
+                />
+                <span>Auto-revoke any conflicting bookings on this date</span>
+              </label>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setQuickBlockModalOpen(false)}
+                  className="btn-secondary text-xs py-2 px-3"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-danger text-xs py-2 px-4 font-bold flex items-center gap-1.5"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Lock All {venues.length} Venues</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
     </div>
