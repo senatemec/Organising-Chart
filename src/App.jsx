@@ -32,7 +32,7 @@ import { CheckCircle2, AlertCircle, Info, Sparkles, XCircle, Cloud, Database } f
 export default function App() {
   // Persistent State with Smart Migration
   const [venues, setVenues] = useState(() => {
-    const saved = localStorage.getItem('cs_venues_v15');
+    const saved = localStorage.getItem('cs_venues_v16');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -162,7 +162,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('cs_venues_v15', JSON.stringify(venues));
+    localStorage.setItem('cs_venues_v16', JSON.stringify(venues));
   }, [venues]);
 
   useEffect(() => {
