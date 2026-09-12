@@ -112,7 +112,7 @@ export default function VenueCard({ venue, onBookClick, onViewDetails }) {
           >
             <div className="flex items-center gap-2" style={{color:'#000000'}}>
               <Users className="w-4 h-4 shrink-0" style={{color:'#B91C1C'}} />
-              <span>Capacity: <strong style={{color:'#000000'}}>{venue.capacity}</strong>{venue.capacity === 'NA' ? '' : ' Seats'}</span>
+              <span>Capacity: <strong style={{color:'#000000'}}>{venue.capacity}</strong>{String(venue.capacity || '').toUpperCase() === 'NA' ? '' : ' Seats'}</span>
             </div>
             <span className="badge-tag" style={{background:'#F3F4F6', color:'#555555', borderColor:'#E5E7EB'}}>
               {venue.type}

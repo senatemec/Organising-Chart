@@ -44,7 +44,13 @@ export default function App() {
             const savedV = parsed.find(v => v.id === initV.id);
             if (!savedV) return initV;
             const image = (initV.image && initV.image.startsWith('/')) ? initV.image : (savedV.image || initV.image);
-            return { ...initV, ...savedV, image };
+            return { 
+              ...savedV, 
+              ...initV, 
+              image, 
+              capacity: initV.capacity,
+              status: savedV.status || initV.status 
+            };
           });
         }
       } catch (e) {}
@@ -140,9 +146,11 @@ export default function App() {
             if (!liveV) return initV;
             const image = (initV.image && initV.image.startsWith('/')) ? initV.image : (liveV.image || initV.image);
             return {
-              ...initV,
               ...liveV,
-              image
+              ...initV,
+              image,
+              capacity: initV.capacity,
+              status: liveV.status || initV.status
             };
           });
           setVenues(merged);

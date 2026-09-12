@@ -112,11 +112,12 @@ export async function seedInitialFirestoreData() {
         await setDoc(doc(db, 'venues', venue.id), venue);
       }
     } else {
-      // Sync official images if they are local assets
+      // Sync official images and updated capacities to Firestore
       for (const venue of initialVenues) {
-        if (venue.image && venue.image.startsWith('/')) {
-          await setDoc(doc(db, 'venues', venue.id), { image: venue.image }, { merge: true });
-        }
+        await setDoc(doc(db, 'venues', venue.id), { 
+          capacity: venue.capacity,
+          ...(venue.image && venue.image.startsWith('/') ? { image: venue.image } : {})
+        }, { merge: true });
       }
     }
 
