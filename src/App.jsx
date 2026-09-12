@@ -126,20 +126,10 @@ export default function App() {
 
       const unsubscribeBookings = subscribeToBookings((liveBookings) => {
         if (Array.isArray(liveBookings)) {
-          setBookings((prevBookings) => {
-            const map = new Map();
-            prevBookings.forEach((b) => {
-              if (b && b.id) map.set(b.id, b);
-            });
-            liveBookings.forEach((b) => {
-              if (b && b.id) map.set(b.id, b);
-            });
-            const merged = Array.from(map.values());
-            try {
-              localStorage.setItem('cs_bookings_v8', JSON.stringify(merged));
-            } catch (e) {}
-            return merged;
-          });
+          setBookings(liveBookings);
+          try {
+            localStorage.setItem('cs_bookings_v8', JSON.stringify(liveBookings));
+          } catch (e) {}
         }
       });
 

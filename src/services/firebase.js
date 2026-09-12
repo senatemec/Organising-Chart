@@ -13,6 +13,7 @@ import {
 import {
   getAuth,
   signInWithCredential,
+  signInWithPopup,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged
@@ -47,6 +48,19 @@ if (isFirebaseConfigured) {
   } catch (err) {
     console.error('Firebase initialization error:', err);
   }
+}
+
+/**
+ * Sign in to Firebase Auth using Google OAuth Popup with account selection prompt
+ */
+export async function dbSignInWithGooglePopup() {
+  if (!auth) throw new Error('Firebase Auth is not initialized');
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({
+    prompt: 'select_account'
+  });
+  const userCredential = await signInWithPopup(auth, provider);
+  return userCredential.user;
 }
 
 /**
@@ -285,7 +299,8 @@ export async function dbCreateBooking(bookingOrList) {
 export async function dbUpdateBooking(bookingId, updates) {
   if (!db) return false;
   try {
-    await updateDoc(doc(db, 'bookings', bookingId), updates);
+    const clean = sanitizeBookingData(updates);
+    await setDoc(doc(db, 'bookings', bookingId), clean, { merge: true });
     return true;
   } catch (err) {
     console.error('Failed to update booking in Firestore:', err);
@@ -313,7 +328,7 @@ export async function dbDeleteBooking(bookingId) {
 export async function dbUpdateVenueStatus(venueId, status) {
   if (!db) return false;
   try {
-    await updateDoc(doc(db, 'venues', venueId), { status });
+    await setDoc(doc(db, 'venues', venueId), { status }, { merge: true });
     return true;
   } catch (err) {
     console.error('Failed to update venue status in Firestore:', err);

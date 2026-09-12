@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ShieldCheck, Lock, AlertCircle, Sparkles, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { dbSignInWithGoogleCredential } from '../services/firebase';
+import { 
+  X, 
+  ShieldCheck, 
+  Lock, 
+  AlertCircle, 
+  Sparkles, 
+  CheckCircle2, 
+  AlertTriangle,
+  RefreshCw,
+  UserCheck,
+  ArrowRight,
+  Loader2
+} from 'lucide-react';
+import { dbSignInWithGoogleCredential, dbSignInWithGooglePopup } from '../services/firebase';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '339715089734-il7f8qb0mrpg7nlm35edqutdnu7761ov.apps.googleusercontent.com';
 
@@ -13,6 +25,8 @@ export default function GoogleAuthModal({
   strictAuthEnabled = true
 }) {
   const [authError, setAuthError] = useState(null);
+  const [unauthorizedEmail, setUnauthorizedEmail] = useState(null);
+  const [isLoadingPopup, setIsLoadingPopup] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
   const googleBtnRef = useRef(null);
 
@@ -33,6 +47,73 @@ export default function GoogleAuthModal({
     }
   };
 
+  // Process authenticated user details & check authorization
+  const processAuthenticatedUser = (email, name, picture) => {
+    if (!email) {
+      setAuthError('Could not retrieve email from Google. Please try again.');
+      return;
+    }
+    const userEmail = email.toLowerCase().trim();
+
+    // senatemec@mec.ac.in receives Union Admin controls!
+    const isSenateAdmin = userEmail === 'senatemec@mec.ac.in' || 
+                         userEmail === 'senate@mec.ac.in' || 
+                         userEmail.startsWith('senatemec@') ||
+                         userEmail.startsWith('senate@') || 
+                         userEmail === 'union@mec.ac.in';
+
+    const isWhitelisted = allowedUsers.some(u => (u.email || '').toLowerCase().trim() === userEmail);
+
+    // Access Control Enforcement:
+    if (strictAuthEnabled && !isSenateAdmin && !isWhitelisted) {
+      setUnauthorizedEmail(userEmail);
+      setAuthError(`Access Restricted: "${userEmail}" is not on the Union MEC authorized organizer whitelist.`);
+      return;
+    }
+
+    const matchedUser = allowedUsers.find(u => (u.email || '').toLowerCase().trim() === userEmail);
+
+    const account = {
+      name: name || userEmail.split('@')[0],
+      email: userEmail,
+      avatar: picture || (isSenateAdmin ? '/union_mec_logo.webp' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'),
+      isUnionAdmin: isSenateAdmin,
+      society: matchedUser?.society || (isSenateAdmin ? 'Union Senate' : 'Authorized Organizer'),
+      role: isSenateAdmin ? 'Union Senate Executive' : (matchedUser?.note || 'Authorized Organizer')
+    };
+
+    setAuthError(null);
+    setUnauthorizedEmail(null);
+    onLoginSuccess(account);
+    onClose();
+  };
+
+  // Popup Sign-In Handler (Guaranteed Account Switcher with prompt: 'select_account')
+  const handlePopupSignIn = async () => {
+    try {
+      setIsLoadingPopup(true);
+      setAuthError(null);
+      setUnauthorizedEmail(null);
+      const user = await dbSignInWithGooglePopup();
+      if (user && user.email) {
+        processAuthenticatedUser(user.email, user.displayName, user.photoURL);
+      } else {
+        setAuthError('Google Sign-In was cancelled or did not return an email.');
+      }
+    } catch (err) {
+      console.warn('Google Popup Sign-In:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setAuthError('Google sign-in popup was closed before completing.');
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        // Ignored
+      } else {
+        setAuthError(err.message || 'Google Sign-In encountered an error. Please try again.');
+      }
+    } finally {
+      setIsLoadingPopup(false);
+    }
+  };
+
   // Check if Google SDK script is ready
   useEffect(() => {
     if (!isOpen) return;
@@ -47,55 +128,24 @@ export default function GoogleAuthModal({
     checkGsiReady();
   }, [isOpen]);
 
-  // Initialize Google Identity Services automatically
+  // Initialize Google Identity Services (GIS) button as secondary/fallback
   useEffect(() => {
     if (!isOpen || !sdkReady || !googleBtnRef.current) return;
 
     try {
-      setAuthError(null);
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: async (response) => {
           if (response.credential) {
-            // Authenticate directly with Firebase Auth backend
             try {
               await dbSignInWithGoogleCredential(response.credential);
             } catch (authErr) {
-              console.warn('Firebase Auth backend sync notice:', authErr);
+              console.warn('Firebase Auth credential link notice:', authErr);
             }
 
             const payload = parseJwt(response.credential);
             if (payload && payload.email) {
-              const userEmail = payload.email.toLowerCase().trim();
-              
-              // senatemec@mec.ac.in receives Union Admin controls!
-              const isSenateAdmin = userEmail === 'senatemec@mec.ac.in' || 
-                                   userEmail === 'senate@mec.ac.in' || 
-                                   userEmail.startsWith('senatemec@') ||
-                                   userEmail.startsWith('senate@') || 
-                                   userEmail === 'union@mec.ac.in';
-
-              const isWhitelisted = allowedUsers.some(u => (u.email || '').toLowerCase().trim() === userEmail);
-
-              // Access Control Enforcement:
-              if (strictAuthEnabled && !isSenateAdmin && !isWhitelisted) {
-                setAuthError(`Access Restricted: "${userEmail}" is not authorized by Union MEC to book college venues. Please contact senatemec@mec.ac.in to add your email to the approved organizer list.`);
-                return;
-              }
-
-              const matchedUser = allowedUsers.find(u => (u.email || '').toLowerCase().trim() === userEmail);
-
-              const account = {
-                name: payload.name || userEmail.split('@')[0],
-                email: userEmail,
-                avatar: payload.picture || (isSenateAdmin ? '/union_mec_logo.webp' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'),
-                isUnionAdmin: isSenateAdmin,
-                society: matchedUser?.society || (isSenateAdmin ? 'Union Senate' : 'Authorized Organizer'),
-                role: isSenateAdmin ? 'Union Senate Executive' : (matchedUser?.note || 'Authorized Organizer')
-              };
-
-              onLoginSuccess(account);
-              onClose();
+              processAuthenticatedUser(payload.email, payload.name, payload.picture);
             } else {
               setAuthError('Could not verify Google account details. Please try again.');
             }
@@ -107,22 +157,18 @@ export default function GoogleAuthModal({
 
       // Clear existing button container and render Google official button
       googleBtnRef.current.innerHTML = '';
-      const buttonWidth = Math.min(300, Math.max(240, window.innerWidth - 80));
+      const buttonWidth = Math.min(280, Math.max(220, window.innerWidth - 80));
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         type: 'standard',
         theme: 'outline',
-        size: 'large',
+        size: 'medium',
         text: 'signin_with',
         shape: 'pill',
         logo_alignment: 'left',
         width: buttonWidth
       });
-
-      // Trigger Google One-Tap prompt automatically
-      window.google.accounts.id.prompt();
     } catch (err) {
-      console.error('Google Auth Init Error:', err);
-      setAuthError('Failed to initialize Google Sign-In.');
+      console.warn('Google GIS button render notice:', err);
     }
   }, [isOpen, sdkReady, allowedUsers, strictAuthEnabled]);
 
@@ -163,24 +209,71 @@ export default function GoogleAuthModal({
           </div>
         )}
 
-        {/* Error Notification */}
+        {/* Error Notification with Switch Account CTA */}
         {authError && (
-          <div className="border p-3.5 rounded-xl flex items-start gap-2.5 text-xs animate-fade-in" style={{ background: '#FFF5F5', borderColor: '#FCA5A5', color: '#7F1D1D' }}>
-            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-            <span className="leading-relaxed font-semibold">{authError}</span>
+          <div className="border p-3.5 rounded-xl space-y-2.5 text-xs animate-fade-in" style={{ background: '#FFF5F5', borderColor: '#FCA5A5', color: '#7F1D1D' }}>
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <span className="leading-relaxed font-semibold">{authError}</span>
+                {unauthorizedEmail && (
+                  <div className="text-[11px] text-gray-600 pt-0.5">
+                    Attempted: <span className="font-mono font-bold text-red-800">{unauthorizedEmail}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handlePopupSignIn}
+                disabled={isLoadingPopup}
+                className="w-full btn-primary text-xs py-2 px-3 flex items-center justify-center gap-1.5 font-bold shadow-sm"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingPopup ? 'animate-spin' : ''}`} />
+                <span>Switch / Choose Another Google Account</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Official Google GIS Button Container */}
-        <div className="space-y-4" style={{ colorScheme: 'light' }}>
-          <div className="flex flex-col items-center justify-center min-h-[48px]" style={{ colorScheme: 'light' }}>
+        {/* Main Sign-In Controls */}
+        <div className="space-y-3.5">
+          {/* PRIMARY POPUP SIGN-IN BUTTON (Select Account prompt) */}
+          <button
+            type="button"
+            onClick={handlePopupSignIn}
+            disabled={isLoadingPopup}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm shadow-sm hover:shadow-md transition-all active:scale-[0.99] disabled:opacity-60"
+          >
+            {isLoadingPopup ? (
+              <>
+                <Loader2 className="w-5 h-5 text-red-600 animate-spin" />
+                <span>Opening Google Account Chooser...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.35 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+                <span>Continue with Google</span>
+              </>
+            )}
+          </button>
+
+          {/* Secondary / Alternate GIS One-Tap Button Container */}
+          <div className="flex flex-col items-center justify-center pt-1">
             <div ref={googleBtnRef} className="flex justify-center" style={{ colorScheme: 'light' }} />
           </div>
 
           <div className="text-[11px] text-center space-y-1 p-3 rounded-xl border" style={{ background: '#F9FAFB', borderColor: '#E5E7EB', color: '#4B5563' }}>
-            <p className="font-bold" style={{ color: '#111827' }}>🔒 Authorized Access Control</p>
-            <p style={{ color: '#4B5563' }}>
-              Only authorized Gmail accounts approved by <strong className="font-bold" style={{ color: '#B91C1C' }}>Union MEC</strong> can book campus venues.
+            <p className="font-bold text-gray-900">🔒 Authorized Access Control</p>
+            <p className="text-gray-600">
+              Only authorized Gmail accounts approved by <strong className="font-bold text-red-700">Union MEC</strong> can book campus venues.
             </p>
           </div>
         </div>
