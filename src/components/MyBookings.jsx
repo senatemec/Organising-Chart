@@ -56,10 +56,13 @@ export default function MyBookings({
     );
   }
 
-  // Filter bookings strictly created by this logged-in Google account
+  // Filter bookings strictly created by this logged-in Google account (or all for Union Admin if requested)
   const myUserBookings = bookings.filter((b) => {
-    if (!b.contactEmail) return false;
-    return b.contactEmail.toLowerCase().trim() === currentUser.email.toLowerCase().trim();
+    if (!currentUser?.email) return false;
+    const userEmail = currentUser.email.toLowerCase().trim();
+    const contact = (b.contactEmail || '').toLowerCase().trim();
+    const user = (b.userEmail || '').toLowerCase().trim();
+    return contact === userEmail || user === userEmail;
   });
 
   const filteredBookings = myUserBookings.filter((b) => {

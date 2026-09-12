@@ -248,6 +248,17 @@ export async function dbUpdateAuthSettings(settings) {
   }
 }
 
+function sanitizeBookingData(booking) {
+  if (!booking) return {};
+  const clean = { ...booking };
+  Object.keys(clean).forEach(key => {
+    if (clean[key] === undefined) {
+      clean[key] = null;
+    }
+  });
+  return clean;
+}
+
 /**
  * Create or save a booking (or batch array of bookings) to Firestore
  */
@@ -256,10 +267,14 @@ export async function dbCreateBooking(bookingOrList) {
   try {
     if (Array.isArray(bookingOrList)) {
       await Promise.all(
-        bookingOrList.map(b => setDoc(doc(db, 'bookings', b.id), b))
+        bookingOrList.map(b => {
+          const clean = sanitizeBookingData(b);
+          return setDoc(doc(db, 'bookings', clean.id), clean);
+        })
       );
     } else {
-      await setDoc(doc(db, 'bookings', bookingOrList.id), bookingOrList);
+      const clean = sanitizeBookingData(bookingOrList);
+      await setDoc(doc(db, 'bookings', clean.id), clean);
     }
     return true;
   } catch (err) {

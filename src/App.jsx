@@ -122,8 +122,21 @@ export default function App() {
       seedInitialFirestoreData();
 
       const unsubscribeBookings = subscribeToBookings((liveBookings) => {
-        if (liveBookings) {
-          setBookings(liveBookings);
+        if (Array.isArray(liveBookings)) {
+          setBookings((prevBookings) => {
+            const map = new Map();
+            prevBookings.forEach((b) => {
+              if (b && b.id) map.set(b.id, b);
+            });
+            liveBookings.forEach((b) => {
+              if (b && b.id) map.set(b.id, b);
+            });
+            const merged = Array.from(map.values());
+            try {
+              localStorage.setItem('cs_bookings_v8', JSON.stringify(merged));
+            } catch (e) {}
+            return merged;
+          });
         }
       });
 
@@ -304,26 +317,32 @@ export default function App() {
 
   // Add new booking(s) (Instantly Confirmed & synced with Firestore)
   const handleCreateBooking = async (bookingOrList) => {
-    if (Array.isArray(bookingOrList)) {
-      setBookings([...bookingOrList, ...bookings]);
-      if (isFirebaseConfigured) {
-        try {
-          await dbCreateBooking(bookingOrList);
-        } catch (e) {
-          console.error('Firebase batch create error:', e);
-        }
+    const newItems = Array.isArray(bookingOrList) ? bookingOrList : [bookingOrList];
+
+    // 1. Immediately update local state atomically and persist to localStorage
+    setBookings((prevBookings) => {
+      const newIds = new Set(newItems.map(b => b.id));
+      const filteredPrev = prevBookings.filter(b => !newIds.has(b.id));
+      const updated = [...newItems, ...filteredPrev];
+      try {
+        localStorage.setItem('cs_bookings_v8', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    // 2. Sync to Firestore in background
+    if (isFirebaseConfigured) {
+      try {
+        await dbCreateBooking(bookingOrList);
+      } catch (e) {
+        console.warn('Firestore booking sync notice (persisted in local state):', e);
       }
+    }
+
+    if (Array.isArray(bookingOrList)) {
       const eventTitle = bookingOrList[0]?.eventTitle || 'Event';
       showToast(`Event "${eventTitle}" confirmed across ${bookingOrList.length} venues!`, 'success');
     } else {
-      setBookings([bookingOrList, ...bookings]);
-      if (isFirebaseConfigured) {
-        try {
-          await dbCreateBooking(bookingOrList);
-        } catch (e) {
-          console.error('Firebase create error:', e);
-        }
-      }
       showToast(`Booking ${bookingOrList.id} confirmed for ${bookingOrList.venueName}!`, 'success');
     }
   };

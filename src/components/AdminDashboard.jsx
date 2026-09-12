@@ -125,10 +125,10 @@ export default function AdminDashboard({
   const cancelledBookings = bookings.filter(b => b.status === 'cancelled' || b.status === 'rejected');
 
   const filteredActiveBookings = activeBookings.filter(b => 
-    b.eventTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.organizer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.venueName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    b.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (b.eventTitle || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (b.organizer || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (b.venueName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (b.id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (b.contactEmail && b.contactEmail.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 

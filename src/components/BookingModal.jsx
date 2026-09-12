@@ -215,22 +215,24 @@ export default function BookingModal({
     if (singleConflictInfo.hasConflict) return;
     if (isSingleClassroom && !singleRoomNumber.trim()) return;
 
+    const userEmailResolved = (initialEmail || currentUser?.email || '').trim().toLowerCase();
+
     const newBooking = {
       id: `BK-2026-${Math.floor(1000 + Math.random() * 9000)}`,
       eventId: null,
       venueId: singleVenueId,
-      venueName: selectedSingleVenue ? selectedSingleVenue.name : '',
-      roomNumber: isSingleClassroom ? singleRoomNumber.trim() : null,
-      eventTitle: eventTitle.trim(),
-      organizer: organizer.trim() || organizerSearch.trim() || 'College Student Body',
+      venueName: selectedSingleVenue ? selectedSingleVenue.name : singleVenueId,
+      roomNumber: isSingleClassroom ? (singleRoomNumber || '').trim() : null,
+      eventTitle: (eventTitle || '').trim(),
+      organizer: (organizer || organizerSearch || 'College Student Body').trim(),
       date: singleDate,
       startTime: singleStartTime,
       endTime: singleEndTime,
       status: 'confirmed',
       approvedBy: 'Auto-Confirmed',
-      description: description.trim(),
-      contactEmail: initialEmail || '',
-      userEmail: initialEmail || '',
+      description: (description || '').trim(),
+      contactEmail: userEmailResolved,
+      userEmail: userEmailResolved,
       createdAt: new Date().toISOString()
     };
 
@@ -244,6 +246,7 @@ export default function BookingModal({
     e.preventDefault();
     if (hasAnyMultiSlotConflict || hasAnyMissingClassroomRoom || hasAnyInvalidTimes) return;
 
+    const userEmailResolved = (initialEmail || currentUser?.email || '').trim().toLowerCase();
     const eventId = `EVT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const eventBookings = venueSlots.map((slot, idx) => {
       const v = venues.find(item => item.id === slot.venueId);
@@ -251,8 +254,8 @@ export default function BookingModal({
       return {
         id: `BK-2026-${Math.floor(1000 + Math.random() * 9000)}-${idx + 1}`,
         eventId,
-        eventTitle: eventTitle.trim(),
-        organizer: organizer.trim() || organizerSearch.trim() || 'College Student Body',
+        eventTitle: (eventTitle || '').trim(),
+        organizer: (organizer || organizerSearch || 'College Student Body').trim(),
         venueId: slot.venueId,
         venueName: v ? v.name : slot.venueId,
         roomNumber: isClass ? (slot.roomNumber || '').trim() : null,
@@ -261,9 +264,9 @@ export default function BookingModal({
         endTime: slot.endTime,
         status: 'confirmed',
         approvedBy: 'Auto-Confirmed',
-        description: description.trim(),
-        contactEmail: initialEmail || '',
-        userEmail: initialEmail || '',
+        description: (description || '').trim(),
+        contactEmail: userEmailResolved,
+        userEmail: userEmailResolved,
         createdAt: new Date().toISOString()
       };
     });
