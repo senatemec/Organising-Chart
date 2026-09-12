@@ -26,7 +26,7 @@ export default function GoogleAuthModal({
 }) {
   const [authError, setAuthError] = useState(null);
   const [unauthorizedEmail, setUnauthorizedEmail] = useState(null);
-  const [isLoadingPopup, setIsLoadingPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
   const googleBtnRef = useRef(null);
 
@@ -88,30 +88,73 @@ export default function GoogleAuthModal({
     onClose();
   };
 
-  // Popup Sign-In Handler (Guaranteed Account Switcher with prompt: 'select_account')
-  const handlePopupSignIn = async () => {
-    try {
-      setIsLoadingPopup(true);
-      setAuthError(null);
-      setUnauthorizedEmail(null);
-      const user = await dbSignInWithGooglePopup();
-      if (user && user.email) {
-        processAuthenticatedUser(user.email, user.displayName, user.photoURL);
-      } else {
-        setAuthError('Google Sign-In was cancelled or did not return an email.');
+  // Primary Google Sign-In with Guaranteed Account Chooser (GIS OAuth2 Token Client)
+  const handleSignInWithGoogle = () => {
+    setIsLoading(true);
+    setAuthError(null);
+    setUnauthorizedEmail(null);
+
+    // Method 1: Google Identity Services Token Client with prompt: 'select_account'
+    if (window.google?.accounts?.oauth2) {
+      try {
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'email profile openid',
+          prompt: 'select_account',
+          callback: async (tokenResponse) => {
+            setIsLoading(false);
+            if (tokenResponse.error) {
+              if (tokenResponse.error === 'access_denied') {
+                setAuthError('Sign-in was cancelled. Please select your Google account.');
+              } else {
+                setAuthError(`Sign-in error: ${tokenResponse.error_description || tokenResponse.error}`);
+              }
+              return;
+            }
+
+            if (tokenResponse.access_token) {
+              try {
+                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                });
+                const profile = await res.json();
+                if (profile && profile.email) {
+                  processAuthenticatedUser(profile.email, profile.name, profile.picture);
+                } else {
+                  setAuthError('Could not retrieve user details from Google. Please try again.');
+                }
+              } catch (fetchErr) {
+                console.error('Error fetching Google profile:', fetchErr);
+                setAuthError('Failed to fetch user details from Google. Please try again.');
+              }
+            }
+          }
+        });
+        client.requestAccessToken({ prompt: 'select_account' });
+        return;
+      } catch (err) {
+        console.warn('GIS TokenClient init warning, trying popup fallback:', err);
       }
-    } catch (err) {
-      console.warn('Google Popup Sign-In:', err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setAuthError('Google sign-in popup was closed before completing.');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        // Ignored
-      } else {
-        setAuthError(err.message || 'Google Sign-In encountered an error. Please try again.');
-      }
-    } finally {
-      setIsLoadingPopup(false);
     }
+
+    // Method 2: Firebase Auth Popup Fallback
+    dbSignInWithGooglePopup()
+      .then((user) => {
+        setIsLoading(false);
+        if (user && user.email) {
+          processAuthenticatedUser(user.email, user.displayName, user.photoURL);
+        }
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        if (err.code === 'auth/popup-blocked') {
+          setAuthError('Popup was blocked by your browser settings. Please allow popups for localhost / this site or use the one-click button below.');
+        } else if (err.code === 'auth/popup-closed-by-user') {
+          setAuthError('Google sign-in popup was closed before completing.');
+        } else {
+          setAuthError(err.message || 'Google Sign-In encountered an error. Please try again.');
+        }
+      });
   };
 
   // Check if Google SDK script is ready
@@ -128,7 +171,7 @@ export default function GoogleAuthModal({
     checkGsiReady();
   }, [isOpen]);
 
-  // Initialize Google Identity Services (GIS) button as secondary/fallback
+  // Initialize Google Identity Services (GIS) button as 1-click fallback
   useEffect(() => {
     if (!isOpen || !sdkReady || !googleBtnRef.current) return;
 
@@ -155,7 +198,6 @@ export default function GoogleAuthModal({
         cancel_on_tap_outside: true
       });
 
-      // Clear existing button container and render Google official button
       googleBtnRef.current.innerHTML = '';
       const buttonWidth = Math.min(280, Math.max(220, window.innerWidth - 80));
       window.google.accounts.id.renderButton(googleBtnRef.current, {
@@ -227,11 +269,11 @@ export default function GoogleAuthModal({
             <div className="pt-1">
               <button
                 type="button"
-                onClick={handlePopupSignIn}
-                disabled={isLoadingPopup}
+                onClick={handleSignInWithGoogle}
+                disabled={isLoading}
                 className="w-full btn-primary text-xs py-2 px-3 flex items-center justify-center gap-1.5 font-bold shadow-sm"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingPopup ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 <span>Switch / Choose Another Google Account</span>
               </button>
             </div>
@@ -240,14 +282,14 @@ export default function GoogleAuthModal({
 
         {/* Main Sign-In Controls */}
         <div className="space-y-3.5">
-          {/* PRIMARY POPUP SIGN-IN BUTTON (Select Account prompt) */}
+          {/* PRIMARY GOOGLE BUTTON (Guaranteed Account Chooser) */}
           <button
             type="button"
-            onClick={handlePopupSignIn}
-            disabled={isLoadingPopup}
+            onClick={handleSignInWithGoogle}
+            disabled={isLoading}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm shadow-sm hover:shadow-md transition-all active:scale-[0.99] disabled:opacity-60"
           >
-            {isLoadingPopup ? (
+            {isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 text-red-600 animate-spin" />
                 <span>Opening Google Account Chooser...</span>
