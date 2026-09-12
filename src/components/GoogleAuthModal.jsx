@@ -47,10 +47,19 @@ export default function GoogleAuthModal({
     }
   };
 
+  // Reset errors when modal opens or closes
+  useEffect(() => {
+    if (isOpen) {
+      setAuthError(null);
+      setUnauthorizedEmail(null);
+      setIsLoading(false);
+    }
+  }, [isOpen]);
+
   // Process authenticated user details & check authorization
   const processAuthenticatedUser = (email, name, picture) => {
     if (!email) {
-      setAuthError('Could not retrieve email from Google. Please try again.');
+      setAuthError('Could not retrieve email from Google account. Please try again.');
       return;
     }
     const userEmail = email.toLowerCase().trim();
@@ -68,6 +77,13 @@ export default function GoogleAuthModal({
     if (strictAuthEnabled && !isSenateAdmin && !isWhitelisted) {
       setUnauthorizedEmail(userEmail);
       setAuthError(`Access Restricted: "${userEmail}" is not on the Union MEC authorized organizer whitelist.`);
+      // Disable auto-select and revoke current unauthorized session so user can pick another account
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.disableAutoSelect();
+        try {
+          window.google.accounts.id.revoke(userEmail, () => {});
+        } catch (e) {}
+      }
       return;
     }
 
@@ -88,90 +104,65 @@ export default function GoogleAuthModal({
     onClose();
   };
 
-  // Primary Google Sign-In with Guaranteed Account Chooser (GIS OAuth2 Token Client)
-  const handleSignInWithGoogle = () => {
+  // Switch Account or Explicit Select Account via Popup
+  const handleSelectDifferentAccount = async () => {
     setIsLoading(true);
     setAuthError(null);
-    setUnauthorizedEmail(null);
 
-    // Method 1: Google Identity Services Token Client with prompt: 'select_account'
-    if (window.google?.accounts?.oauth2) {
-      try {
-        const client = window.google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'email profile openid',
-          prompt: 'select_account',
-          callback: async (tokenResponse) => {
-            setIsLoading(false);
-            if (tokenResponse.error) {
-              if (tokenResponse.error === 'access_denied') {
-                setAuthError('Sign-in was cancelled. Please select your Google account.');
-              } else {
-                setAuthError(`Sign-in error: ${tokenResponse.error_description || tokenResponse.error}`);
-              }
-              return;
-            }
-
-            if (tokenResponse.access_token) {
-              try {
-                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-                });
-                const profile = await res.json();
-                if (profile && profile.email) {
-                  processAuthenticatedUser(profile.email, profile.name, profile.picture);
-                } else {
-                  setAuthError('Could not retrieve user details from Google. Please try again.');
-                }
-              } catch (fetchErr) {
-                console.error('Error fetching Google profile:', fetchErr);
-                setAuthError('Failed to fetch user details from Google. Please try again.');
-              }
-            }
-          }
-        });
-        client.requestAccessToken({ prompt: 'select_account' });
-        return;
-      } catch (err) {
-        console.warn('GIS TokenClient init warning, trying popup fallback:', err);
+    // Clear Google Identity session hints
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect();
+      if (unauthorizedEmail) {
+        try {
+          window.google.accounts.id.revoke(unauthorizedEmail, () => {});
+        } catch (e) {}
       }
     }
 
-    // Method 2: Firebase Auth Popup Fallback
-    dbSignInWithGooglePopup()
-      .then((user) => {
-        setIsLoading(false);
-        if (user && user.email) {
-          processAuthenticatedUser(user.email, user.displayName, user.photoURL);
-        }
-      })
-      .catch((err) => {
-        setIsLoading(false);
-        if (err.code === 'auth/popup-blocked') {
-          setAuthError('Popup was blocked by your browser settings. Please allow popups for localhost / this site or use the one-click button below.');
-        } else if (err.code === 'auth/popup-closed-by-user') {
-          setAuthError('Google sign-in popup was closed before completing.');
-        } else {
-          setAuthError(err.message || 'Google Sign-In encountered an error. Please try again.');
-        }
-      });
+    const timeoutGuard = setTimeout(() => {
+      setIsLoading(false);
+    }, 12000);
+
+    try {
+      const user = await dbSignInWithGooglePopup();
+      if (user && user.email) {
+        processAuthenticatedUser(user.email, user.displayName, user.photoURL);
+      }
+    } catch (err) {
+      console.warn('Google sign-in popup error:', err);
+      if (err.code === 'auth/popup-blocked') {
+        setAuthError('Popup was blocked by your browser. Please click the official Google button below or enable popups.');
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setAuthError('Sign-in cancelled. Please select your Google account.');
+      } else {
+        setAuthError(err.message || 'Google sign-in failed. Please try again.');
+      }
+    } finally {
+      clearTimeout(timeoutGuard);
+      setIsLoading(false);
+    }
   };
 
   // Check if Google SDK script is ready
   useEffect(() => {
     if (!isOpen) return;
 
+    let isMounted = true;
     const checkGsiReady = () => {
-      if (window.google && window.google.accounts && window.google.accounts.id) {
-        setSdkReady(true);
+      if (window.google?.accounts?.id) {
+        if (isMounted) setSdkReady(true);
       } else {
         setTimeout(checkGsiReady, 150);
       }
     };
     checkGsiReady();
+
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen]);
 
-  // Initialize Google Identity Services (GIS) button as 1-click fallback
+  // Initialize and Render Official Google Identity Services (GIS) Button
   useEffect(() => {
     if (!isOpen || !sdkReady || !googleBtnRef.current) return;
 
@@ -195,15 +186,16 @@ export default function GoogleAuthModal({
           }
         },
         auto_select: false,
-        cancel_on_tap_outside: true
+        cancel_on_tap_outside: true,
+        itp_support: true
       });
 
       googleBtnRef.current.innerHTML = '';
-      const buttonWidth = Math.min(280, Math.max(220, window.innerWidth - 80));
+      const buttonWidth = Math.min(320, Math.max(240, window.innerWidth - 80));
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         type: 'standard',
         theme: 'outline',
-        size: 'medium',
+        size: 'large',
         text: 'signin_with',
         shape: 'pill',
         logo_alignment: 'left',
@@ -260,7 +252,7 @@ export default function GoogleAuthModal({
                 <span className="leading-relaxed font-semibold">{authError}</span>
                 {unauthorizedEmail && (
                   <div className="text-[11px] text-gray-600 pt-0.5">
-                    Attempted: <span className="font-mono font-bold text-red-800">{unauthorizedEmail}</span>
+                    Attempted email: <span className="font-mono font-bold text-red-800">{unauthorizedEmail}</span>
                   </div>
                 )}
               </div>
@@ -269,7 +261,7 @@ export default function GoogleAuthModal({
             <div className="pt-1">
               <button
                 type="button"
-                onClick={handleSignInWithGoogle}
+                onClick={handleSelectDifferentAccount}
                 disabled={isLoading}
                 className="w-full btn-primary text-xs py-2 px-3 flex items-center justify-center gap-1.5 font-bold shadow-sm"
               >
@@ -280,38 +272,55 @@ export default function GoogleAuthModal({
           </div>
         )}
 
-        {/* Main Sign-In Controls */}
-        <div className="space-y-3.5">
-          {/* PRIMARY GOOGLE BUTTON (Guaranteed Account Chooser) */}
-          <button
-            type="button"
-            onClick={handleSignInWithGoogle}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm shadow-sm hover:shadow-md transition-all active:scale-[0.99] disabled:opacity-60"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 text-red-600 animate-spin" />
-                <span>Opening Google Account Chooser...</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.35 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                </svg>
-                <span>Continue with Google</span>
-              </>
+        {/* Main Sign-In Section */}
+        <div className="space-y-4">
+          {/* Primary Official Google Identity Services Button */}
+          <div className="flex flex-col items-center justify-center min-h-[44px]">
+            <div ref={googleBtnRef} className="flex justify-center w-full" style={{ colorScheme: 'light' }} />
+            
+            {/* Fallback button if Google GIS SDK is not rendered or user wants explicit chooser */}
+            {(!sdkReady || isLoading) && (
+              <button
+                type="button"
+                onClick={handleSelectDifferentAccount}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm shadow-sm transition-all disabled:opacity-60"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 text-red-600 animate-spin" />
+                    <span>Opening Google Account Chooser...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.35 24 12 24z"/>
+                      <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                  </>
+                )}
+              </button>
             )}
-          </button>
-
-          {/* Secondary / Alternate GIS One-Tap Button Container */}
-          <div className="flex flex-col items-center justify-center pt-1">
-            <div ref={googleBtnRef} className="flex justify-center" style={{ colorScheme: 'light' }} />
           </div>
 
+          {/* Switch Account link if not already showing error */}
+          {!authError && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleSelectDifferentAccount}
+                disabled={isLoading}
+                className="text-xs text-gray-500 hover:text-red-700 underline font-medium transition-colors"
+              >
+                Sign in with a different Google account
+              </button>
+            </div>
+          )}
+
+          {/* Whitelist info box */}
           <div className="text-[11px] text-center space-y-1 p-3 rounded-xl border" style={{ background: '#F9FAFB', borderColor: '#E5E7EB', color: '#4B5563' }}>
             <p className="font-bold text-gray-900">🔒 Authorized Access Control</p>
             <p className="text-gray-600">

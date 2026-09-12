@@ -233,6 +233,14 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.disableAutoSelect();
+        if (currentUser?.email) {
+          try {
+            window.google.accounts.id.revoke(currentUser.email, () => {});
+          } catch (e) {}
+        }
+      }
       await dbSignOut();
     } catch (e) {}
     setCurrentUser(null);
