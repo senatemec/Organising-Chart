@@ -899,7 +899,7 @@ export default function AvailabilityGrid({
                   className="input-field text-xs w-full"
                 />
                 <div className="flex items-center gap-1 flex-wrap pt-1">
-                  {['College Day 2026', 'Union Arts Fest', 'Tech Symposium', 'Union Elections', 'Sports Meet'].map(preset => (
+                  {['College Day 2026', 'Union Arts Fest', 'Excel 2026', 'Tech Symposium', 'Union Elections', 'Sports Meet'].map(preset => (
                     <button
                       key={preset}
                       type="button"
@@ -924,6 +924,8 @@ export default function AvailabilityGrid({
                   className="input-field text-xs w-full cursor-pointer"
                 >
                   <option value="College Student Union (Union MEC)">College Student Union (Union MEC)</option>
+                  <option value="Excel (Annual Tech Fest)">Excel (Annual Tech Fest)</option>
+                  <option value="Excel MEC">Excel MEC</option>
                   <option value="Principal & Senate Office">Principal &amp; Senate Office</option>
                   <option value="Staff Council & Administration">Staff Council &amp; Administration</option>
                   <option value="Physical Education Dept">Physical Education Dept</option>

@@ -836,6 +836,8 @@ export default function AdminDashboard({
                     className="input-field text-xs w-full cursor-pointer"
                   >
                     <option value="College Student Union (Union MEC)">College Student Union (Union MEC)</option>
+                    <option value="Excel (Annual Tech Fest)">Excel (Annual Tech Fest)</option>
+                    <option value="Excel MEC">Excel MEC</option>
                     <option value="Principal & Senate Office">Principal &amp; Senate Office</option>
                     <option value="Staff Council & Administration">Staff Council &amp; Administration</option>
                     <option value="Physical Education Dept (Sports Council)">Physical Education Dept (Sports Council)</option>

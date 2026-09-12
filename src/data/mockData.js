@@ -177,6 +177,9 @@ export const initialAllowedUsers = [
   { email: 'senatemec@mec.ac.in', society: 'Union Senate', note: 'Union Senate Admin' },
   { email: 'senate@mec.ac.in', society: 'Union Senate', note: 'Union Senate Admin' },
   { email: 'union@mec.ac.in', society: 'Union', note: 'College Union MEC' },
+  { email: 'excel@mec.ac.in', society: 'Excel', note: 'Excel Core Representative' },
+  { email: 'reach@excelmec.org', society: 'Excel', note: 'Excel Secretariat' },
+  { email: 'excelmec@gmail.com', society: 'Excel', note: 'Excel Representative' },
   { email: 'emf@mec.ac.in', society: 'EMF', note: 'EMF Representative' },
   { email: 'tle@mec.ac.in', society: 'TLE MEC', note: 'TLE MEC Representative' },
   { email: 'iedcmec@gmail.com', society: 'IEDC', note: 'IEDC Representative' },
@@ -204,6 +207,8 @@ export const initialAllowedUsers = [
 
 export const studentSocieties = [
   'Union',
+  'Excel',
+  'Excel MEC',
   'Principal',
   'EMF',
   'TLE MEC',
