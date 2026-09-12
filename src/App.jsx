@@ -69,8 +69,11 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const map = new Map();
+          initialAllowedUsers.forEach(u => map.set(u.email.toLowerCase().trim(), u));
+          parsed.forEach(u => map.set(u.email.toLowerCase().trim(), u));
+          return Array.from(map.values());
         }
       } catch (e) {}
     }

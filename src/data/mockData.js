@@ -176,6 +176,7 @@ export const initialAllowedUsers = [
   { email: 'emf@mec.ac.in', society: 'EMF', note: 'EMF Representative' },
   { email: 'tle@mec.ac.in', society: 'TLE MEC', note: 'TLE MEC Representative' },
   { email: 'iedcmec@gmail.com', society: 'IEDC', note: 'IEDC Representative' },
+  { email: 'iedc@mec.ac.in', society: 'IEDC', note: 'IEDC Representative' },
   { email: 'theilluminatiquiz@gmail.com', society: 'TIQ', note: 'TIQ Representative' },
   { email: 'gdcmeofficial@gmail.com', society: 'GDC MEC', note: 'GDC MEC Representative' },
   { email: 'reachmecmun@gmail.com', society: 'MUNSOC MEC', note: 'MUNSOC MEC Representative' },
