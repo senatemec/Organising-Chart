@@ -173,6 +173,10 @@ export const initialVenues = [
 export const initialBookings = [];
 
 export const initialAllowedUsers = [
+  { email: 'mohammedshaddaad.mec@gmail.com', society: 'Union', note: 'Union Senate Chairman' },
+  { email: 'senatemec@mec.ac.in', society: 'Union Senate', note: 'Union Senate Admin' },
+  { email: 'senate@mec.ac.in', society: 'Union Senate', note: 'Union Senate Admin' },
+  { email: 'union@mec.ac.in', society: 'Union', note: 'College Union MEC' },
   { email: 'emf@mec.ac.in', society: 'EMF', note: 'EMF Representative' },
   { email: 'tle@mec.ac.in', society: 'TLE MEC', note: 'TLE MEC Representative' },
   { email: 'iedcmec@gmail.com', society: 'IEDC', note: 'IEDC Representative' },

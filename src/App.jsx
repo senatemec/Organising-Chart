@@ -150,8 +150,11 @@ export default function App() {
       });
 
       const unsubscribeAllowedUsers = subscribeToAllowedUsers((liveAllowedUsers) => {
-        if (liveAllowedUsers) {
-          setAllowedUsers(liveAllowedUsers);
+        if (liveAllowedUsers && Array.isArray(liveAllowedUsers)) {
+          const map = new Map();
+          initialAllowedUsers.forEach(u => map.set((u.email || '').toLowerCase().trim(), u));
+          liveAllowedUsers.forEach(u => map.set((u.email || '').toLowerCase().trim(), u));
+          setAllowedUsers(Array.from(map.values()));
         }
       });
 

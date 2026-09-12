@@ -13,8 +13,16 @@ import {
   Loader2
 } from 'lucide-react';
 import { dbSignInWithGoogleCredential, dbSignInWithGooglePopup } from '../services/firebase';
+import { initialAllowedUsers } from '../data/mockData';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '339715089734-il7f8qb0mrpg7nlm35edqutdnu7761ov.apps.googleusercontent.com';
+
+// Helper to normalize and match emails
+const matchEmail = (item, targetEmail) => {
+  if (!item || !targetEmail) return false;
+  const email = (typeof item === 'string' ? item : item.email || '').toLowerCase().trim();
+  return email === targetEmail.toLowerCase().trim();
+};
 
 export default function GoogleAuthModal({ 
   isOpen, 
@@ -64,14 +72,18 @@ export default function GoogleAuthModal({
     }
     const userEmail = email.toLowerCase().trim();
 
-    // senatemec@mec.ac.in receives Union Admin controls!
+    // Union Senate / Executive Admins
     const isSenateAdmin = userEmail === 'senatemec@mec.ac.in' || 
                          userEmail === 'senate@mec.ac.in' || 
                          userEmail.startsWith('senatemec@') ||
                          userEmail.startsWith('senate@') || 
-                         userEmail === 'union@mec.ac.in';
+                         userEmail === 'union@mec.ac.in' ||
+                         userEmail === 'mohammedshaddaad.mec@gmail.com' ||
+                         userEmail === 'mohammedshaddaad@gmail.com' ||
+                         userEmail === 'shaddaad@mec.ac.in';
 
-    const isWhitelisted = allowedUsers.some(u => (u.email || '').toLowerCase().trim() === userEmail);
+    const isWhitelisted = allowedUsers.some(u => matchEmail(u, userEmail)) ||
+                          initialAllowedUsers.some(u => matchEmail(u, userEmail));
 
     // Access Control Enforcement:
     if (strictAuthEnabled && !isSenateAdmin && !isWhitelisted) {
@@ -87,15 +99,18 @@ export default function GoogleAuthModal({
       return;
     }
 
-    const matchedUser = allowedUsers.find(u => (u.email || '').toLowerCase().trim() === userEmail);
+    const matchedUser = allowedUsers.find(u => matchEmail(u, userEmail)) ||
+                        initialAllowedUsers.find(u => matchEmail(u, userEmail));
+
+    const isUnionRole = isSenateAdmin || matchedUser?.society === 'Union';
 
     const account = {
       name: name || userEmail.split('@')[0],
       email: userEmail,
-      avatar: picture || (isSenateAdmin ? '/union_mec_logo.webp' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'),
-      isUnionAdmin: isSenateAdmin,
-      society: matchedUser?.society || (isSenateAdmin ? 'Union Senate' : 'Authorized Organizer'),
-      role: isSenateAdmin ? 'Union Senate Executive' : (matchedUser?.note || 'Authorized Organizer')
+      avatar: picture || (isUnionRole ? '/union_mec_logo.webp' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'),
+      isUnionAdmin: isUnionRole,
+      society: matchedUser?.society || (isUnionRole ? 'Union Senate' : 'Authorized Organizer'),
+      role: isUnionRole ? (matchedUser?.note || 'Union Senate Executive') : (matchedUser?.note || 'Authorized Organizer')
     };
 
     setAuthError(null);
