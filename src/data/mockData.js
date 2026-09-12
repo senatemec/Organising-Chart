@@ -177,6 +177,7 @@ export const initialAllowedUsers = [
   { email: 'senatemec@mec.ac.in', society: 'Union Senate', note: 'Union Senate Admin' },
   { email: 'senate@mec.ac.in', society: 'Union Senate', note: 'Union Senate Admin' },
   { email: 'union@mec.ac.in', society: 'Union', note: 'College Union MEC' },
+  { email: 'officialexcelmec@gmail.com', society: 'Excel', note: 'Excel Official Core' },
   { email: 'excel@mec.ac.in', society: 'Excel', note: 'Excel Core Representative' },
   { email: 'reach@excelmec.org', society: 'Excel', note: 'Excel Secretariat' },
   { email: 'excelmec@gmail.com', society: 'Excel', note: 'Excel Representative' },
@@ -199,10 +200,16 @@ export const initialAllowedUsers = [
   { email: 'bharatham.mec25@gmail.com', society: 'Bharatham', note: 'Bharatham Representative' },
   { email: 'thebookthieves@mec.ac.in', society: 'TBT', note: 'TBT Representative' },
   { email: 'yuvamec26@gmail.com', society: 'Yuva', note: 'Yuva Representative' },
+  { email: 'acmstudentchapter.mec@gmail.com', society: 'ACM', note: 'ACM Representative' },
+  { email: 'rhapzodymec@gmail.com', society: 'RHAPZODY', note: 'RHAPZODY Representative' },
   { email: 'reachdebateclubmec@gmail.com', society: 'D.E.B.A.T.E Club', note: 'D.E.B.A.T.E Club Representative' },
   { email: 'gdgc@mec.ac.in', society: 'GDGC MEC', note: 'GDGC MEC Representative' },
   { email: 'sae@mec.ac.in', society: 'SAE MEC', note: 'SAE MEC Representative' },
-  { email: 'ietesf.mec@gmail.com', society: 'IETE', note: 'IETE Representative' }
+  { email: 'ietesf.mec@gmail.com', society: 'IETE', note: 'IETE Representative' },
+  { email: 'idealabfablab.mec@gmail.com', society: 'Idealab MEC', note: 'Idealab MEC Representative' },
+  { email: 'rotaractmec@gmail.com', society: 'Rotaract', note: 'Rotaract Representative' },
+  { email: 'ircmec28@gmail.com', society: 'COSMEC', note: 'COSMEC Representative' },
+  { email: 'topgearmec@gmail.com', society: 'Topgearmec', note: 'Topgearmec Representative' }
 ];
 
 export const studentSocieties = [
@@ -242,6 +249,9 @@ export const studentSocieties = [
   'BMA MEC',
   'IETE',
   'Idealab MEC',
+  'Rotaract',
+  'COSMEC',
+  'Topgearmec',
   'Thanal MEC',
   'Training Cell',
   'Thudi'
