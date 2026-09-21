@@ -8,8 +8,6 @@ import {
   CheckCircle2, 
   AlertTriangle,
   RefreshCw,
-  UserCheck,
-  ArrowRight,
   Loader2
 } from 'lucide-react';
 import { dbSignInWithGoogleCredential, dbSignInWithGooglePopup } from '../services/firebase';
@@ -105,12 +103,12 @@ export default function GoogleAuthModal({
     const isUnionRole = isSenateAdmin || matchedUser?.society === 'Union';
 
     const account = {
-      name: name || userEmail.split('@')[0],
+      name: name || matchedUser?.society || userEmail.split('@')[0],
       email: userEmail,
       avatar: picture || (isUnionRole ? '/union_mec_logo.webp' : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'),
       isUnionAdmin: isUnionRole,
       society: matchedUser?.society || (isUnionRole ? 'Union Senate' : 'Authorized Organizer'),
-      role: isUnionRole ? (matchedUser?.note || 'Union Senate Executive') : (matchedUser?.note || 'Authorized Organizer')
+      role: isUnionRole ? (matchedUser?.note || 'Union Senate Executive') : (matchedUser?.note || 'Club Representative')
     };
 
     setAuthError(null);
@@ -321,7 +319,7 @@ export default function GoogleAuthModal({
             )}
           </div>
 
-          {/* Switch Account link if not already showing error */}
+          {/* Switch Account link */}
           {!authError && (
             <div className="text-center">
               <button

@@ -28,6 +28,7 @@ export default function AvailabilityGrid({
   onSlotClick, 
   currentUser, 
   onAdminCancelBooking,
+  onClubCancelBooking,
   onBlockAllVenues,
   onUnblockDay 
 }) {
@@ -850,6 +851,7 @@ export default function AvailabilityGrid({
           onClose={() => setSelectedEventForDetails(null)}
           currentUser={currentUser}
           onAdminRevokeClick={onAdminCancelBooking ? (event) => onAdminCancelBooking(event.id, 'Revoked by Union Admin from Live Matrix') : null}
+          onClubCancelClick={onClubCancelBooking ? (bookingId, reason, cancelPackage) => onClubCancelBooking(bookingId, reason, cancelPackage) : null}
           allBookings={bookings}
         />
       )}

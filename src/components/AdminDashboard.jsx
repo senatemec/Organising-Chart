@@ -471,11 +471,16 @@ export default function AdminDashboard({
                       ) : (
                         <div>
                           <span className="badge badge-occupied">
-                            <XCircle className="w-3 h-3" /> Revoked
+                            <XCircle className="w-3 h-3" /> {b.cancelledByClub ? `Cancelled by Club (${b.cancelledByClub})` : 'Revoked by Admin'}
                           </span>
                           {b.cancellationReason && (
                             <div className="text-[10px] text-red-800 max-w-xs truncate mt-1 bg-red-50 px-2 py-0.5 rounded border border-red-200" title={b.cancellationReason}>
                               "{b.cancellationReason}"
+                            </div>
+                          )}
+                          {b.cancelledAt && (
+                            <div className="text-[9px] text-gray-500 font-mono mt-0.5">
+                              {formatDateTime(b.cancelledAt)}
                             </div>
                           )}
                         </div>

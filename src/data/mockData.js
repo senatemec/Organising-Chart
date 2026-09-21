@@ -170,7 +170,62 @@ export const initialVenues = [
   }
 ];
 
-export const initialBookings = [];
+export const initialBookings = [
+  {
+    id: 'BK-2026-1011-1',
+    eventId: 'EVT-2026-1011',
+    eventTitle: 'IEEE TechSprint: Embedded IoT Hands-On Workshop',
+    organizer: 'IEEE MEC',
+    venueId: 'internal-auditorium',
+    venueName: 'Internal Auditorium',
+    roomNumber: null,
+    date: '2026-09-05',
+    startTime: '09:30',
+    endTime: '12:30',
+    status: 'confirmed',
+    approvedBy: 'Auto-Confirmed',
+    description: 'Technical workshop covering microcontrollers and IoT protocol architectures for second and third year students.',
+    contactEmail: 'ieee@mec.ac.in',
+    userEmail: 'ieee@mec.ac.in',
+    createdAt: '2026-09-01T10:00:00.000Z'
+  },
+  {
+    id: 'BK-2026-2022-1',
+    eventId: 'EVT-2026-2022',
+    eventTitle: 'Excel 2026 Annual Core Executive Convention',
+    organizer: 'Excel',
+    venueId: 'external-auditorium',
+    venueName: 'External Auditorium',
+    roomNumber: null,
+    date: '2026-09-06',
+    startTime: '10:00',
+    endTime: '13:00',
+    status: 'confirmed',
+    approvedBy: 'Auto-Confirmed',
+    description: 'General orientation and strategy summit for Excel 2026 committee chairs and volunteers.',
+    contactEmail: 'excel@mec.ac.in',
+    userEmail: 'excel@mec.ac.in',
+    createdAt: '2026-09-02T11:00:00.000Z'
+  },
+  {
+    id: 'BK-2026-3033-1',
+    eventId: 'EVT-2026-3033',
+    eventTitle: 'IEDC Venture Launchpad Pitch Day',
+    organizer: 'IEDC',
+    venueId: 'sdpk',
+    venueName: 'SDPK (Skill Delivery Platform)',
+    roomNumber: null,
+    date: '2026-09-07',
+    startTime: '13:00',
+    endTime: '16:00',
+    status: 'confirmed',
+    approvedBy: 'Auto-Confirmed',
+    description: 'Student startup incubation presentations and mentor feedback session.',
+    contactEmail: 'iedc@mec.ac.in',
+    userEmail: 'iedc@mec.ac.in',
+    createdAt: '2026-09-03T09:00:00.000Z'
+  }
+];
 
 export const initialAllowedUsers = [
   { email: 'mohammedshaddaad.mec@gmail.com', society: 'Union', note: 'Union Senate Chairman' },

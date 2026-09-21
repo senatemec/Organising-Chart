@@ -63,7 +63,7 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {}
     }
     return initialBookings;
@@ -433,6 +433,70 @@ export default function App() {
     );
   };
 
+  // Individual Club cancel own booking with mandatory/structured reason and package support
+  const handleClubCancelBooking = async (bookingId, reason, cancelWholePackage = false) => {
+    const targetBooking = bookings.find(b => b.id === bookingId);
+    if (!targetBooking) return;
+
+    // Security check: Verify currentUser owns this booking (or is Union Admin)
+    const userEmail = (currentUser?.email || '').toLowerCase().trim();
+    const contactEmail = (targetBooking.contactEmail || '').toLowerCase().trim();
+    const bookingUserEmail = (targetBooking.userEmail || '').toLowerCase().trim();
+    const userSociety = (currentUser?.society || '').toLowerCase().trim();
+    const bookingOrganizer = (targetBooking.organizer || '').toLowerCase().trim();
+
+    const isOwner = userEmail && (
+      contactEmail === userEmail ||
+      bookingUserEmail === userEmail ||
+      (userSociety && bookingOrganizer === userSociety)
+    );
+
+    if (!isOwner && !currentUser?.isUnionAdmin) {
+      showToast('You can only cancel bookings made by your club account.', 'error');
+      return;
+    }
+
+    const eventIdToCancel = (cancelWholePackage && targetBooking?.eventId) ? targetBooking.eventId : null;
+    const nowIso = new Date().toISOString();
+    const clubName = currentUser?.society || currentUser?.name || 'Club Representative';
+
+    const updates = {
+      status: 'cancelled',
+      cancelledBy: currentUser?.email || 'Club Representative',
+      cancelledByClub: clubName,
+      cancellationReason: reason || 'Cancelled by club organizers.',
+      cancelledAt: nowIso
+    };
+
+    let updatedBookings;
+    let targetList = [];
+    if (eventIdToCancel) {
+      targetList = bookings.filter(b => b.eventId === eventIdToCancel);
+      updatedBookings = bookings.map(b => b.eventId === eventIdToCancel ? { ...b, ...updates } : b);
+    } else {
+      targetList = bookings.filter(b => b.id === bookingId);
+      updatedBookings = bookings.map(b => b.id === bookingId ? { ...b, ...updates } : b);
+    }
+
+    setBookings(updatedBookings);
+    localStorage.setItem('cs_bookings_v8', JSON.stringify(updatedBookings));
+
+    if (isFirebaseConfigured) {
+      try {
+        await Promise.all(targetList.map(b => dbUpdateBooking(b.id, updates)));
+      } catch (e) {
+        console.error('Firebase update error:', e);
+      }
+    }
+
+    showToast(
+      eventIdToCancel
+        ? `Event package (${targetList.length} venues) cancelled by ${clubName}. Slots released.`
+        : `Booking permit ${bookingId} cancelled by ${clubName}. Slot released.`,
+      'info'
+    );
+  };
+
   // Admin Block All Venues for a Date (Campus-Wide Lockdown / Event Reservation)
   const handleBlockAllVenues = async ({
     date,
@@ -609,6 +673,7 @@ export default function App() {
             bookings={bookings}
             currentUser={currentUser}
             onAdminCancelBooking={handleAdminCancelBooking}
+            onClubCancelBooking={handleClubCancelBooking}
             onBlockAllVenues={handleBlockAllVenues}
             onUnblockDay={handleUnblockDay}
             onSlotClick={(venue, date, slot) => handleOpenBookingModal(venue, date, slot)}
@@ -623,6 +688,7 @@ export default function App() {
             currentUser={currentUser}
             onOpenLoginModal={(msg) => triggerAuthModal(msg)}
             onNewBookingClick={() => handleOpenBookingModal()}
+            onCancelBooking={handleClubCancelBooking}
           />
         )}
 
