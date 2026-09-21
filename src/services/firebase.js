@@ -131,6 +131,19 @@ export async function seedInitialFirestoreData() {
         createdAt: new Date().toISOString()
       }, { merge: true });
     }
+
+    // Clean up any unverified or automatically seeded mock clubs from Firestore
+    try {
+      const clubsSnap = await getDocs(collection(db, 'clubs'));
+      for (const d of clubsSnap.docs) {
+        const data = d.data();
+        if (!data.updatedByUser) {
+          await deleteDoc(doc(db, 'clubs', d.id));
+        }
+      }
+    } catch (cleanErr) {
+      console.warn('Firestore clubs cleanup notice:', cleanErr);
+    }
   } catch (err) {
     console.warn('Firestore initial data seed check:', err);
   }
@@ -336,3 +349,44 @@ export async function dbUpdateVenueStatus(venueId, status) {
     throw err;
   }
 }
+
+/**
+ * Real-time listener for College Clubs & Societies (ONLY returns profiles updated by the user)
+ */
+export function subscribeToClubs(onData, onError) {
+  if (!db) return () => {};
+
+  return onSnapshot(collection(db, 'clubs'), (snapshot) => {
+    const list = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.updatedByUser && data.name && data.name.trim()) {
+        list.push({ ...data, id: doc.id });
+      }
+    });
+    onData(list);
+  }, (err) => {
+    console.error('Firestore Clubs Subscription Error:', err);
+    if (onError) onError(err);
+  });
+}
+
+/**
+ * Update or create club profile in Firestore (marks updatedByUser = true)
+ */
+export async function dbUpdateClubProfile(clubId, updates) {
+  if (!db) return false;
+  try {
+    const clean = sanitizeBookingData({
+      ...updates,
+      updatedByUser: true,
+      updatedAt: new Date().toISOString()
+    });
+    await setDoc(doc(db, 'clubs', clubId), clean, { merge: true });
+    return true;
+  } catch (err) {
+    console.error('Failed to update club profile in Firestore:', err);
+    throw err;
+  }
+}
+

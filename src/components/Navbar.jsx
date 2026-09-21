@@ -6,7 +6,9 @@ import {
   ShieldCheck, 
   Plus,
   LogOut,
-  UserCheck
+  UserCheck,
+  Users,
+  Edit3
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -14,12 +16,14 @@ export default function Navbar({
   setActiveTab, 
   currentUser,
   onOpenLoginModal,
+  onOpenProfileModal,
   onLogout,
   onNewBookingClick 
 }) {
   const baseNavItems = [
     { id: 'venues', label: 'Venues', icon: Building2 },
     { id: 'availability', label: 'Live Schedule Matrix', icon: CalendarDays },
+    { id: 'clubs', label: 'Clubs', icon: Users },
     { id: 'my-bookings', label: 'My Bookings', icon: Ticket },
   ];
 
@@ -150,6 +154,15 @@ export default function Navbar({
                   {currentUser.email}
                 </div>
               </div>
+              {onOpenProfileModal && currentUser.society && (
+                <button
+                  onClick={() => onOpenProfileModal()}
+                  className="p-1 rounded-lg transition-colors ml-0.5 text-gray-500 hover:text-red-700 hover:bg-gray-100"
+                  title={`Edit ${currentUser.society} Profile`}
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
                 onClick={onLogout}
                 className="p-1 rounded-lg transition-colors ml-0.5"

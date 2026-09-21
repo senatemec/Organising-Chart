@@ -330,3 +330,45 @@ export const categories = [
   'Placement Drive',
   'Orientation'
 ];
+
+// Official campus clubs published by default with names only (no edits/logos until updated by user)
+export const initialClubs = [
+  { id: 'union', name: 'College Student Union (Union MEC)', society: 'Union', email: 'union@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'excel', name: 'Excel MEC', society: 'Excel', email: 'excel@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'ieee-mec', name: 'IEEE MEC Student Branch', society: 'IEEE MEC', email: 'ieee@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'iedc-mec', name: 'IEDC MEC', society: 'IEDC', email: 'iedc@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'tinkerhub-mec', name: 'TinkerHub MEC', society: 'Tinkerhub MEC', email: 'reachtinkerhubmec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'foss-mec', name: 'FOSS MEC', society: 'FOSS MEC', email: 'foss@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'acm-mec', name: 'ACM Student Chapter MEC', society: 'ACM', email: 'acmstudentchapter.mec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'gdc-mec', name: 'GDC MEC (Game Developers Community)', society: 'GDC MEC', email: 'gdcmecofficial@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'nss-mec', name: 'NSS MEC (National Service Scheme)', society: 'NSS', email: 'nssmecofficial@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'munsoc-mec', name: 'MUNSOC MEC (Model United Nations)', society: 'MUNSOC MEC', email: 'reachmecmun@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'tedx-mec', name: 'TEDxMEC', society: 'TEDxMEC', email: 'reachtedxmec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'rotaract-mec', name: 'Rotaract Club of MEC', society: 'Rotaract', email: 'rotaractmec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'mixed-signals', name: 'Mixed Signals MEC (Music Club)', society: 'Mixed Signals MEC', email: 'mixedsignals@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'rhapzody', name: 'RHAPZODY (Dance Club)', society: 'RHAPZODY', email: 'rhapzodymec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'bharatham', name: 'Bharatham MEC', society: 'Bharatham', email: 'bharatham.mec25@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'bhoomitrasena', name: 'Bhoomitrasena Club (BMS MEC)', society: 'Bhoomitrasena', email: 'bhoomitrasena@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'debate-club', name: 'D.E.B.A.T.E Club MEC', society: 'D.E.B.A.T.E Club', email: 'reachdebateclubmec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'gdgc-mec', name: 'GDGC MEC (Google Developer Groups)', society: 'GDGC MEC', email: 'gdgc@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'placement-cell', name: 'Placement Cell', society: 'Placement Cell', email: 'pc@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'alumni-relations', name: 'Alumni Relations Cell (ARC MEC)', society: 'Alumni Relations Cell', email: 'arc@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'sae-mec', name: 'SAE MEC', society: 'SAE MEC', email: 'sae@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'iete-mec', name: 'IETE MEC', society: 'IETE', email: 'ietesf.mec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'idealab-mec', name: 'Idealab MEC', society: 'Idealab MEC', email: 'idealabfablab.mec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'tiq-mec', name: 'The Illuminati Quiz (TIQ)', society: 'TIQ', email: 'theilluminatiquiz@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'tle-mec', name: 'TLE MEC', society: 'TLE MEC', email: 'tle@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'emf-mec', name: 'EMF MEC', society: 'EMF', email: 'emf@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'asme-mec', name: 'ASME MEC', society: 'ASME MEC', email: 'asme.mec.mdl@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'astra-mec', name: 'ASTRA MEC', society: 'ASTRA MEC', email: 'mecastra25@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'fortitude-mec', name: 'FORTITUDE MEC', society: 'FORTITUDE MEC', email: 'fortitudemec2026@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'nsdc-mec', name: 'NSDC MEC', society: 'NSDC MEC', email: 'nsdc@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'macs-mec', name: 'MACS MEC', society: 'MACS MEC', email: 'macs@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'tbt-mec', name: 'The Book Thieves (TBT)', society: 'TBT', email: 'thebookthieves@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'yuva-mec', name: 'Yuva MEC', society: 'Yuva', email: 'yuvamec26@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'cosmec', name: 'COSMEC', society: 'COSMEC', email: 'ircmec28@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'topgear-mec', name: 'Topgear MEC', society: 'Topgearmec', email: 'topgearmec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'c2s-internship', name: 'C2S Project Internship', society: 'C2S_Project_Internship', email: 'c2sinternship2026@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false }
+];
+
+

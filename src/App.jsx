@@ -8,10 +8,13 @@ import AdminDashboard from './components/AdminDashboard';
 import MyBookings from './components/MyBookings';
 import AnalyticsView from './components/AnalyticsView';
 import GoogleAuthModal from './components/GoogleAuthModal';
+import ClubsView from './components/ClubsView';
+import ClubProfileModal from './components/ClubProfileModal';
+import EventDetailsModal from './components/EventDetailsModal';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-import { initialVenues, initialBookings, initialAllowedUsers } from './data/mockData';
+import { initialVenues, initialBookings, initialAllowedUsers, initialClubs } from './data/mockData';
 import { formatDateFriendly } from './utils/availabilityUtils';
 import { 
   isFirebaseConfigured, 
@@ -20,6 +23,8 @@ import {
   subscribeToVenues, 
   subscribeToAllowedUsers, 
   subscribeToAuthSettings,
+  subscribeToClubs,
+  dbUpdateClubProfile,
   dbCreateBooking, 
   dbUpdateBooking, 
   dbDeleteBooking, 
@@ -111,6 +116,31 @@ export default function App() {
   // Toast / Notification State
   const [toast, setToast] = useState(null);
 
+  // College Clubs & Societies Profiles State (Names published by default; user edits merged on save)
+  const [clubs, setClubs] = useState(() => {
+    try {
+      localStorage.removeItem('cs_clubs_v2');
+      localStorage.removeItem('cs_clubs_v3');
+      localStorage.removeItem('cs_clubs_v4');
+    } catch (e) {}
+    const saved = localStorage.getItem('cs_clubs_v5');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const map = new Map();
+          initialClubs.forEach(c => map.set(c.id, c));
+          parsed.forEach(c => {
+            const init = map.get(c.id) || {};
+            map.set(c.id, { ...init, ...c });
+          });
+          return Array.from(map.values());
+        }
+      } catch (e) {}
+    }
+    return initialClubs;
+  });
+
   // Modals
   const [selectedVenueForDetails, setSelectedVenueForDetails] = useState(null);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -119,6 +149,11 @@ export default function App() {
     date: '2026-09-05',
     time: '10:00'
   });
+
+  // Club Profile Modal State
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedClubForEdit, setSelectedClubForEdit] = useState(null);
+  const [selectedEventForModal, setSelectedEventForModal] = useState(null);
 
   // Google Auth Modal State
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -172,14 +207,35 @@ export default function App() {
         }
       });
 
+      const unsubscribeClubs = subscribeToClubs((liveClubs) => {
+        if (Array.isArray(liveClubs)) {
+          const map = new Map();
+          initialClubs.forEach(c => map.set(c.id, c));
+          liveClubs.forEach(c => {
+            const init = map.get(c.id) || {};
+            map.set(c.id, { ...init, ...c });
+          });
+          const merged = Array.from(map.values());
+          setClubs(merged);
+          try {
+            localStorage.setItem('cs_clubs_v5', JSON.stringify(merged));
+          } catch (e) {}
+        }
+      });
+
       return () => {
         unsubscribeBookings();
         unsubscribeVenues();
         unsubscribeAllowedUsers();
         unsubscribeAuthSettings();
+        unsubscribeClubs();
       };
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('cs_clubs_v5', JSON.stringify(clubs));
+  }, [clubs]);
 
   useEffect(() => {
     localStorage.setItem('cs_venues_v16', JSON.stringify(venues));
@@ -314,6 +370,112 @@ export default function App() {
     }
 
     showToast(enabled ? 'Strict Whitelist Login Enabled' : 'Open Login Mode Enabled', 'info');
+  };
+
+  // Helper to check if current logged in user belongs to the respective club
+  const isRespectiveClubUser = (club) => {
+    if (!currentUser || !club) return false;
+    const userEmail = (currentUser.email || '').toLowerCase().trim();
+    const userSociety = (currentUser.society || '').toLowerCase().trim();
+    const clubEmail = (club.email || '').toLowerCase().trim();
+    const clubSociety = (club.society || '').toLowerCase().trim();
+    const clubId = (club.id || '').toLowerCase().trim();
+
+    return Boolean(
+      (userEmail && clubEmail && userEmail === clubEmail) ||
+      (userSociety && clubSociety && userSociety === clubSociety) ||
+      (userSociety && clubId && userSociety.replace(/[^a-z0-9]+/g, '-') === clubId)
+    );
+  };
+
+  // Open Club Profile Editor - STRICTLY available ONLY to the respective club login
+  const handleOpenProfileModal = (targetClub = null) => {
+    if (!currentUser) {
+      triggerAuthModal('Please sign in with your authorized club account to edit profile details.');
+      return;
+    }
+
+    if (targetClub) {
+      if (!isRespectiveClubUser(targetClub)) {
+        showToast(`Access Restricted: Only authorized representatives of ${targetClub.name} can edit this profile.`, 'error');
+        return;
+      }
+      setSelectedClubForEdit(targetClub);
+      setProfileModalOpen(true);
+      return;
+    }
+
+    // Match current logged-in user's respective club
+    const matchedClub = clubs.find(isRespectiveClubUser);
+
+    if (matchedClub) {
+      setSelectedClubForEdit(matchedClub);
+      setProfileModalOpen(true);
+    } else {
+      const rawSociety = currentUser.society || '';
+      if (!rawSociety) {
+        showToast('Your account is not linked to any recognized college club.', 'error');
+        return;
+      }
+      const userEmail = (currentUser.email || '').toLowerCase().trim();
+      const clubId = rawSociety.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+      setSelectedClubForEdit({
+        id: clubId,
+        name: rawSociety,
+        society: rawSociety,
+        email: currentUser.email || '',
+        logo: '',
+        instagram: '',
+        description: '',
+        coreMembers: [
+          { id: '1', name: '', designation: 'Lead / Executive', phone: '' }
+        ],
+        updatedByUser: false
+      });
+      setProfileModalOpen(true);
+    }
+  };
+
+  // Save updated club profile (edits saved and published)
+  const handleSaveClubProfile = async (clubId, updatedData) => {
+    if (!currentUser) {
+      showToast('Please sign in to save profile changes.', 'error');
+      return;
+    }
+
+    const targetClub = clubs.find(c => c.id === clubId) || updatedData;
+    if (!isRespectiveClubUser(targetClub)) {
+      showToast(`Unauthorized: You can only edit and save your own club's profile.`, 'error');
+      return;
+    }
+
+    const dataWithFlag = {
+      ...updatedData,
+      updatedByUser: true,
+      updatedAt: new Date().toISOString()
+    };
+
+    setClubs(prevClubs => {
+      const exists = prevClubs.some(c => c.id === clubId);
+      const updated = exists 
+        ? prevClubs.map(c => c.id === clubId ? { ...c, ...dataWithFlag } : c)
+        : [...prevClubs, dataWithFlag];
+      try {
+        localStorage.setItem('cs_clubs_v5', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbUpdateClubProfile(clubId, dataWithFlag);
+      } catch (err) {
+        console.error('Firebase club profile update error:', err);
+      }
+    }
+
+    showToast(`${dataWithFlag.name} profile updated successfully!`, 'success');
   };
 
   // Open booking modal (requires Google Login!)
@@ -649,6 +811,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         currentUser={currentUser}
         onOpenLoginModal={(msg) => triggerAuthModal(msg)}
+        onOpenProfileModal={() => handleOpenProfileModal()}
         onLogout={handleLogout}
         onNewBookingClick={() => handleOpenBookingModal()}
       />
@@ -680,7 +843,18 @@ export default function App() {
           />
         )}
 
-        {/* Tab 3: My Bookings (Filtered by logged in Google user) */}
+        {/* Tab 3: Campus Clubs & Societies Directory (Public) */}
+        {activeTab === 'clubs' && (
+          <ClubsView
+            clubs={clubs}
+            bookings={bookings}
+            currentUser={currentUser}
+            onEditProfileClick={(club) => handleOpenProfileModal(club)}
+            onViewEventDetails={(event) => setSelectedEventForModal(event)}
+          />
+        )}
+
+        {/* Tab 4: My Bookings (Filtered by logged in Google user) */}
         {activeTab === 'my-bookings' && (
           <MyBookings
             bookings={bookings}
@@ -762,6 +936,32 @@ export default function App() {
           }
           onClose={() => setBookingModalOpen(false)}
           onSubmitBooking={handleCreateBooking}
+        />
+      )}
+
+      {/* Club Profile Editor Modal */}
+      {profileModalOpen && selectedClubForEdit && (
+        <ClubProfileModal
+          isOpen={profileModalOpen}
+          club={selectedClubForEdit}
+          onClose={() => {
+            setProfileModalOpen(false);
+            setSelectedClubForEdit(null);
+          }}
+          onSaveProfile={handleSaveClubProfile}
+        />
+      )}
+
+      {/* Event Details Modal (from Clubs view) */}
+      {selectedEventForModal && (
+        <EventDetailsModal
+          event={selectedEventForModal}
+          venue={venues.find(v => v.id === selectedEventForModal.venueId)}
+          onClose={() => setSelectedEventForModal(null)}
+          currentUser={currentUser}
+          onAdminRevokeClick={handleAdminCancelBooking ? (event) => handleAdminCancelBooking(event.id, 'Revoked by Union Admin') : null}
+          onClubCancelClick={handleClubCancelBooking ? (bookingId, reason, cancelPackage) => handleClubCancelBooking(bookingId, reason, cancelPackage) : null}
+          allBookings={bookings}
         />
       )}
 
