@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Users, 
+  User,
   Search, 
   ArrowLeft, 
   Instagram, 
@@ -18,11 +19,13 @@ import {
   Ticket
 } from 'lucide-react';
 import { formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
+import { isRespectiveClubUser } from '../utils/clubUtils';
 
 export default function ClubsView({ 
   clubs = [], 
   bookings = [], 
   currentUser,
+  allowedUsers = [],
   onEditProfileClick,
   onViewEventDetails,
   initialSelectedClubId = null
@@ -57,13 +60,7 @@ export default function ClubsView({
   });
 
   // Check if current user is the respective owner/representative of selected club (STRICT: no other user or role)
-  const isRespectiveClubLogin = Boolean(
-    currentUser && selectedClub && (
-      (currentUser.email && selectedClub.email && currentUser.email.toLowerCase().trim() === selectedClub.email.toLowerCase().trim()) ||
-      (currentUser.society && selectedClub.society && currentUser.society.toLowerCase().trim() === selectedClub.society.toLowerCase().trim()) ||
-      (currentUser.society && selectedClub.id && currentUser.society.toLowerCase().replace(/[^a-z0-9]+/g, '-') === selectedClub.id.toLowerCase().trim())
-    )
-  );
+  const isRespectiveClubLogin = Boolean(isRespectiveClubUser(currentUser, selectedClub, allowedUsers));
 
   // Booked events for the selected club - ONLY active events, NOT cancelled ones
   const clubActiveBookings = selectedClub ? bookings.filter(b => {
@@ -76,10 +73,12 @@ export default function ClubsView({
     const cSociety = (selectedClub.society || '').toLowerCase().trim();
     const cName = (selectedClub.name || '').toLowerCase().trim();
     const cEmail = (selectedClub.email || '').toLowerCase().trim();
+    const cId = (selectedClub.id || '').toLowerCase().trim();
 
     return (
       (cSociety && org === cSociety) ||
       (cName && org === cName) ||
+      (cId && org.replace(/[^a-z0-9]+/g, '-') === cId) ||
       (cEmail && (contact === cEmail || user === cEmail))
     );
   }) : [];

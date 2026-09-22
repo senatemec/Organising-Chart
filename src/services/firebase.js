@@ -351,7 +351,7 @@ export async function dbUpdateVenueStatus(venueId, status) {
 }
 
 /**
- * Real-time listener for College Clubs & Societies (ONLY returns profiles updated by the user)
+ * Real-time listener for College Clubs & Societies
  */
 export function subscribeToClubs(onData, onError) {
   if (!db) return () => {};
@@ -360,13 +360,13 @@ export function subscribeToClubs(onData, onError) {
     const list = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.updatedByUser && data.name && data.name.trim()) {
+      if (data && data.name && data.name.trim()) {
         list.push({ ...data, id: doc.id });
       }
     });
     onData(list);
   }, (err) => {
-    console.error('Firestore Clubs Subscription Error:', err);
+    console.warn('Firestore Clubs Subscription notice (operating with local clubs cache):', err);
     if (onError) onError(err);
   });
 }
@@ -385,8 +385,8 @@ export async function dbUpdateClubProfile(clubId, updates) {
     await setDoc(doc(db, 'clubs', clubId), clean, { merge: true });
     return true;
   } catch (err) {
-    console.error('Failed to update club profile in Firestore:', err);
-    throw err;
+    console.warn('Firestore club profile sync notice (saved locally in browser):', err);
+    return false;
   }
 }
 

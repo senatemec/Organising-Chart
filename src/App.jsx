@@ -16,6 +16,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import { initialVenues, initialBookings, initialAllowedUsers, initialClubs } from './data/mockData';
 import { formatDateFriendly } from './utils/availabilityUtils';
+import { isRespectiveClubUser, findRespectiveClub } from './utils/clubUtils';
 import { 
   isFirebaseConfigured, 
   seedInitialFirestoreData, 
@@ -208,18 +209,30 @@ export default function App() {
       });
 
       const unsubscribeClubs = subscribeToClubs((liveClubs) => {
-        if (Array.isArray(liveClubs)) {
-          const map = new Map();
-          initialClubs.forEach(c => map.set(c.id, c));
-          liveClubs.forEach(c => {
-            const init = map.get(c.id) || {};
-            map.set(c.id, { ...init, ...c });
+        if (Array.isArray(liveClubs) && liveClubs.length > 0) {
+          setClubs(prevClubs => {
+            const map = new Map();
+            initialClubs.forEach(c => map.set(c.id, c));
+            (prevClubs || []).forEach(c => {
+              if (c && c.id) {
+                const init = map.get(c.id) || {};
+                map.set(c.id, { ...init, ...c });
+              }
+            });
+            liveClubs.forEach(c => {
+              if (c && c.id) {
+                const existing = map.get(c.id) || {};
+                if (c.updatedByUser) {
+                  map.set(c.id, { ...existing, ...c });
+                }
+              }
+            });
+            const merged = Array.from(map.values());
+            try {
+              localStorage.setItem('cs_clubs_v5', JSON.stringify(merged));
+            } catch (e) {}
+            return merged;
           });
-          const merged = Array.from(map.values());
-          setClubs(merged);
-          try {
-            localStorage.setItem('cs_clubs_v5', JSON.stringify(merged));
-          } catch (e) {}
         }
       });
 
@@ -372,22 +385,6 @@ export default function App() {
     showToast(enabled ? 'Strict Whitelist Login Enabled' : 'Open Login Mode Enabled', 'info');
   };
 
-  // Helper to check if current logged in user belongs to the respective club
-  const isRespectiveClubUser = (club) => {
-    if (!currentUser || !club) return false;
-    const userEmail = (currentUser.email || '').toLowerCase().trim();
-    const userSociety = (currentUser.society || '').toLowerCase().trim();
-    const clubEmail = (club.email || '').toLowerCase().trim();
-    const clubSociety = (club.society || '').toLowerCase().trim();
-    const clubId = (club.id || '').toLowerCase().trim();
-
-    return Boolean(
-      (userEmail && clubEmail && userEmail === clubEmail) ||
-      (userSociety && clubSociety && userSociety === clubSociety) ||
-      (userSociety && clubId && userSociety.replace(/[^a-z0-9]+/g, '-') === clubId)
-    );
-  };
-
   // Open Club Profile Editor - STRICTLY available ONLY to the respective club login
   const handleOpenProfileModal = (targetClub = null) => {
     if (!currentUser) {
@@ -396,7 +393,7 @@ export default function App() {
     }
 
     if (targetClub) {
-      if (!isRespectiveClubUser(targetClub)) {
+      if (!isRespectiveClubUser(currentUser, targetClub, allowedUsers)) {
         showToast(`Access Restricted: Only authorized representatives of ${targetClub.name} can edit this profile.`, 'error');
         return;
       }
@@ -406,7 +403,7 @@ export default function App() {
     }
 
     // Match current logged-in user's respective club
-    const matchedClub = clubs.find(isRespectiveClubUser);
+    const matchedClub = findRespectiveClub(currentUser, clubs, allowedUsers);
 
     if (matchedClub) {
       setSelectedClubForEdit(matchedClub);
@@ -445,13 +442,14 @@ export default function App() {
     }
 
     const targetClub = clubs.find(c => c.id === clubId) || updatedData;
-    if (!isRespectiveClubUser(targetClub)) {
+    if (!isRespectiveClubUser(currentUser, targetClub, allowedUsers)) {
       showToast(`Unauthorized: You can only edit and save your own club's profile.`, 'error');
       return;
     }
 
     const dataWithFlag = {
       ...updatedData,
+      id: clubId,
       updatedByUser: true,
       updatedAt: new Date().toISOString()
     };
@@ -466,6 +464,8 @@ export default function App() {
       } catch (e) {}
       return updated;
     });
+
+    setSelectedClubForEdit(dataWithFlag);
 
     if (isFirebaseConfigured) {
       try {
@@ -849,6 +849,7 @@ export default function App() {
             clubs={clubs}
             bookings={bookings}
             currentUser={currentUser}
+            allowedUsers={allowedUsers}
             onEditProfileClick={(club) => handleOpenProfileModal(club)}
             onViewEventDetails={(event) => setSelectedEventForModal(event)}
           />
