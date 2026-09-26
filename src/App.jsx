@@ -11,6 +11,7 @@ import GoogleAuthModal from './components/GoogleAuthModal';
 import ClubsView from './components/ClubsView';
 import ClubProfileModal from './components/ClubProfileModal';
 import EventDetailsModal from './components/EventDetailsModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
@@ -955,15 +956,20 @@ export default function App() {
 
       {/* Event Details Modal (from Clubs view) */}
       {selectedEventForModal && (
-        <EventDetailsModal
-          event={selectedEventForModal}
-          venue={venues.find(v => v.id === selectedEventForModal.venueId)}
-          onClose={() => setSelectedEventForModal(null)}
-          currentUser={currentUser}
-          onAdminRevokeClick={handleAdminCancelBooking ? (event) => handleAdminCancelBooking(event.id, 'Revoked by Union Admin') : null}
-          onClubCancelClick={handleClubCancelBooking ? (bookingId, reason, cancelPackage) => handleClubCancelBooking(bookingId, reason, cancelPackage) : null}
-          allBookings={bookings}
-        />
+        <ErrorBoundary
+          title="Unable to Display Event Details"
+          onReset={() => setSelectedEventForModal(null)}
+        >
+          <EventDetailsModal
+            event={selectedEventForModal}
+            venue={venues.find(v => v.id === selectedEventForModal.venueId)}
+            onClose={() => setSelectedEventForModal(null)}
+            currentUser={currentUser}
+            onAdminRevokeClick={handleAdminCancelBooking ? (event) => handleAdminCancelBooking(event.id, 'Revoked by Union Admin') : null}
+            onClubCancelClick={handleClubCancelBooking ? (bookingId, reason, cancelPackage) => handleClubCancelBooking(bookingId, reason, cancelPackage) : null}
+            allBookings={bookings}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Footer with Database Status Indicator */}

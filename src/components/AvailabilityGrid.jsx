@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Calendar, 
   CalendarDays,
@@ -17,10 +17,15 @@ import {
   Lock,
   Unlock,
   ShieldAlert,
-  AlertTriangle
+  AlertTriangle,
+  Search,
+  X,
+  ArrowRight,
+  Tag
 } from 'lucide-react';
 import { timeSlots, formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
 import EventDetailsModal from './EventDetailsModal';
+import ErrorBoundary from './ErrorBoundary';
 
 export default function AvailabilityGrid({ 
   venues, 
@@ -41,6 +46,13 @@ export default function AvailabilityGrid({
   // Selected Event to view full details modal
   const [selectedEventForDetails, setSelectedEventForDetails] = useState(null);
 
+  // Search Modal & Query State
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCategory, setSearchCategory] = useState('all');
+  const [highlightedBookingId, setHighlightedBookingId] = useState(null);
+  const searchInputRef = useRef(null);
+
   // Quick Day Block Modal State (for Union Admin directly from Schedule Matrix)
   const [quickBlockModalOpen, setQuickBlockModalOpen] = useState(false);
   const [quickBlockTargetDate, setQuickBlockTargetDate] = useState('2026-09-05');
@@ -49,6 +61,123 @@ export default function AvailabilityGrid({
   const [quickBlockStartTime, setQuickBlockStartTime] = useState('08:00');
   const [quickBlockEndTime, setQuickBlockEndTime] = useState('20:00');
   const [quickBlockAutoRevoke, setQuickBlockAutoRevoke] = useState(true);
+
+  // Keyboard shortcut listener (Cmd+K / Ctrl+K and Esc)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchModalOpen(prev => !prev);
+      }
+      if (e.key === 'Escape' && searchModalOpen) {
+        setSearchModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchModalOpen]);
+
+  // Autofocus search input when modal opens
+  useEffect(() => {
+    if (searchModalOpen && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+    }
+  }, [searchModalOpen]);
+
+  // All active bookings for search
+  const searchableBookings = useMemo(() => {
+    return (bookings || []).filter(b => b.status !== 'cancelled' && b.status !== 'rejected');
+  }, [bookings]);
+
+  // Counts for search category chips
+  const searchCategoryCounts = useMemo(() => {
+    const todayStr = '2026-09-05';
+    const all = searchableBookings.length;
+    const today = searchableBookings.filter(b => b.date === todayStr).length;
+    const upcoming = searchableBookings.filter(b => b.date >= todayStr).length;
+    const auditorium = searchableBookings.filter(b => {
+      const v = venues.find(ven => ven.id === b.venueId);
+      return v && v.type === 'Auditorium';
+    }).length;
+    const activity = searchableBookings.filter(b => {
+      const v = venues.find(ven => ven.id === b.venueId);
+      return v && v.type === 'Activity Division';
+    }).length;
+    const labs = searchableBookings.filter(b => {
+      const v = venues.find(ven => ven.id === b.venueId);
+      return v && (v.type === 'Computer Lab' || v.type === 'Classrooms');
+    }).length;
+
+    return { all, today, upcoming, auditorium, activity, labs };
+  }, [searchableBookings, venues]);
+
+  // Filtered search results
+  const filteredSearchResults = useMemo(() => {
+    let list = searchableBookings;
+    const todayStr = '2026-09-05';
+
+    if (searchCategory === 'today') {
+      list = list.filter(b => b.date === todayStr);
+    } else if (searchCategory === 'upcoming') {
+      list = list.filter(b => b.date >= todayStr);
+    } else if (searchCategory === 'auditorium') {
+      list = list.filter(b => {
+        const v = venues.find(ven => ven.id === b.venueId);
+        return v && v.type === 'Auditorium';
+      });
+    } else if (searchCategory === 'activity') {
+      list = list.filter(b => {
+        const v = venues.find(ven => ven.id === b.venueId);
+        return v && v.type === 'Activity Division';
+      });
+    } else if (searchCategory === 'labs') {
+      list = list.filter(b => {
+        const v = venues.find(ven => ven.id === b.venueId);
+        return v && (v.type === 'Computer Lab' || v.type === 'Classrooms');
+      });
+    }
+
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return list;
+
+    return list.filter(b => {
+      const titleMatch = b.eventTitle?.toLowerCase().includes(q);
+      const orgMatch = b.organizer?.toLowerCase().includes(q);
+      const venueMatch = b.venueName?.toLowerCase().includes(q);
+      const roomMatch = b.roomNumber?.toLowerCase().includes(q);
+      const dateMatch = b.date?.toLowerCase().includes(q) || formatDateFriendly(b.date).toLowerCase().includes(q);
+      const descMatch = b.description?.toLowerCase().includes(q);
+      const idMatch = b.id?.toLowerCase().includes(q) || b.eventId?.toLowerCase().includes(q);
+
+      return titleMatch || orgMatch || venueMatch || roomMatch || dateMatch || descMatch || idMatch;
+    });
+  }, [searchableBookings, searchQuery, searchCategory, venues]);
+
+  const handleJumpToEventInMatrix = (booking) => {
+    setSelectedDate(booking.date);
+    setSelectedMonthDay(booking.date);
+    setViewMode('daily');
+    setHighlightedBookingId(booking.id);
+    setSearchModalOpen(false);
+
+    setTimeout(() => {
+      const el = document.getElementById('hourly-matrix-table');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 150);
+
+    setTimeout(() => {
+      setHighlightedBookingId(null);
+    }, 4500);
+  };
+
+  const handleInspectFromSearch = (booking) => {
+    setSearchModalOpen(false);
+    setSelectedEventForDetails(booking);
+  };
 
   // Change date by offset in days (for daily matrix)
   const changeDateByDays = (days) => {
@@ -160,9 +289,24 @@ export default function AvailabilityGrid({
           </div>
         </div>
 
-        {/* Right View Switcher Toggle */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <div className="grid grid-cols-2 sm:flex items-center p-1 rounded-xl border text-xs w-full md:w-auto" style={{background:'#F3F4F6', borderColor:'#E5E7EB'}}>
+        {/* Right Controls: Search Button + View Switcher */}
+        <div className="flex items-center gap-2 w-full md:w-auto flex-wrap sm:flex-nowrap">
+          <button
+            onClick={() => setSearchModalOpen(true)}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-xs hover:shadow-sm active:scale-95 border"
+            style={{
+              background: '#FFF5F5',
+              color: '#B91C1C',
+              borderColor: '#FECACA'
+            }}
+            title="Search scheduled events (Cmd+K)"
+          >
+            <Search className="w-3.5 h-3.5 text-red-600" />
+            <span>Search Events</span>
+            <kbd className="hidden sm:inline-block text-[9px] px-1.5 py-0.5 rounded bg-white text-gray-400 border border-gray-200 font-mono">⌘K</kbd>
+          </button>
+
+          <div className="grid grid-cols-2 sm:flex items-center p-1 rounded-xl border text-xs flex-1 sm:flex-initial" style={{background:'#F3F4F6', borderColor:'#E5E7EB'}}>
             <button
               onClick={() => setViewMode('monthly')}
               className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg font-semibold transition-all text-[11px] sm:text-xs`}
@@ -230,6 +374,15 @@ export default function AvailabilityGrid({
                 className="btn-secondary text-[11px] sm:text-xs py-1.5 px-2.5 sm:px-3 ml-auto sm:ml-2 font-semibold"
               >
                 Current Month
+              </button>
+
+              <button
+                onClick={() => setSearchModalOpen(true)}
+                className="btn-secondary text-[11px] sm:text-xs py-1.5 px-2.5 sm:px-3 font-semibold flex items-center gap-1.5 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-all ml-1 shrink-0"
+                title="Search events across schedule"
+              >
+                <Search className="w-3.5 h-3.5 text-red-600" />
+                <span className="hidden sm:inline">Search Events</span>
               </button>
             </div>
 
@@ -663,6 +816,15 @@ export default function AvailabilityGrid({
               </div>
 
               <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end">
+                <button
+                  onClick={() => setSearchModalOpen(true)}
+                  className="btn-secondary text-[11px] sm:text-xs py-1 sm:py-1.5 px-2.5 sm:px-3 flex items-center gap-1.5 font-bold hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-all"
+                  title="Search events across schedule matrix"
+                >
+                  <Search className="w-3.5 h-3.5 text-red-600" />
+                  <span>Search Events</span>
+                </button>
+
                 {currentUser?.isUnionAdmin && !dailyDayBlock && (
                   <button
                     onClick={() => {
@@ -733,7 +895,7 @@ export default function AvailabilityGrid({
           </div>
 
           {/* The Live Matrix Table */}
-          <div className="glass-panel rounded-2xl border overflow-hidden shadow-sm sm:shadow-xl bg-white" style={{borderColor:'#E5E7EB'}}>
+          <div id="hourly-matrix-table" className="glass-panel rounded-2xl border overflow-hidden shadow-sm sm:shadow-xl bg-white scroll-mt-20" style={{borderColor:'#E5E7EB'}}>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left min-w-[700px] sm:min-w-[900px]">
                 <thead>
@@ -777,12 +939,16 @@ export default function AvailabilityGrid({
                         }
 
                         if (slotState.isOccupied) {
+                          const isHighlighted = slotState.booking.id === highlightedBookingId;
                           return (
                             <td key={slot} className="p-0.5 sm:p-1 border-r relative group min-w-[55px] sm:min-w-[70px]" style={{borderColor:'#F3F4F6'}}>
                               <div 
                                 onClick={() => setSelectedEventForDetails(slotState.booking)}
-                                className="w-full h-9 sm:h-11 rounded-md sm:rounded-lg p-1 sm:p-1.5 flex flex-col justify-center transition-all cursor-pointer border text-white shadow-xs hover:scale-[1.02]"
-                                style={{background:'#DC2626', borderColor:'#B91C1C'}}
+                                className={`w-full h-9 sm:h-11 rounded-md sm:rounded-lg p-1 sm:p-1.5 flex flex-col justify-center transition-all cursor-pointer border text-white shadow-xs hover:scale-[1.02] ${isHighlighted ? 'ring-2 ring-amber-400 ring-offset-1 animate-pulse' : ''}`}
+                                style={{
+                                  background: isHighlighted ? '#B91C1C' : '#DC2626', 
+                                  borderColor: isHighlighted ? '#F59E0B' : '#B91C1C'
+                                }}
                                 title="Click to view full event details"
                               >
                                 <span className="font-bold truncate text-[9px] sm:text-[10px] block text-white leading-tight">
@@ -843,17 +1009,224 @@ export default function AvailabilityGrid({
         );
       })()}
 
-      {/* Full Event Details Modal */}
+      {/* Full Event Details Modal with Error Boundary */}
       {selectedEventForDetails && (
-        <EventDetailsModal
-          event={selectedEventForDetails}
-          venue={venues.find(v => v.id === selectedEventForDetails.venueId)}
-          onClose={() => setSelectedEventForDetails(null)}
-          currentUser={currentUser}
-          onAdminRevokeClick={onAdminCancelBooking ? (event) => onAdminCancelBooking(event.id, 'Revoked by Union Admin from Live Matrix') : null}
-          onClubCancelClick={onClubCancelBooking ? (bookingId, reason, cancelPackage) => onClubCancelBooking(bookingId, reason, cancelPackage) : null}
-          allBookings={bookings}
-        />
+        <ErrorBoundary
+          title="Unable to Display Event Details"
+          onReset={() => setSelectedEventForDetails(null)}
+        >
+          <EventDetailsModal
+            event={selectedEventForDetails}
+            venue={venues.find(v => v.id === selectedEventForDetails.venueId)}
+            onClose={() => setSelectedEventForDetails(null)}
+            currentUser={currentUser}
+            onAdminRevokeClick={onAdminCancelBooking ? (event) => onAdminCancelBooking(event.id, 'Revoked by Union Admin from Live Matrix') : null}
+            onClubCancelClick={onClubCancelBooking ? (bookingId, reason, cancelPackage) => onClubCancelBooking(bookingId, reason, cancelPackage) : null}
+            allBookings={bookings}
+          />
+        </ErrorBoundary>
+      )}
+
+      {/* =========================================================================
+          EVENT SEARCH MODAL (Live Schedule Matrix)
+          ========================================================================= */}
+      {searchModalOpen && (
+        <div 
+          className="modal-overlay animate-fade-in z-50" 
+          onClick={(e) => { if (e.target === e.currentTarget) setSearchModalOpen(false); }}
+        >
+          <div className="glass-panel w-full max-w-2xl rounded-2xl sm:rounded-3xl border border-gray-200 p-4 sm:p-6 relative bg-white shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+            
+            {/* Modal Top Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 border"
+                  style={{ background: '#FEE2E2', borderColor: '#FCA5A5' }}>
+                  <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: '#DC2626' }} />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-gray-900 leading-tight">
+                    Search Campus Live Schedule
+                  </h3>
+                  <p className="text-[11px] text-gray-500">
+                    Find events across all campus venues, societies, dates, and times
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSearchModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200 flex items-center justify-center transition-colors border border-gray-200"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Search Input Box */}
+            <div className="relative">
+              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-gray-300 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-100 bg-gray-50/70 transition-all">
+                <Search className="w-4 h-4 text-gray-400 shrink-0" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by event title, organizing club, venue, room, date..."
+                  className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-gray-900 placeholder-gray-400 font-medium"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
+                    title="Clear input"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Filter Category Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 text-[11px]">
+              {[
+                { id: 'all', label: `All Events (${searchCategoryCounts.all})` },
+                { id: 'today', label: `Today (${searchCategoryCounts.today})` },
+                { id: 'upcoming', label: `Upcoming (${searchCategoryCounts.upcoming})` },
+                { id: 'auditorium', label: `Auditoriums (${searchCategoryCounts.auditorium})` },
+                { id: 'activity', label: `Activity Spaces (${searchCategoryCounts.activity})` },
+                { id: 'labs', label: `Labs & Classes (${searchCategoryCounts.labs})` }
+              ].map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSearchCategory(cat.id)}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all border shrink-0 whitespace-nowrap ${
+                    searchCategory === cat.id
+                      ? 'bg-red-600 text-white border-red-700 shadow-xs'
+                      : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Results Count Summary */}
+            <div className="flex items-center justify-between text-[11px] text-gray-500 px-1">
+              <span>
+                Found <strong className="text-gray-900 font-bold">{filteredSearchResults.length}</strong> {filteredSearchResults.length === 1 ? 'event' : 'events'}
+                {searchQuery ? ` matching "${searchQuery}"` : ''}
+              </span>
+              <span className="text-[10px] text-gray-400 hidden sm:inline">
+                Click "Inspect" for full details or "View in Matrix" to jump to date
+              </span>
+            </div>
+
+            {/* Scrollable Results List */}
+            <div className="overflow-y-auto max-h-[46vh] space-y-2.5 pr-1 divide-y divide-gray-100">
+              {filteredSearchResults.length > 0 ? (
+                filteredSearchResults.map((booking) => (
+                  <div
+                    key={booking.id}
+                    className="p-3 sm:p-3.5 rounded-xl border border-gray-200 bg-white hover:border-red-300 hover:shadow-xs transition-all space-y-2 group"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded border"
+                            style={{ background: '#FEE2E2', color: '#7F1D1D', borderColor: '#FCA5A5' }}>
+                            {booking.id}
+                          </span>
+                          <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
+                            {booking.organizer}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-xs sm:text-sm text-gray-900 group-hover:text-red-700 transition-colors">
+                          {booking.eventTitle}
+                        </h4>
+                      </div>
+
+                      <span className="badge badge-available text-[9px] py-0.5 shrink-0">
+                        <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" /> Confirmed
+                      </span>
+                    </div>
+
+                    {/* Venue & Time details */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Building2 className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                        <span className="font-medium truncate text-gray-800">
+                          {booking.venueName} {booking.roomNumber && <span className="font-mono text-red-700">({booking.roomNumber})</span>}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                        <span className="font-semibold text-gray-800">
+                          {formatDateFriendly(booking.date)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 sm:col-span-2 font-mono text-[10px]">
+                        <Clock className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                        <span>{formatTime12H(booking.startTime)} – {formatTime12H(booking.endTime)}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        onClick={() => handleJumpToEventInMatrix(booking)}
+                        className="btn-secondary text-[11px] py-1 px-2.5 font-bold flex items-center gap-1 hover:bg-gray-100"
+                        title="Jump to this date in hourly matrix"
+                      >
+                        <Clock className="w-3 h-3 text-red-600" />
+                        <span>View in Matrix</span>
+                        <ArrowRight className="w-3 h-3 text-gray-400" />
+                      </button>
+
+                      <button
+                        onClick={() => handleInspectFromSearch(booking)}
+                        className="btn-primary text-[11px] py-1 px-3 font-bold flex items-center gap-1"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>Inspect Details</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center mx-auto">
+                    <Search className="w-5 h-5" />
+                  </div>
+                  <h4 className="text-sm font-bold text-gray-900">No matching events found</h4>
+                  <p className="text-xs text-gray-500 max-w-xs mx-auto">
+                    No bookings found matching "{searchQuery}". Try searching by another keyword or reset the filter.
+                  </p>
+                  <button
+                    onClick={() => { setSearchQuery(''); setSearchCategory('all'); }}
+                    className="btn-secondary text-xs py-1 px-3 font-semibold mt-2"
+                  >
+                    Clear Filter
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+              <span className="hidden sm:inline text-[11px]">
+                Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-gray-100 font-mono text-[10px] text-gray-700 border">Esc</kbd> to exit search
+              </span>
+              <button
+                onClick={() => setSearchModalOpen(false)}
+                className="btn-secondary text-xs py-1.5 px-4 font-bold ml-auto"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
 
       {/* QUICK BLOCK ALL VENUES MODAL (Admin) */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   X, 
   Calendar, 
@@ -52,8 +52,8 @@ export default function EventDetailsModal({
   );
 
   // Find sister venue bookings that belong to the same event
-  const sisterBookings = allBookings.filter(b => {
-    if (b.id === event.id) return false;
+  const sisterBookings = (allBookings || []).filter(b => {
+    if (!b || b.id === event.id) return false;
     if (event.eventId && b.eventId) {
       return b.eventId === event.eventId;
     }
