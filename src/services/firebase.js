@@ -390,3 +390,54 @@ export async function dbUpdateClubProfile(clubId, updates) {
   }
 }
 
+/**
+ * Real-time listener for Club Activity & Change Logs
+ */
+export function subscribeToActivityLogs(onData, onError) {
+  if (!db) return () => {};
+
+  return onSnapshot(collection(db, 'activity_logs'), (snapshot) => {
+    const list = [];
+    snapshot.forEach((doc) => {
+      list.push({ ...doc.data(), id: doc.id });
+    });
+    list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    onData(list);
+  }, (err) => {
+    console.warn('Firestore Activity Logs Subscription notice:', err);
+    if (onError) onError(err);
+  });
+}
+
+/**
+ * Save a new activity log entry to Firestore
+ */
+export async function dbAddActivityLog(logEntry) {
+  if (!db || !logEntry) return false;
+  try {
+    const clean = sanitizeBookingData(logEntry);
+    await setDoc(doc(db, 'activity_logs', clean.id), clean);
+    return true;
+  } catch (err) {
+    console.warn('Firestore activity log save notice (saved locally in browser):', err);
+    return false;
+  }
+}
+
+/**
+ * Clear activity logs from Firestore
+ */
+export async function dbClearActivityLogs(logIds = []) {
+  if (!db) return false;
+  try {
+    for (const id of logIds) {
+      await deleteDoc(doc(db, 'activity_logs', id));
+    }
+    return true;
+  } catch (err) {
+    console.warn('Firestore activity logs clear notice:', err);
+    return false;
+  }
+}
+
+

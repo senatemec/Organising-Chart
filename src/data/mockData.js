@@ -371,4 +371,66 @@ export const initialClubs = [
   { id: 'c2s-internship', name: 'C2S Project Internship', society: 'C2S_Project_Internship', email: 'c2sinternship2026@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false }
 ];
 
+export const initialActivityLogs = [
+  {
+    id: 'LOG-INIT-101',
+    timestamp: '2026-10-16T18:45:00.000Z',
+    actionType: 'BOOKING_EDITED',
+    clubName: 'IEEE MEC',
+    userEmail: 'ieee@mec.ac.in',
+    bookingId: 'BK-2026-1011-1',
+    eventId: 'EVT-2026-1011',
+    eventTitle: 'IEEE TechSprint: Embedded IoT Hands-On Workshop',
+    venueName: 'Internal Auditorium',
+    date: '2026-09-05',
+    summary: 'IEEE MEC rescheduled workshop timing and refined laboratory syllabus description.',
+    changes: [
+      { field: 'startTime', label: 'Start Time', oldValue: '09:00', newValue: '09:30' },
+      { field: 'endTime', label: 'End Time', oldValue: '12:00', newValue: '12:30' },
+      { field: 'description', label: 'Event Description', oldValue: 'IoT workshop for second year students.', newValue: 'Technical workshop covering microcontrollers and IoT protocol architectures for second and third year students.' }
+    ]
+  },
+  {
+    id: 'LOG-INIT-102',
+    timestamp: '2026-10-16T17:15:00.000Z',
+    actionType: 'BOOKING_CREATED',
+    clubName: 'Excel',
+    userEmail: 'excel@mec.ac.in',
+    bookingId: 'BK-2026-2022-1',
+    eventId: 'EVT-2026-2022',
+    eventTitle: 'Excel 2026 Annual Core Executive Convention',
+    venueName: 'External Auditorium',
+    date: '2026-09-06',
+    summary: 'Excel MEC confirmed reservation for External Auditorium (10:00 AM - 01:00 PM).'
+  },
+  {
+    id: 'LOG-INIT-103',
+    timestamp: '2026-10-16T15:30:00.000Z',
+    actionType: 'PROFILE_UPDATED',
+    clubName: 'TinkerHub MEC',
+    userEmail: 'reachtinkerhubmec@gmail.com',
+    summary: 'TinkerHub MEC updated club leadership contacts and Instagram handles.'
+  },
+  {
+    id: 'LOG-INIT-104',
+    timestamp: '2026-10-16T14:10:00.000Z',
+    actionType: 'BOOKING_CANCELLED',
+    clubName: 'GDC MEC',
+    userEmail: 'gdcmecofficial@gmail.com',
+    bookingId: 'BK-2026-9044-1',
+    eventTitle: 'Game Jam 2026 Sprint',
+    venueName: 'Computer Center (CCF)',
+    summary: 'GDC MEC cancelled lab booking. Reason: "Schedule Conflict with Academic Exams - Postponed".'
+  },
+  {
+    id: 'LOG-INIT-105',
+    timestamp: '2026-10-16T11:00:00.000Z',
+    actionType: 'DAY_BLOCKED',
+    clubName: 'Union MEC Admin',
+    userEmail: 'senatemec@mec.ac.in',
+    summary: 'Union Senate Admin configured campus event lockdown for College Union Day 2026.'
+  }
+];
+
+
 

@@ -15,7 +15,8 @@ import {
   FileText,
   X,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Edit3
 } from 'lucide-react';
 import { formatDateFriendly, formatTime12H, formatDateTime } from '../utils/availabilityUtils';
 
@@ -34,7 +35,8 @@ export default function MyBookings({
   currentUser,
   onOpenLoginModal,
   onNewBookingClick,
-  onCancelBooking
+  onCancelBooking,
+  onEditBooking
 }) {
   const [filterStatus, setFilterStatus] = useState('all');
 
@@ -280,18 +282,33 @@ export default function MyBookings({
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> Permit Valid & Active
                       </span>
 
-                      {/* CANCEL BOOKING BUTTON FOR CLUB USER */}
-                      {onCancelBooking && (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenCancelModal(b)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold text-red-700 bg-red-50 hover:bg-red-600 hover:text-white border border-red-200 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer ml-auto"
-                          title="Cancel this booking and release the slot"
-                        >
-                          <XCircle className="w-3.5 h-3.5 shrink-0" />
-                          <span>Cancel Booking</span>
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2 ml-auto">
+                        {/* EDIT BOOKING BUTTON FOR CLUB USER */}
+                        {onEditBooking && (
+                          <button
+                            type="button"
+                            onClick={() => onEditBooking(b)}
+                            className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-800 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="Edit venue, timing, or details for this booking"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-gray-700" />
+                            <span>Edit Booking</span>
+                          </button>
+                        )}
+
+                        {/* CANCEL BOOKING BUTTON FOR CLUB USER */}
+                        {onCancelBooking && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCancelModal(b)}
+                            className="px-3 py-1.5 rounded-xl text-xs font-bold text-red-700 bg-red-50 hover:bg-red-600 hover:text-white border border-red-200 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="Cancel this booking and release the slot"
+                          >
+                            <XCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span>Cancel Booking</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="text-[11px] text-gray-500 text-center w-full italic">

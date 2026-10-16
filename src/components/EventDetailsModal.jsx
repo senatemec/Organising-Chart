@@ -12,7 +12,8 @@ import {
   Tag, 
   User, 
   AlertTriangle,
-  Sparkles
+  Sparkles,
+  Edit3
 } from 'lucide-react';
 import { formatDateFriendly, formatTime12H, formatDateTime } from '../utils/availabilityUtils';
 
@@ -30,6 +31,7 @@ export default function EventDetailsModal({
   currentUser,
   onAdminRevokeClick,
   onClubCancelClick,
+  onEditClick,
   allBookings = []
 }) {
   const [showClubCancelForm, setShowClubCancelForm] = useState(false);
@@ -403,6 +405,22 @@ export default function EventDetailsModal({
               className="btn-danger text-xs py-2 px-4 font-bold"
             >
               <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Revoke Slot Permit
+            </button>
+          )}
+
+          {/* If Club Owner or Union Admin is viewing active booking, allow editing */}
+          {(isOwner || currentUser?.isUnionAdmin) && isConfirmed && onEditClick && !showClubCancelForm && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onEditClick(event);
+              }}
+              className="px-3 py-2 rounded-xl text-xs font-bold text-gray-800 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              title="Edit venue, timings, or details for this booking"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-gray-700" />
+              <span>Edit Booking</span>
             </button>
           )}
 

@@ -23,7 +23,7 @@ import {
   ArrowRight,
   Tag
 } from 'lucide-react';
-import { timeSlots, formatDateFriendly, formatTime12H } from '../utils/availabilityUtils';
+import { timeSlots, formatDateFriendly, formatTime12H, getSystemCurrentDate } from '../utils/availabilityUtils';
 import EventDetailsModal from './EventDetailsModal';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -35,8 +35,10 @@ export default function AvailabilityGrid({
   onAdminCancelBooking,
   onClubCancelBooking,
   onBlockAllVenues,
-  onUnblockDay 
+  onUnblockDay,
+  onEditBooking
 }) {
+  const sysDate = getSystemCurrentDate();
   const [viewMode, setViewMode] = useState('monthly'); // 'daily' | 'monthly'
   const [selectedDate, setSelectedDate] = useState('2026-09-05');
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date('2026-09-01T00:00:00'));
@@ -190,10 +192,16 @@ export default function AvailabilityGrid({
   };
 
   const setDatePreset = (preset) => {
+    const cur = getSystemCurrentDate();
     if (preset === 'today') {
-      setSelectedDate('2026-09-05');
+      setSelectedDate(cur.dateStr);
     } else if (preset === 'tomorrow') {
-      setSelectedDate('2026-09-06');
+      const tmr = new Date(cur.dateObj);
+      tmr.setDate(tmr.getDate() + 1);
+      const yyyy = tmr.getFullYear();
+      const mm = String(tmr.getMonth() + 1).padStart(2, '0');
+      const dd = String(tmr.getDate()).padStart(2, '0');
+      setSelectedDate(`${yyyy}-${mm}-${dd}`);
     }
   };
 
@@ -221,14 +229,33 @@ export default function AvailabilityGrid({
 
   // Monthly Calendar Navigation & Computation
   const changeMonth = (delta) => {
-    const nextMonth = new Date(currentMonthDate);
-    nextMonth.setMonth(nextMonth.getMonth() + delta);
-    setCurrentMonthDate(nextMonth);
+    setCurrentMonthDate(prev => {
+      const y = prev.getFullYear();
+      const m = prev.getMonth();
+      return new Date(y, m + delta, 1);
+    });
+  };
+
+  const handleGoToCurrentMonth = () => {
+    const cur = getSystemCurrentDate();
+    setCurrentMonthDate(cur.monthStartDate);
+    setSelectedMonthDay(cur.dateStr);
+    setSelectedDate(cur.dateStr);
   };
 
   const year = currentMonthDate.getFullYear();
   const month = currentMonthDate.getMonth(); // 0-indexed
   const monthName = currentMonthDate.toLocaleString('default', { month: 'long' });
+  const isViewingCurrentMonth = year === sysDate.year && month === sysDate.month;
+
+  const tomorrowDateStr = useMemo(() => {
+    const tmr = new Date(sysDate.dateObj);
+    tmr.setDate(tmr.getDate() + 1);
+    const y = tmr.getFullYear();
+    const m = String(tmr.getMonth() + 1).padStart(2, '0');
+    const d = String(tmr.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, [sysDate.dateStr]);
 
   // Compute days in month
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -367,13 +394,19 @@ export default function AvailabilityGrid({
               </div>
 
               <button
-                onClick={() => {
-                  setCurrentMonthDate(new Date('2026-09-01T00:00:00'));
-                  setSelectedMonthDay('2026-09-05');
-                }}
-                className="btn-secondary text-[11px] sm:text-xs py-1.5 px-2.5 sm:px-3 ml-auto sm:ml-2 font-semibold"
+                onClick={handleGoToCurrentMonth}
+                className={`text-[11px] sm:text-xs py-1.5 px-2.5 sm:px-3 ml-auto sm:ml-2 font-semibold transition-all rounded-xl border flex items-center gap-1.5 ${
+                  isViewingCurrentMonth
+                    ? 'bg-red-50 text-red-700 border-red-300 shadow-2xs font-bold'
+                    : 'btn-secondary text-gray-700 hover:text-red-700 hover:border-gray-300'
+                }`}
+                title={`Jump to current real-world month (${sysDate.dateObj.toLocaleString('default', { month: 'short' })} ${sysDate.year})`}
               >
-                Current Month
+                <CalendarDays className="w-3.5 h-3.5 text-red-600" />
+                <span>Current Month</span>
+                {isViewingCurrentMonth && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" title="Currently active month" />
+                )}
               </button>
 
               <button
@@ -445,7 +478,7 @@ export default function AvailabilityGrid({
             {daysArray.map((item) => {
               const dayBookings = getBookingsForDate(item.dateStr);
               const isSelected = selectedMonthDay === item.dateStr;
-              const isToday = item.dateStr === '2026-09-05';
+              const isToday = item.dateStr === sysDate.dateStr;
               const dayBlock = dayBookings.find(b => (b.isDayBlock || (b.eventId && b.eventId.startsWith('BLK-'))));
               const isDayBlocked = Boolean(dayBlock);
 
@@ -771,7 +804,7 @@ export default function AvailabilityGrid({
                   <button
                     onClick={() => setDatePreset('today')}
                     className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all border"
-                    style={selectedDate === '2026-09-05'
+                    style={selectedDate === sysDate.dateStr
                       ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
                       : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
                     }
@@ -781,7 +814,7 @@ export default function AvailabilityGrid({
                   <button
                     onClick={() => setDatePreset('tomorrow')}
                     className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all border"
-                    style={selectedDate === '2026-09-06'
+                    style={selectedDate === tomorrowDateStr
                       ? { background: '#B91C1C', color: '#FFFFFF', borderColor: '#7F1D1D', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }
                       : { background: '#FFFFFF', color: '#374151', borderColor: '#E5E7EB' }
                     }
@@ -1033,6 +1066,7 @@ export default function AvailabilityGrid({
             currentUser={currentUser}
             onAdminRevokeClick={onAdminCancelBooking ? (event) => onAdminCancelBooking(event.id, 'Revoked by Union Admin from Live Matrix') : null}
             onClubCancelClick={onClubCancelBooking ? (bookingId, reason, cancelPackage) => onClubCancelBooking(bookingId, reason, cancelPackage) : null}
+            onEditClick={onEditBooking ? (event) => onEditBooking(event) : null}
             allBookings={bookings}
           />
         </ErrorBoundary>

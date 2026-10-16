@@ -24,9 +24,16 @@ import {
   ToggleLeft,
   ToggleRight,
   ShieldAlert,
-  Layers
+  Layers,
+  History,
+  Download,
+  ArrowRight,
+  Edit3,
+  Activity,
+  Filter,
+  RotateCcw
 } from 'lucide-react';
-import { formatDateFriendly, formatTime12H, formatDateTime } from '../utils/availabilityUtils';
+import { formatDateFriendly, formatTime12H, formatDateTime, formatRelativeTime } from '../utils/availabilityUtils';
 import { studentSocieties } from '../data/mockData';
 
 export default function AdminDashboard({ 
@@ -34,6 +41,7 @@ export default function AdminDashboard({
   venues, 
   allowedUsers = [],
   strictAuthEnabled = true,
+  activityLogs = [],
   initialSubTab = 'active-events',
   onAdminCancelBooking, 
   onAdminDeleteBooking,
@@ -42,13 +50,20 @@ export default function AdminDashboard({
   onAddAllowedUser,
   onRemoveAllowedUser,
   onToggleStrictAuth,
-  onToggleVenueStatus 
+  onToggleVenueStatus,
+  onClearActivityLogs,
+  onEditBooking
 }) {
   const [activeSubTab, setActiveSubTab] = useState(initialSubTab);
   const [cancelReasonModal, setCancelReasonModal] = useState(null);
   const [reasonText, setReasonText] = useState('');
   const [revokeWholePackage, setRevokeWholePackage] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Activity Logs filtering state
+  const [logSearch, setLogSearch] = useState('');
+  const [logActionFilter, setLogActionFilter] = useState('all');
+  const [logClubFilter, setLogClubFilter] = useState('all');
 
   // Day-Wide Venue Block form state
   const [blockDate, setBlockDate] = useState('2026-09-05');
@@ -238,6 +253,18 @@ export default function AdminDashboard({
         </button>
 
         <button
+          onClick={() => setActiveSubTab('club-logs')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+            activeSubTab === 'club-logs'
+              ? 'bg-red-600 text-white shadow-sm'
+              : 'text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 border border-gray-200'
+          }`}
+        >
+          <History className={`w-4 h-4 ${activeSubTab === 'club-logs' ? 'text-white' : 'text-purple-600'}`} />
+          Club Change Logs & Audit ({activityLogs.length})
+        </button>
+
+        <button
           onClick={() => setActiveSubTab('access-control')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
             activeSubTab === 'access-control'
@@ -368,8 +395,17 @@ export default function AdminDashboard({
 
                 </div>
 
-                {/* Union Admin Revoke Button */}
-                <div className="w-full md:w-auto border-t md:border-t-0 border-gray-200 pt-3 md:pt-0 shrink-0">
+                {/* Union Admin Actions */}
+                <div className="w-full md:w-auto border-t md:border-t-0 border-gray-200 pt-3 md:pt-0 shrink-0 flex items-center gap-2">
+                  {onEditBooking && (
+                    <button
+                      onClick={() => onEditBooking(b)}
+                      className="w-full md:w-auto text-xs justify-center py-2.5 px-3.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 font-semibold transition-colors flex items-center gap-1.5 shadow-2xs"
+                      title="Edit this booking's venue, timing, or details"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" /> Edit Permit
+                    </button>
+                  )}
                   <button
                     onClick={() => setCancelReasonModal(b)}
                     className="btn-danger w-full md:w-auto text-xs justify-center py-2.5 px-4 shadow-red-500/20"
@@ -1054,6 +1090,428 @@ export default function AdminDashboard({
           </div>
         </div>
       )}
+
+      {/* TAB: CLUB ACTIVITY & CHANGE AUDIT LOGS */}
+      {activeSubTab === 'club-logs' && (() => {
+        const uniqueClubsInLogs = Array.from(new Set((activityLogs || []).map(l => l.clubName).filter(Boolean))).sort();
+
+        const filteredActivityLogs = (activityLogs || []).filter(log => {
+          if (logActionFilter !== 'all') {
+            if (logActionFilter === 'BOOKING_EDITED' && log.actionType !== 'BOOKING_EDITED') return false;
+            if (logActionFilter === 'BOOKING_CREATED' && log.actionType !== 'BOOKING_CREATED') return false;
+            if (logActionFilter === 'BOOKING_CANCELLED' && log.actionType !== 'BOOKING_CANCELLED') return false;
+            if (logActionFilter === 'PROFILE_UPDATED' && log.actionType !== 'PROFILE_UPDATED') return false;
+            if (logActionFilter === 'ADMIN_ACTION' && (
+              log.actionType !== 'ADMIN_REVOKED' && 
+              log.actionType !== 'DAY_BLOCKED' && 
+              log.actionType !== 'CAMPUS_LOCKDOWN' && 
+              log.actionType !== 'CAMPUS_UNLOCKED' && 
+              log.actionType !== 'VENUE_STATUS_CHANGED' && 
+              log.actionType !== 'VENUE_STATUS_TOGGLED'
+            )) return false;
+          }
+          if (logClubFilter !== 'all' && log.clubName !== logClubFilter) return false;
+          if (logSearch.trim()) {
+            const q = logSearch.toLowerCase().trim();
+            const matchClub = (log.clubName || '').toLowerCase().includes(q);
+            const matchEmail = (log.userEmail || '').toLowerCase().includes(q);
+            const matchTitle = (log.eventTitle || '').toLowerCase().includes(q);
+            const matchVenue = (log.venueName || '').toLowerCase().includes(q);
+            const matchSummary = (log.summary || '').toLowerCase().includes(q);
+            const matchId = (log.bookingId || '').toLowerCase().includes(q);
+            if (!matchClub && !matchEmail && !matchTitle && !matchVenue && !matchSummary && !matchId) {
+              return false;
+            }
+          }
+          return true;
+        });
+
+        const countEdits = (activityLogs || []).filter(l => l.actionType === 'BOOKING_EDITED').length;
+        const countCreates = (activityLogs || []).filter(l => l.actionType === 'BOOKING_CREATED').length;
+        const countCancels = (activityLogs || []).filter(l => l.actionType === 'BOOKING_CANCELLED').length;
+        const countProfiles = (activityLogs || []).filter(l => l.actionType === 'PROFILE_UPDATED').length;
+
+        const handleExportCSV = () => {
+          if (!activityLogs || activityLogs.length === 0) return;
+          const headers = ['Timestamp', 'Club Name', 'Actor Email', 'Action Type', 'Event Title', 'Venue', 'Summary', 'Details / Diff'];
+          const rows = activityLogs.map(log => {
+            const changesText = (log.changes || [])
+              .map(c => `${c.label}: "${c.oldValue}" -> "${c.newValue}"`)
+              .join('; ');
+            return [
+              `"${log.timestamp}"`,
+              `"${(log.clubName || '').replace(/"/g, '""')}"`,
+              `"${(log.userEmail || '').replace(/"/g, '""')}"`,
+              `"${log.actionType}"`,
+              `"${(log.eventTitle || '').replace(/"/g, '""')}"`,
+              `"${(log.venueName || '').replace(/"/g, '""')}"`,
+              `"${(log.summary || '').replace(/"/g, '""')}"`,
+              `"${(changesText || log.notes || '').replace(/"/g, '""')}"`
+            ].join(',');
+          });
+          const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+          const encodedUri = encodeURI(csvContent);
+          const link = document.createElement('a');
+          link.setAttribute('href', encodedUri);
+          link.setAttribute('download', `mec_club_activity_log_${new Date().toISOString().slice(0, 10)}.csv`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+
+        return (
+          <div className="space-y-4 sm:space-y-5 animate-fade-in">
+            
+            {/* Header & KPI Summary Cards */}
+            <div className="glass-panel p-4 sm:p-5 rounded-2xl border border-gray-200 bg-white flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center shrink-0">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+                    <span>Club Activity &amp; Change Audit Trail</span>
+                    <span className="badge font-bold text-[10px] bg-purple-50 text-purple-800 border-purple-200">
+                      LIVE LOGS
+                    </span>
+                  </h3>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Real-time oversight of what changes are updated by each college club with exact timestamps and field-level diffs.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleExportCSV}
+                  disabled={!activityLogs.length}
+                  className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 font-bold hover:bg-gray-50"
+                  title="Download full audit trail as spreadsheet (CSV)"
+                >
+                  <Download className="w-3.5 h-3.5 text-gray-700" />
+                  <span>Export CSV</span>
+                </button>
+
+                {onClearActivityLogs && activityLogs.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to clear all logged activity records?')) {
+                        onClearActivityLogs();
+                      }
+                    }}
+                    className="text-xs py-2 px-3 rounded-xl border border-gray-200 text-gray-500 hover:text-red-700 hover:bg-red-50 hover:border-red-200 transition-all font-semibold"
+                    title="Clear log history"
+                  >
+                    Clear History
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Metrics Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="bg-white p-3 rounded-2xl border border-gray-200 flex items-center justify-between shadow-2xs">
+                <div>
+                  <div className="text-gray-500 font-semibold text-[11px]">Total Events Logged</div>
+                  <div className="text-gray-900 font-extrabold text-lg mt-0.5">{activityLogs.length}</div>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600">
+                  <Activity className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded-2xl border border-purple-200 flex items-center justify-between shadow-2xs">
+                <div>
+                  <div className="text-purple-700 font-semibold text-[11px]">Booking Edits</div>
+                  <div className="text-purple-900 font-extrabold text-lg mt-0.5">{countEdits}</div>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded-2xl border border-emerald-200 flex items-center justify-between shadow-2xs">
+                <div>
+                  <div className="text-emerald-700 font-semibold text-[11px]">New Reservations</div>
+                  <div className="text-emerald-900 font-extrabold text-lg mt-0.5">{countCreates}</div>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded-2xl border border-rose-200 flex items-center justify-between shadow-2xs">
+                <div>
+                  <div className="text-rose-700 font-semibold text-[11px]">Cancellations</div>
+                  <div className="text-rose-900 font-extrabold text-lg mt-0.5">{countCancels}</div>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 flex items-center justify-center">
+                  <XCircle className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Controls Bar */}
+            <div className="glass-panel p-3.5 sm:p-4 rounded-2xl border border-gray-200 bg-white space-y-3 shadow-xs">
+              
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                {/* Search Bar */}
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                  <input
+                    type="text"
+                    value={logSearch}
+                    onChange={(e) => setLogSearch(e.target.value)}
+                    placeholder="Search by club name, email, venue, or event title..."
+                    className="input-field text-xs pl-9 w-full bg-gray-50 border-gray-200 focus:bg-white"
+                  />
+                  {logSearch && (
+                    <button
+                      onClick={() => setLogSearch('')}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Club Filter Dropdown */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[11px] font-bold text-gray-500 hidden sm:inline">Club:</span>
+                  <select
+                    value={logClubFilter}
+                    onChange={(e) => setLogClubFilter(e.target.value)}
+                    className="input-field text-xs bg-gray-50 border-gray-200 font-semibold max-w-[220px]"
+                  >
+                    <option value="all">All Clubs &amp; Societies ({uniqueClubsInLogs.length})</option>
+                    {uniqueClubsInLogs.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Action Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
+                {[
+                  { id: 'all', label: 'All Actions', count: activityLogs.length },
+                  { id: 'BOOKING_EDITED', label: 'Booking Modifications', count: countEdits },
+                  { id: 'BOOKING_CREATED', label: 'New Reservations', count: countCreates },
+                  { id: 'BOOKING_CANCELLED', label: 'Cancellations', count: countCancels },
+                  { id: 'PROFILE_UPDATED', label: 'Club Profiles', count: countProfiles },
+                  { id: 'ADMIN_ACTION', label: 'Admin Actions', count: (activityLogs || []).filter(l => 
+                    l.actionType === 'ADMIN_REVOKED' || 
+                    l.actionType === 'DAY_BLOCKED' || 
+                    l.actionType === 'CAMPUS_LOCKDOWN' || 
+                    l.actionType === 'CAMPUS_UNLOCKED' || 
+                    l.actionType === 'VENUE_STATUS_CHANGED' || 
+                    l.actionType === 'VENUE_STATUS_TOGGLED'
+                  ).length }
+                ].map(chip => (
+                  <button
+                    key={chip.id}
+                    onClick={() => setLogActionFilter(chip.id)}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                      logActionFilter === chip.id
+                        ? 'bg-purple-700 text-white border-purple-700 shadow-2xs'
+                        : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                    }`}
+                  >
+                    <span>{chip.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      logActionFilter === chip.id ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      {chip.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+            </div>
+
+            {/* Audit Logs List */}
+            {filteredActivityLogs.length > 0 ? (
+              <div className="space-y-3">
+                {filteredActivityLogs.map((log) => {
+                  const isEdit = log.actionType === 'BOOKING_EDITED';
+                  const isCreate = log.actionType === 'BOOKING_CREATED';
+                  const isCancel = log.actionType === 'BOOKING_CANCELLED';
+                  const isProfile = log.actionType === 'PROFILE_UPDATED';
+                  const isAdmin = 
+                    log.actionType === 'ADMIN_REVOKED' || 
+                    log.actionType === 'DAY_BLOCKED' || 
+                    log.actionType === 'CAMPUS_LOCKDOWN' || 
+                    log.actionType === 'CAMPUS_UNLOCKED' || 
+                    log.actionType === 'VENUE_STATUS_CHANGED' || 
+                    log.actionType === 'VENUE_STATUS_TOGGLED';
+
+                  return (
+                    <div 
+                      key={log.id} 
+                      className={`glass-panel p-4 rounded-2xl border transition-all bg-white shadow-2xs space-y-3 ${
+                        isEdit 
+                          ? 'border-purple-200 hover:border-purple-300' 
+                          : isCreate
+                          ? 'border-emerald-200 hover:border-emerald-300'
+                          : isCancel
+                          ? 'border-rose-200 hover:border-rose-300'
+                          : isProfile
+                          ? 'border-amber-200 hover:border-amber-300'
+                          : 'border-blue-200 hover:border-blue-300'
+                      }`}
+                    >
+                      {/* Top Header: Club, Action Badge, Timestamp */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* Club Badge */}
+                          <div className="flex items-center gap-1.5 font-bold text-xs text-gray-900 bg-gray-100 px-2.5 py-1 rounded-xl border border-gray-200">
+                            <span className="w-2 h-2 rounded-full bg-red-600" />
+                            <span>{log.clubName}</span>
+                          </div>
+
+                          {/* Action Badge */}
+                          {isEdit && (
+                            <span className="badge font-bold text-[10px] bg-purple-50 text-purple-800 border-purple-200 flex items-center gap-1">
+                              <Edit3 className="w-3 h-3 text-purple-600" /> Booking Modified
+                            </span>
+                          )}
+                          {isCreate && (
+                            <span className="badge font-bold text-[10px] bg-emerald-50 text-emerald-800 border-emerald-200 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> New Reservation
+                            </span>
+                          )}
+                          {isCancel && (
+                            <span className="badge font-bold text-[10px] bg-rose-50 text-rose-800 border-rose-200 flex items-center gap-1">
+                              <XCircle className="w-3 h-3 text-rose-600" /> Slot Released
+                            </span>
+                          )}
+                          {isProfile && (
+                            <span className="badge font-bold text-[10px] bg-amber-50 text-amber-800 border-amber-200 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-amber-600" /> Profile Updated
+                            </span>
+                          )}
+                          {isAdmin && (
+                            <span className="badge font-bold text-[10px] bg-blue-50 text-blue-800 border-blue-200 flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3 text-blue-600" /> Union Admin Action
+                            </span>
+                          )}
+
+                          {log.bookingId && (
+                            <span className="font-mono text-[10px] font-bold text-gray-600 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
+                              {log.bookingId}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Timestamp */}
+                        <div className="flex items-center gap-2 text-xs font-mono text-gray-600 ml-auto">
+                          <span className="font-bold text-gray-900">
+                            {formatDateTime(log.timestamp)}
+                          </span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
+                            {formatRelativeTime(log.timestamp)}
+                          </span>
+                        </div>
+
+                      </div>
+
+                      {/* Event & Venue Context */}
+                      {(log.eventTitle || log.venueName) && (
+                        <div className="flex items-center gap-3 text-xs text-gray-800 flex-wrap pt-0.5">
+                          {log.eventTitle && (
+                            <div className="flex items-center gap-1.5 font-bold text-gray-900">
+                              <FileText className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                              <span>{log.eventTitle}</span>
+                            </div>
+                          )}
+                          {log.venueName && (
+                            <div className="flex items-center gap-1.5 text-gray-600 font-medium">
+                              <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                              <span>{log.venueName}</span>
+                            </div>
+                          )}
+                          {log.date && (
+                            <div className="flex items-center gap-1.5 text-gray-600 font-medium">
+                              <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                              <span>{formatDateFriendly(log.date)}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Changes Diff Box (For edits / rescheduling) */}
+                      {log.changes && log.changes.length > 0 && (
+                        <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-200 space-y-1.5 text-xs">
+                          <div className="font-bold text-purple-900 text-[11px] flex items-center gap-1">
+                            <Edit3 className="w-3 h-3 text-purple-700" />
+                            <span>Specific Fields Modified ({log.changes.length}):</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                            {log.changes.map((ch, idx) => (
+                              <div key={idx} className="bg-white p-2 rounded-lg border border-purple-200 flex items-center justify-between text-[11px] shadow-2xs">
+                                <span className="font-bold text-gray-700">{ch.label}:</span>
+                                <div className="flex items-center gap-1.5 font-mono">
+                                  <span className="text-red-600 line-through opacity-75">{ch.oldValue}</span>
+                                  <ArrowRight className="w-3 h-3 text-gray-400" />
+                                  <span className="text-emerald-700 font-bold">{ch.newValue}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Summary sentence */}
+                      <div className="text-xs text-gray-700 leading-relaxed bg-gray-50 p-2.5 rounded-xl border border-gray-200 flex items-start gap-2">
+                        <span className="font-bold text-gray-900 shrink-0">Summary:</span>
+                        <span className="text-gray-800">{log.summary}</span>
+                      </div>
+
+                      {/* Actor Email footer */}
+                      <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1 border-t border-gray-100">
+                        <div className="flex items-center gap-1.5">
+                          <User className="w-3 h-3 text-gray-400" />
+                          <span>Submitted by: <strong className="text-gray-700 font-mono">{log.userEmail}</strong></span>
+                        </div>
+                        <span className="font-mono text-gray-400">Log ID: {log.id}</span>
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="glass-panel p-12 text-center rounded-2xl border border-gray-200 bg-white space-y-3 shadow-xs">
+                <History className="w-12 h-12 text-gray-400 mx-auto" />
+                <h4 className="text-base font-bold text-gray-900">No Activity Logs Found</h4>
+                <p className="text-xs text-gray-600 max-w-sm mx-auto">
+                  {logSearch || logActionFilter !== 'all' || logClubFilter !== 'all'
+                    ? 'No change logs match your current filter criteria. Try resetting filters.'
+                    : 'No club updates recorded yet. Club edits and reservations will appear here in real-time.'}
+                </p>
+                {(logSearch || logActionFilter !== 'all' || logClubFilter !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLogSearch('');
+                      setLogActionFilter('all');
+                      setLogClubFilter('all');
+                    }}
+                    className="btn-secondary text-xs py-1.5 px-3 font-semibold mt-1"
+                  >
+                    Reset All Filters
+                  </button>
+                )}
+              </div>
+            )}
+
+          </div>
+        );
+      })()}
 
       {/* MANDATORY CANCELLATION REASON MODAL */}
       {cancelReasonModal && (() => {

@@ -11,12 +11,13 @@ import GoogleAuthModal from './components/GoogleAuthModal';
 import ClubsView from './components/ClubsView';
 import ClubProfileModal from './components/ClubProfileModal';
 import EventDetailsModal from './components/EventDetailsModal';
+import EditBookingModal from './components/EditBookingModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-import { initialVenues, initialBookings, initialAllowedUsers, initialClubs } from './data/mockData';
-import { formatDateFriendly } from './utils/availabilityUtils';
+import { initialVenues, initialBookings, initialAllowedUsers, initialClubs, initialActivityLogs } from './data/mockData';
+import { formatDateFriendly, formatTime12H } from './utils/availabilityUtils';
 import { isRespectiveClubUser, findRespectiveClub } from './utils/clubUtils';
 import { 
   isFirebaseConfigured, 
@@ -26,6 +27,7 @@ import {
   subscribeToAllowedUsers, 
   subscribeToAuthSettings,
   subscribeToClubs,
+  subscribeToActivityLogs,
   dbUpdateClubProfile,
   dbCreateBooking, 
   dbUpdateBooking, 
@@ -34,6 +36,8 @@ import {
   dbAddAllowedUser,
   dbRemoveAllowedUser,
   dbUpdateAuthSettings,
+  dbAddActivityLog,
+  dbClearActivityLogs,
   dbSignOut
 } from './services/firebase';
 
@@ -152,6 +156,22 @@ export default function App() {
     time: '10:00'
   });
 
+  // Edit Booking Modal State (for clubs to edit bookings with conflict check)
+  const [editBookingModalOpen, setEditBookingModalOpen] = useState(false);
+  const [selectedBookingForEdit, setSelectedBookingForEdit] = useState(null);
+
+  // Club Activity & Change Surveillance Logs (for Admin oversight)
+  const [activityLogs, setActivityLogs] = useState(() => {
+    const saved = localStorage.getItem('cs_activity_logs_v1');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return initialActivityLogs;
+  });
+
   // Club Profile Modal State
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedClubForEdit, setSelectedClubForEdit] = useState(null);
@@ -237,12 +257,22 @@ export default function App() {
         }
       });
 
+      const unsubscribeActivityLogs = subscribeToActivityLogs((liveLogs) => {
+        if (Array.isArray(liveLogs) && liveLogs.length > 0) {
+          setActivityLogs(liveLogs);
+          try {
+            localStorage.setItem('cs_activity_logs_v1', JSON.stringify(liveLogs));
+          } catch (e) {}
+        }
+      });
+
       return () => {
         unsubscribeBookings();
         unsubscribeVenues();
         unsubscribeAllowedUsers();
         unsubscribeAuthSettings();
         unsubscribeClubs();
+        unsubscribeActivityLogs();
       };
     }
   }, []);
@@ -258,6 +288,12 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('cs_bookings_v8', JSON.stringify(bookings));
   }, [bookings]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('cs_activity_logs_v1', JSON.stringify(activityLogs));
+    } catch (e) {}
+  }, [activityLogs]);
 
   useEffect(() => {
     localStorage.setItem('cs_allowed_users_v3', JSON.stringify(allowedUsers));
@@ -435,6 +471,134 @@ export default function App() {
     }
   };
 
+  // Central Audit & Change Logger for Admin Surveillance
+  const logActivity = async (entry) => {
+    const newLog = {
+      id: `LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: new Date().toISOString(),
+      clubName: entry.clubName || currentUser?.society || 'Campus Club',
+      userEmail: entry.userEmail || currentUser?.email || 'unknown@mec.ac.in',
+      ...entry
+    };
+
+    setActivityLogs((prev) => [newLog, ...(prev || [])]);
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbAddActivityLog(newLog);
+      } catch (e) {
+        console.warn('Firebase activity log save notice:', e);
+      }
+    }
+    return newLog;
+  };
+
+  // Open Club Booking Editor Modal
+  const handleOpenEditBookingModal = (booking) => {
+    if (!currentUser) {
+      triggerAuthModal('Please sign in with your authorized club account to edit this booking.');
+      return;
+    }
+
+    const userEmail = (currentUser?.email || '').toLowerCase().trim();
+    const contactEmail = (booking.contactEmail || '').toLowerCase().trim();
+    const bookingUserEmail = (booking.userEmail || '').toLowerCase().trim();
+    const userSociety = (currentUser?.society || '').toLowerCase().trim();
+    const bookingOrganizer = (booking.organizer || '').toLowerCase().trim();
+
+    const isOwner = userEmail && (
+      contactEmail === userEmail ||
+      bookingUserEmail === userEmail ||
+      (userSociety && bookingOrganizer === userSociety)
+    );
+
+    if (!isOwner && !currentUser?.isUnionAdmin) {
+      showToast(`Unauthorized: You can only edit bookings created by ${booking.organizer}.`, 'error');
+      return;
+    }
+
+    setSelectedBookingForEdit(booking);
+    setEditBookingModalOpen(true);
+  };
+
+  // Save edited booking details with conflict resolution and package support
+  const handleSaveBookingEdit = async (bookingId, updatedFields, updateWholePackage = true, changesList = []) => {
+    const targetBooking = bookings.find(b => b.id === bookingId);
+    if (!targetBooking) return;
+
+    let updatedBookings;
+    let syncedList = [];
+
+    if (updateWholePackage && targetBooking.eventId) {
+      updatedBookings = bookings.map(b => {
+        if (b.id === bookingId) {
+          const merged = { ...b, ...updatedFields };
+          syncedList.push(merged);
+          return merged;
+        }
+        if (b.eventId === targetBooking.eventId) {
+          const merged = {
+            ...b,
+            eventTitle: updatedFields.eventTitle,
+            description: updatedFields.description,
+            contactEmail: updatedFields.contactEmail,
+            updatedAt: updatedFields.updatedAt
+          };
+          syncedList.push(merged);
+          return merged;
+        }
+        return b;
+      });
+    } else {
+      updatedBookings = bookings.map(b => {
+        if (b.id === bookingId) {
+          const merged = { ...b, ...updatedFields };
+          syncedList.push(merged);
+          return merged;
+        }
+        return b;
+      });
+    }
+
+    setBookings(updatedBookings);
+    localStorage.setItem('cs_bookings_v8', JSON.stringify(updatedBookings));
+
+    if (isFirebaseConfigured) {
+      try {
+        await Promise.all(syncedList.map(b => dbUpdateBooking(b.id, b)));
+      } catch (e) {
+        console.warn('Firebase booking update notice:', e);
+      }
+    }
+
+    // Record change log
+    const actorClub = currentUser?.society || targetBooking.organizer || 'Campus Club';
+    const summaryText = `${actorClub} updated booking permit ${bookingId} ("${updatedFields.eventTitle}"): ` +
+      (changesList.length > 0
+        ? changesList.map(c => `${c.label} changed to ${c.newValue}`).join(', ')
+        : 'Updated schedule and facility details.');
+
+    await logActivity({
+      actionType: 'BOOKING_EDITED',
+      clubName: actorClub,
+      userEmail: currentUser?.email || targetBooking.userEmail || targetBooking.contactEmail,
+      bookingId,
+      eventId: targetBooking.eventId,
+      eventTitle: updatedFields.eventTitle,
+      venueName: updatedFields.venueName,
+      date: updatedFields.date,
+      summary: summaryText,
+      changes: changesList
+    });
+
+    showToast(
+      updateWholePackage && targetBooking.eventId && syncedList.length > 1
+        ? `Event package (${syncedList.length} venues) & permit ${bookingId} updated successfully!`
+        : `Booking permit ${bookingId} updated successfully!`,
+      'success'
+    );
+  };
+
   // Save updated club profile (edits saved and published)
   const handleSaveClubProfile = async (clubId, updatedData) => {
     if (!currentUser) {
@@ -476,6 +640,13 @@ export default function App() {
       }
     }
 
+    logActivity({
+      actionType: 'PROFILE_UPDATED',
+      clubName: dataWithFlag.name || targetClub.name || clubId,
+      userEmail: currentUser?.email,
+      summary: `${dataWithFlag.name || targetClub.name || clubId} official profile details updated and published.`
+    });
+
     showToast(`${dataWithFlag.name} profile updated successfully!`, 'success');
   };
 
@@ -512,6 +683,33 @@ export default function App() {
       } catch (e) {
         console.warn('Firestore booking sync notice (persisted in local state):', e);
       }
+    }
+
+    // 3. Log activity for admin surveillance
+    const actorClub = (Array.isArray(bookingOrList) ? bookingOrList[0]?.organizer : bookingOrList?.organizer) || currentUser?.society || 'Campus Club';
+    const actorEmail = (Array.isArray(bookingOrList) ? bookingOrList[0]?.userEmail || bookingOrList[0]?.contactEmail : bookingOrList?.userEmail || bookingOrList?.contactEmail) || currentUser?.email;
+    if (Array.isArray(bookingOrList)) {
+      logActivity({
+        actionType: 'BOOKING_CREATED',
+        clubName: actorClub,
+        userEmail: actorEmail,
+        eventId: bookingOrList[0]?.eventId,
+        eventTitle: bookingOrList[0]?.eventTitle,
+        date: bookingOrList[0]?.date,
+        summary: `${actorClub} reserved ${bookingOrList.length} campus venues for "${bookingOrList[0]?.eventTitle}" on ${formatDateFriendly(bookingOrList[0]?.date)}.`
+      });
+    } else {
+      logActivity({
+        actionType: 'BOOKING_CREATED',
+        clubName: actorClub,
+        userEmail: actorEmail,
+        bookingId: bookingOrList.id,
+        eventId: bookingOrList.eventId,
+        eventTitle: bookingOrList.eventTitle,
+        venueName: bookingOrList.venueName,
+        date: bookingOrList.date,
+        summary: `${actorClub} confirmed reservation for ${bookingOrList.venueName} on ${formatDateFriendly(bookingOrList.date)} (${formatTime12H(bookingOrList.startTime)} - ${formatTime12H(bookingOrList.endTime)}).`
+      });
     }
 
     if (Array.isArray(bookingOrList)) {
@@ -553,6 +751,19 @@ export default function App() {
         console.error('Firebase update error:', e);
       }
     }
+
+    logActivity({
+      actionType: 'ADMIN_REVOKED',
+      clubName: 'Union Senate Admin',
+      userEmail: currentUser?.email || 'admin@mec.ac.in',
+      bookingId: targetBooking?.id,
+      eventId: targetBooking?.eventId,
+      eventTitle: targetBooking?.eventTitle,
+      venueName: targetBooking?.venueName,
+      date: targetBooking?.date,
+      summary: `Union Admin revoked permit for ${targetBooking?.venueName || 'venue'} ("${targetBooking?.eventTitle || 'Event'}"). Reason: "${reason || 'Administrative requirement'}".`,
+      notes: reason
+    });
 
     showToast(
       eventIdToCancel
@@ -652,6 +863,19 @@ export default function App() {
       }
     }
 
+    logActivity({
+      actionType: 'BOOKING_CANCELLED',
+      clubName: clubName,
+      userEmail: currentUser?.email || targetBooking.userEmail || targetBooking.contactEmail,
+      bookingId: targetBooking.id,
+      eventId: targetBooking.eventId,
+      eventTitle: targetBooking.eventTitle,
+      venueName: targetBooking.venueName,
+      date: targetBooking.date,
+      summary: `${clubName} cancelled permit for ${targetBooking.venueName} on ${formatDateFriendly(targetBooking.date)}. Reason: "${reason}".`,
+      notes: reason
+    });
+
     showToast(
       eventIdToCancel
         ? `Event package (${targetList.length} venues) cancelled by ${clubName}. Slots released.`
@@ -740,6 +964,14 @@ export default function App() {
       }
     }
 
+    logActivity({
+      actionType: 'CAMPUS_LOCKDOWN',
+      clubName: 'Union Senate Admin',
+      userEmail: currentUser?.email || 'admin@mec.ac.in',
+      date,
+      summary: `Union Admin enforced campus-wide lockdown on ${formatDateFriendly(date)} ("${eventTitle}"). All ${venues.length} facilities reserved.`
+    });
+
     showToast(`All ${venues.length} campus venues blocked for ${formatDateFriendly(date)} ("${eventTitle}")!`, 'success');
   };
 
@@ -760,6 +992,14 @@ export default function App() {
       }
     }
 
+    logActivity({
+      actionType: 'CAMPUS_UNLOCKED',
+      clubName: 'Union Senate Admin',
+      userEmail: currentUser?.email || 'admin@mec.ac.in',
+      date: targetDate,
+      summary: `Union Admin released campus-wide lockdown for ${targetDate ? formatDateFriendly(targetDate) : 'selected date'}. Venues restored to normal availability.`
+    });
+
     showToast(targetDate ? `All venues unlocked for ${formatDateFriendly(targetDate)}.` : 'Day block released successfully.', 'info');
   };
 
@@ -777,6 +1017,14 @@ export default function App() {
         console.error('Firebase status error:', e);
       }
     }
+
+    logActivity({
+      actionType: 'VENUE_STATUS_TOGGLED',
+      clubName: 'Facility Management (Union)',
+      userEmail: currentUser?.email || 'admin@mec.ac.in',
+      venueName: target?.name,
+      summary: `Venue status for ${target?.name || 'facility'} changed to ${nextStatus}.`
+    });
 
     showToast(`${target?.name || 'Venue'} status updated to ${nextStatus}`, 'info');
   };
@@ -841,6 +1089,7 @@ export default function App() {
             onBlockAllVenues={handleBlockAllVenues}
             onUnblockDay={handleUnblockDay}
             onSlotClick={(venue, date, slot) => handleOpenBookingModal(venue, date, slot)}
+            onEditBooking={handleOpenEditBookingModal}
           />
         )}
 
@@ -865,6 +1114,7 @@ export default function App() {
             onOpenLoginModal={(msg) => triggerAuthModal(msg)}
             onNewBookingClick={() => handleOpenBookingModal()}
             onCancelBooking={handleClubCancelBooking}
+            onEditBooking={handleOpenEditBookingModal}
           />
         )}
 
@@ -884,6 +1134,20 @@ export default function App() {
             onRemoveAllowedUser={handleRemoveAllowedUser}
             onToggleStrictAuth={handleToggleStrictAuth}
             onToggleVenueStatus={handleToggleVenueStatus}
+            onEditBooking={handleOpenEditBookingModal}
+            activityLogs={activityLogs}
+            onClearActivityLogs={async () => {
+              setActivityLogs([]);
+              try {
+                localStorage.removeItem('cs_activity_logs_v1');
+              } catch (e) {}
+              if (isFirebaseConfigured) {
+                try {
+                  await dbClearActivityLogs();
+                } catch (e) {}
+              }
+              showToast('Audit activity logs cleared.', 'info');
+            }}
           />
         )}
 
@@ -941,6 +1205,22 @@ export default function App() {
         />
       )}
 
+      {/* Club Booking Edit Modal with Real-time Conflict Checking */}
+      {editBookingModalOpen && selectedBookingForEdit && (
+        <EditBookingModal
+          isOpen={editBookingModalOpen}
+          booking={selectedBookingForEdit}
+          venues={venues}
+          existingBookings={bookings}
+          currentUser={currentUser}
+          onClose={() => {
+            setEditBookingModalOpen(false);
+            setSelectedBookingForEdit(null);
+          }}
+          onSave={handleSaveBookingEdit}
+        />
+      )}
+
       {/* Club Profile Editor Modal */}
       {profileModalOpen && selectedClubForEdit && (
         <ClubProfileModal
@@ -967,6 +1247,7 @@ export default function App() {
             currentUser={currentUser}
             onAdminRevokeClick={handleAdminCancelBooking ? (event) => handleAdminCancelBooking(event.id, 'Revoked by Union Admin') : null}
             onClubCancelClick={handleClubCancelBooking ? (bookingId, reason, cancelPackage) => handleClubCancelBooking(bookingId, reason, cancelPackage) : null}
+            onEditClick={handleOpenEditBookingModal}
             allBookings={bookings}
           />
         </ErrorBoundary>

@@ -33,5 +33,11 @@ service cloud.firestore {
       allow read: if true;
       allow create, write, update, delete: if true;
     }
+
+    // Activity & Change Audit Logs: Publicly readable for admin oversight; allow create/update/delete
+    match /activity_logs/{logId} {
+      allow read: if true;
+      allow create, write, update, delete: if true;
+    }
   }
 }

@@ -10,10 +10,32 @@ export const timeSlots = [
  * Checks if a proposed booking overlaps with any existing confirmed booking.
  * For classrooms, checks overlap only if the specific roomNumber matches.
  */
-export function checkBookingConflict(newBooking, existingBookings) {
+export function checkBookingConflict(newBooking, existingBookings = []) {
   const { venueId, roomNumber, date, startTime, endTime, id: excludeId } = newBooking;
 
-  const sameDayBookings = existingBookings.filter(
+  if (!venueId || !date || !startTime || !endTime) {
+    return { hasConflict: false, conflictingBooking: null };
+  }
+
+  // 1. Check for day-wide blocks on this date
+  const dayBlock = (existingBookings || []).find(
+    (b) => b.date === date && 
+           (b.isDayBlock || (b.eventId && b.eventId.startsWith('BLK-'))) &&
+           b.id !== excludeId && 
+           b.status !== 'cancelled' &&
+           b.status !== 'rejected' &&
+           (!b.venueId || b.venueId === 'all' || b.venueId === venueId)
+  );
+
+  if (dayBlock) {
+    return {
+      hasConflict: true,
+      isDayBlock: true,
+      conflictingBooking: dayBlock
+    };
+  }
+
+  const sameDayBookings = (existingBookings || []).filter(
     (b) => b.venueId === venueId && 
            b.date === date && 
            b.id !== excludeId && 
@@ -36,12 +58,56 @@ export function checkBookingConflict(newBooking, existingBookings) {
     if (startTime < existingEnd && endTime > existingStart) {
       return {
         hasConflict: true,
+        isDayBlock: false,
         conflictingBooking: booking
       };
     }
   }
 
   return { hasConflict: false, conflictingBooking: null };
+}
+
+/**
+ * Returns current date components and string based on user's system clock
+ */
+export function getSystemCurrentDate() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return {
+    dateObj: now,
+    monthStartDate: new Date(yyyy, now.getMonth(), 1),
+    dateStr: `${yyyy}-${mm}-${dd}`,
+    year: yyyy,
+    month: now.getMonth()
+  };
+}
+
+/**
+ * Formats timestamp into relative time string (e.g. "Just now", "5m ago", "Yesterday")
+ */
+export function formatRelativeTime(dateOrIsoStr) {
+  if (!dateOrIsoStr) return '';
+  try {
+    const d = new Date(dateOrIsoStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    if (diffMs < 0) return 'Just now';
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHr / 24);
+
+    if (diffSec < 45) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHr < 24) return `${diffHr}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return '';
+  }
 }
 
 /**
