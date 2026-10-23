@@ -710,6 +710,9 @@ select.input-field {
 .bg-red-100     { background-color: #FEE2E2; }
 .bg-red-500     { background-color: #EF4444; }
 .bg-red-600     { background-color: #DC2626; }
+.bg-red-700     { background-color: #B91C1C; }
+.bg-red-800     { background-color: #991B1B; }
+.bg-red-900     { background-color: #7F1D1D; }
 .bg-red-500\/10  { background-color: rgba(239,68,68,0.10); }
 .bg-red-500\/15  { background-color: rgba(239,68,68,0.15); }
 .bg-red-500\/20  { background-color: rgba(239,68,68,0.20); }

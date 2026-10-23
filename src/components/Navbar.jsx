@@ -8,7 +8,9 @@ import {
   LogOut,
   UserCheck,
   Users,
-  Edit3
+  Edit3,
+  Award,
+  MessageSquarePlus
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -18,11 +20,14 @@ export default function Navbar({
   onOpenLoginModal,
   onOpenProfileModal,
   onLogout,
-  onNewBookingClick 
+  onNewBookingClick,
+  onScheduleTabClick
 }) {
   const baseNavItems = [
     { id: 'venues', label: 'Venues', icon: Building2 },
-    { id: 'availability', label: 'Live Schedule Matrix', icon: CalendarDays },
+    { id: 'availability', label: 'Live Schedule', icon: CalendarDays },
+    { id: 'about', label: 'About', icon: Award },
+    { id: 'complaints', label: 'Complaint & Suggestion', icon: MessageSquarePlus },
     { id: 'clubs', label: 'Clubs', icon: Users },
     { id: 'my-bookings', label: 'My Bookings', icon: Ticket },
   ];
@@ -69,12 +74,12 @@ export default function Navbar({
               <span className="font-extrabold text-sm sm:text-base tracking-tight truncate"
                 style={{color:'#000000'}}
               >
-                Organizing Chart
+                Union MEC
               </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border tracking-wider hidden md:inline-flex"
                 style={{color:'#7F1D1D', background:'#FEE2E2', borderColor:'#FCA5A5'}}
               >
-                UNION MEC
+                STUDENT BODY
               </span>
             </div>
             <p className="text-[10px] font-medium hidden sm:block truncate" style={{color:'#555555'}}>
@@ -91,7 +96,13 @@ export default function Navbar({
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                  if (item.id === 'availability' && onScheduleTabClick) {
+                    onScheduleTabClick();
+                  } else {
+                    setActiveTab(item.id);
+                  }
+                }}
                 className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all`}
                 style={isActive
                   ? {
@@ -211,7 +222,13 @@ export default function Navbar({
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                if (item.id === 'availability' && onScheduleTabClick) {
+                  onScheduleTabClick();
+                } else {
+                  setActiveTab(item.id);
+                }
+              }}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap shrink-0 transition-all`}
               style={isActive
                 ? { background: '#B91C1C', color: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }

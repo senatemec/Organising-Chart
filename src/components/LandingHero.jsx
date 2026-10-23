@@ -47,7 +47,7 @@ export default function LandingHero({
             </div>
             <span className="font-semibold text-gray-900 truncate">Govt. Model Engineering College</span>
             <span className="text-gray-300 hidden sm:inline">•</span>
-            <span className="font-bold text-red-700 whitespace-nowrap">Union MEC Organizing Chart</span>
+            <span className="font-bold text-red-700 whitespace-nowrap">Union MEC</span>
           </div>
 
           {/* Main Hero Headline */}
@@ -92,7 +92,7 @@ export default function LandingHero({
               className="btn-secondary text-xs sm:text-sm py-2.5 px-4 sm:px-5 w-full sm:w-auto justify-center font-semibold"
             >
               <CalendarDays className="w-4 h-4" style={{color:'#DC2626'}} />
-              <span>Live Schedule Matrix</span>
+              <span>Live Schedule</span>
             </button>
           </div>
 

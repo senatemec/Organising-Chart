@@ -36,14 +36,15 @@ export default function AvailabilityGrid({
   onClubCancelBooking,
   onBlockAllVenues,
   onUnblockDay,
-  onEditBooking
+  onEditBooking,
+  resetTrigger
 }) {
   const sysDate = getSystemCurrentDate();
   const [viewMode, setViewMode] = useState('monthly'); // 'daily' | 'monthly'
-  const [selectedDate, setSelectedDate] = useState('2026-09-05');
-  const [currentMonthDate, setCurrentMonthDate] = useState(new Date('2026-09-01T00:00:00'));
+  const [selectedDate, setSelectedDate] = useState(() => getSystemCurrentDate().dateStr);
+  const [currentMonthDate, setCurrentMonthDate] = useState(() => getSystemCurrentDate().monthStartDate);
   const [selectedDivision, setSelectedDivision] = useState('All');
-  const [selectedMonthDay, setSelectedMonthDay] = useState('2026-09-05');
+  const [selectedMonthDay, setSelectedMonthDay] = useState(() => getSystemCurrentDate().dateStr);
   
   // Selected Event to view full details modal
   const [selectedEventForDetails, setSelectedEventForDetails] = useState(null);
@@ -57,12 +58,35 @@ export default function AvailabilityGrid({
 
   // Quick Day Block Modal State (for Union Admin directly from Schedule Matrix)
   const [quickBlockModalOpen, setQuickBlockModalOpen] = useState(false);
-  const [quickBlockTargetDate, setQuickBlockTargetDate] = useState('2026-09-05');
+  const [quickBlockTargetDate, setQuickBlockTargetDate] = useState(() => getSystemCurrentDate().dateStr);
   const [quickBlockTitle, setQuickBlockTitle] = useState('College Union Day 2026');
   const [quickBlockOrganizer, setQuickBlockOrganizer] = useState('College Student Union (Union MEC)');
   const [quickBlockStartTime, setQuickBlockStartTime] = useState('08:00');
   const [quickBlockEndTime, setQuickBlockEndTime] = useState('20:00');
   const [quickBlockAutoRevoke, setQuickBlockAutoRevoke] = useState(true);
+
+  // Automatically select current month and day when clicking Live Schedule
+  useEffect(() => {
+    const cur = getSystemCurrentDate();
+    setCurrentMonthDate(cur.monthStartDate);
+    setSelectedMonthDay(cur.dateStr);
+    setSelectedDate(cur.dateStr);
+  }, [resetTrigger]);
+
+  // Defaultly scroll to current day in the calendar grid
+  useEffect(() => {
+    const cur = getSystemCurrentDate();
+    const isCurrentMonth = currentMonthDate.getFullYear() === cur.year && currentMonthDate.getMonth() === cur.month;
+    if (isCurrentMonth && viewMode === 'monthly') {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('current-day-calendar-cell');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [currentMonthDate, resetTrigger, viewMode]);
 
   // Keyboard shortcut listener (Cmd+K / Ctrl+K and Esc)
   useEffect(() => {
@@ -95,7 +119,7 @@ export default function AvailabilityGrid({
 
   // Counts for search category chips
   const searchCategoryCounts = useMemo(() => {
-    const todayStr = '2026-09-05';
+    const todayStr = sysDate.dateStr;
     const all = searchableBookings.length;
     const today = searchableBookings.filter(b => b.date === todayStr).length;
     const upcoming = searchableBookings.filter(b => b.date >= todayStr).length;
@@ -113,12 +137,12 @@ export default function AvailabilityGrid({
     }).length;
 
     return { all, today, upcoming, auditorium, activity, labs };
-  }, [searchableBookings, venues]);
+  }, [searchableBookings, venues, sysDate.dateStr]);
 
   // Filtered search results
   const filteredSearchResults = useMemo(() => {
     let list = searchableBookings;
-    const todayStr = '2026-09-05';
+    const todayStr = sysDate.dateStr;
 
     if (searchCategory === 'today') {
       list = list.filter(b => b.date === todayStr);
@@ -485,8 +509,9 @@ export default function AvailabilityGrid({
               return (
                 <div
                   key={item.dateStr}
+                  id={isToday ? 'current-day-calendar-cell' : `day-cell-${item.dateStr}`}
                   onClick={() => setSelectedMonthDay(item.dateStr)}
-                  className="rounded-2xl transition-all cursor-pointer flex flex-col justify-between space-y-2 p-2.5 sm:p-3.5"
+                  className={`rounded-2xl transition-all cursor-pointer flex flex-col justify-between space-y-2 p-2.5 sm:p-3.5 scroll-mt-28 ${isToday ? 'ring-2 ring-red-400 ring-offset-2' : ''}`}
                   style={isSelected
                     ? {
                         background: '#FFF5F5',

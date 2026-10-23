@@ -12,11 +12,22 @@ import ClubsView from './components/ClubsView';
 import ClubProfileModal from './components/ClubProfileModal';
 import EventDetailsModal from './components/EventDetailsModal';
 import EditBookingModal from './components/EditBookingModal';
+import AboutView from './components/AboutView';
+import ComplaintSuggestionView from './components/ComplaintSuggestionView';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-import { initialVenues, initialBookings, initialAllowedUsers, initialClubs, initialActivityLogs } from './data/mockData';
+import { 
+  initialVenues, 
+  initialBookings, 
+  initialAllowedUsers, 
+  initialClubs, 
+  initialActivityLogs,
+  initialUnionMembers,
+  initialComplaints,
+  initialClassRepresentatives
+} from './data/mockData';
 import { formatDateFriendly, formatTime12H } from './utils/availabilityUtils';
 import { isRespectiveClubUser, findRespectiveClub } from './utils/clubUtils';
 import { 
@@ -28,6 +39,9 @@ import {
   subscribeToAuthSettings,
   subscribeToClubs,
   subscribeToActivityLogs,
+  subscribeToUnionMembers,
+  subscribeToComplaints,
+  subscribeToClassRepresentatives,
   dbUpdateClubProfile,
   dbCreateBooking, 
   dbUpdateBooking, 
@@ -38,6 +52,16 @@ import {
   dbUpdateAuthSettings,
   dbAddActivityLog,
   dbClearActivityLogs,
+  dbAddUnionMember,
+  dbUpdateUnionMember,
+  dbDeleteUnionMember,
+  dbAddComplaint,
+  dbUpdateComplaintComment,
+  dbUpdateComplaintStatus,
+  dbDeleteComplaint,
+  dbAddClassRepresentative,
+  dbUpdateClassRepresentative,
+  dbDeleteClassRepresentative,
   dbSignOut
 } from './services/firebase';
 
@@ -118,6 +142,12 @@ export default function App() {
   });
 
   const [activeTab, setActiveTab] = useState('venues');
+  const [scheduleResetCounter, setScheduleResetCounter] = useState(0);
+
+  const handleScheduleTabClick = () => {
+    setActiveTab('availability');
+    setScheduleResetCounter(prev => prev + 1);
+  };
 
   // Toast / Notification State
   const [toast, setToast] = useState(null);
@@ -145,6 +175,42 @@ export default function App() {
       } catch (e) {}
     }
     return initialClubs;
+  });
+
+  // Union MEC Executive Council Members (About Tab)
+  const [unionMembers, setUnionMembers] = useState(() => {
+    const saved = localStorage.getItem('cs_union_members_v2');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return initialUnionMembers;
+  });
+
+  // Student Grievances & Suggestions (Complaint & Suggestion Tab)
+  const [complaints, setComplaints] = useState(() => {
+    const saved = localStorage.getItem('cs_complaints_v1');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return initialComplaints;
+  });
+
+  // Union MEC Class Representatives (Only Names list)
+  const [classRepresentatives, setClassRepresentatives] = useState(() => {
+    const saved = localStorage.getItem('cs_class_reps_v2');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return initialClassRepresentatives;
   });
 
   // Modals
@@ -266,6 +332,33 @@ export default function App() {
         }
       });
 
+      const unsubscribeUnionMembers = subscribeToUnionMembers((liveMembers) => {
+        if (Array.isArray(liveMembers) && liveMembers.length > 0) {
+          setUnionMembers(liveMembers);
+          try {
+            localStorage.setItem('cs_union_members_v2', JSON.stringify(liveMembers));
+          } catch (e) {}
+        }
+      });
+
+      const unsubscribeComplaints = subscribeToComplaints((liveComplaints) => {
+        if (Array.isArray(liveComplaints) && liveComplaints.length > 0) {
+          setComplaints(liveComplaints);
+          try {
+            localStorage.setItem('cs_complaints_v1', JSON.stringify(liveComplaints));
+          } catch (e) {}
+        }
+      });
+
+      const unsubscribeClassRepresentatives = subscribeToClassRepresentatives((liveReps) => {
+        if (Array.isArray(liveReps) && liveReps.length > 0) {
+          setClassRepresentatives(liveReps);
+          try {
+            localStorage.setItem('cs_class_reps_v2', JSON.stringify(liveReps));
+          } catch (e) {}
+        }
+      });
+
       return () => {
         unsubscribeBookings();
         unsubscribeVenues();
@@ -273,9 +366,24 @@ export default function App() {
         unsubscribeAuthSettings();
         unsubscribeClubs();
         unsubscribeActivityLogs();
+        unsubscribeUnionMembers();
+        unsubscribeComplaints();
+        unsubscribeClassRepresentatives();
       };
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('cs_union_members_v2', JSON.stringify(unionMembers));
+  }, [unionMembers]);
+
+  useEffect(() => {
+    localStorage.setItem('cs_complaints_v1', JSON.stringify(complaints));
+  }, [complaints]);
+
+  useEffect(() => {
+    localStorage.setItem('cs_class_reps_v2', JSON.stringify(classRepresentatives));
+  }, [classRepresentatives]);
 
   useEffect(() => {
     localStorage.setItem('cs_clubs_v5', JSON.stringify(clubs));
@@ -1029,6 +1137,213 @@ export default function App() {
     showToast(`${target?.name || 'Venue'} status updated to ${nextStatus}`, 'info');
   };
 
+  // Union Member Handlers (About Tab)
+  const handleAddUnionMember = async (memberData) => {
+    const updated = [...unionMembers, memberData].sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
+    setUnionMembers(updated);
+    try {
+      localStorage.setItem('cs_union_members_v2', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbAddUnionMember(memberData);
+      } catch (e) {
+        console.warn('Firebase add union member error:', e);
+      }
+    }
+
+    logActivity({
+      actionType: 'UNION_MEMBER_ADDED',
+      clubName: 'Union MEC',
+      userEmail: currentUser?.email || 'admin@mec.ac.in',
+      summary: `Union Admin added executive member: ${memberData.name} (${memberData.post}).`
+    });
+
+    showToast(`Added ${memberData.name} (${memberData.post}) to Union executive list.`, 'success');
+  };
+
+  const handleUpdateUnionMember = async (memberId, updates) => {
+    const updated = unionMembers.map(m => m.id === memberId ? { ...m, ...updates } : m)
+      .sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
+    setUnionMembers(updated);
+    try {
+      localStorage.setItem('cs_union_members_v2', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbUpdateUnionMember(memberId, updates);
+      } catch (e) {
+        console.warn('Firebase update union member error:', e);
+      }
+    }
+
+    showToast('Union member details updated.', 'success');
+  };
+
+  const handleDeleteUnionMember = async (memberId) => {
+    const target = unionMembers.find(m => m.id === memberId);
+    const updated = unionMembers.filter(m => m.id !== memberId);
+    setUnionMembers(updated);
+    try {
+      localStorage.setItem('cs_union_members_v2', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbDeleteUnionMember(memberId);
+      } catch (e) {
+        console.warn('Firebase delete union member error:', e);
+      }
+    }
+
+    showToast(`Removed ${target?.name || 'member'} from Union list.`, 'info');
+  };
+
+  // Class Representatives Handlers
+  const handleAddClassRepresentative = async (repData) => {
+    const updated = [...classRepresentatives, repData];
+    setClassRepresentatives(updated);
+    try {
+      localStorage.setItem('cs_class_reps_v2', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbAddClassRepresentative(repData);
+      } catch (e) {
+        console.warn('Firebase add class rep error:', e);
+      }
+    }
+
+    logActivity({
+      actionType: 'CLASS_REP_ADDED',
+      clubName: 'Union MEC',
+      userEmail: currentUser?.email || 'admin@mec.ac.in',
+      summary: `Union Admin added class representative: ${repData.name} (${repData.className || 'General'}).`
+    });
+
+    showToast(`Added ${repData.name} to Class Representatives.`, 'success');
+  };
+
+  const handleUpdateClassRepresentative = async (repId, updates) => {
+    const updated = classRepresentatives.map(r => r.id === repId ? { ...r, ...updates } : r);
+    setClassRepresentatives(updated);
+    try {
+      localStorage.setItem('cs_class_reps_v2', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbUpdateClassRepresentative(repId, updates);
+      } catch (e) {
+        console.warn('Firebase update class rep error:', e);
+      }
+    }
+
+    showToast('Class representative details updated.', 'success');
+  };
+
+  const handleDeleteClassRepresentative = async (repId) => {
+    const target = classRepresentatives.find(r => r.id === repId);
+    const updated = classRepresentatives.filter(r => r.id !== repId);
+    setClassRepresentatives(updated);
+    try {
+      localStorage.setItem('cs_class_reps_v2', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbDeleteClassRepresentative(repId);
+      } catch (e) {
+        console.warn('Firebase delete class rep error:', e);
+      }
+    }
+
+    showToast(`Removed ${target?.name || 'representative'} from Class Representatives.`, 'info');
+  };
+
+  // Complaint & Suggestion Handlers
+  const handleAddComplaint = async (complaintData) => {
+    const updated = [complaintData, ...complaints];
+    setComplaints(updated);
+    try {
+      localStorage.setItem('cs_complaints_v1', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbAddComplaint(complaintData);
+      } catch (e) {
+        console.warn('Firebase add complaint error:', e);
+      }
+    }
+
+    showToast(`${complaintData.type === 'complaint' ? 'Complaint' : 'Suggestion'} submitted successfully!`, 'success');
+  };
+
+  const handleUpdateComplaintComment = async (complaintId, updates) => {
+    const updated = complaints.map(c => c.id === complaintId ? { ...c, ...updates } : c);
+    setComplaints(updated);
+    try {
+      localStorage.setItem('cs_complaints_v1', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbUpdateComplaintComment(complaintId, updates);
+      } catch (e) {
+        console.warn('Firebase update comment error:', e);
+      }
+    }
+
+    logActivity({
+      actionType: 'COMPLAINT_RESPONDED',
+      clubName: 'Union MEC',
+      userEmail: currentUser?.email || 'admin@mec.ac.in',
+      summary: `Union Admin replied with official comment to complaint/suggestion: ${complaintId}.`
+    });
+
+    showToast('Official Union response published.', 'success');
+  };
+
+  const handleUpdateComplaintStatus = async (complaintId, status) => {
+    const updated = complaints.map(c => c.id === complaintId ? { ...c, status } : c);
+    setComplaints(updated);
+    try {
+      localStorage.setItem('cs_complaints_v1', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbUpdateComplaintStatus(complaintId, status);
+      } catch (e) {
+        console.warn('Firebase update status error:', e);
+      }
+    }
+
+    showToast(`Status updated to ${status}.`, 'info');
+  };
+
+  const handleDeleteComplaint = async (complaintId) => {
+    const updated = complaints.filter(c => c.id !== complaintId);
+    setComplaints(updated);
+    try {
+      localStorage.setItem('cs_complaints_v1', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isFirebaseConfigured) {
+      try {
+        await dbDeleteComplaint(complaintId);
+      } catch (e) {
+        console.warn('Firebase delete complaint error:', e);
+      }
+    }
+
+    showToast('Entry removed from portal.', 'info');
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col justify-between">
       
@@ -1063,6 +1378,7 @@ export default function App() {
         onOpenProfileModal={() => handleOpenProfileModal()}
         onLogout={handleLogout}
         onNewBookingClick={() => handleOpenBookingModal()}
+        onScheduleTabClick={handleScheduleTabClick}
       />
 
       {/* Main Workspace Container */}
@@ -1074,7 +1390,7 @@ export default function App() {
             venues={venues}
             onBookClick={(venue) => handleOpenBookingModal(venue)}
             onViewDetails={(venue) => setSelectedVenueForDetails(venue)}
-            onScheduleClick={() => setActiveTab('availability')}
+            onScheduleClick={handleScheduleTabClick}
           />
         )}
 
@@ -1090,6 +1406,36 @@ export default function App() {
             onUnblockDay={handleUnblockDay}
             onSlotClick={(venue, date, slot) => handleOpenBookingModal(venue, date, slot)}
             onEditBooking={handleOpenEditBookingModal}
+            resetTrigger={scheduleResetCounter}
+          />
+        )}
+
+        {/* Tab: About Union MEC & Executive Council */}
+        {activeTab === 'about' && (
+          <AboutView
+            members={unionMembers}
+            classRepresentatives={classRepresentatives}
+            currentUser={currentUser}
+            onAddMember={handleAddUnionMember}
+            onUpdateMember={handleUpdateUnionMember}
+            onDeleteMember={handleDeleteUnionMember}
+            onAddClassRep={handleAddClassRepresentative}
+            onUpdateClassRep={handleUpdateClassRepresentative}
+            onDeleteClassRep={handleDeleteClassRepresentative}
+            onOpenLoginModal={(msg) => triggerAuthModal(msg)}
+          />
+        )}
+
+        {/* Tab: Complaint & Suggestion Portal */}
+        {activeTab === 'complaints' && (
+          <ComplaintSuggestionView
+            complaints={complaints}
+            currentUser={currentUser}
+            onAddComplaint={handleAddComplaint}
+            onUpdateComment={handleUpdateComplaintComment}
+            onUpdateStatus={handleUpdateComplaintStatus}
+            onDeleteComplaint={handleDeleteComplaint}
+            onOpenLoginModal={(msg) => triggerAuthModal(msg)}
           />
         )}
 

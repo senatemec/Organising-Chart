@@ -39,5 +39,25 @@ service cloud.firestore {
       allow read: if true;
       allow create, write, update, delete: if true;
     }
+
+    // Union Members: Publicly readable; allow create/update/delete
+    match /union_members/{memberId} {
+      allow read: if true;
+      allow create, write, update, delete: if true;
+    }
+
+    // Complaints & Suggestions: Publicly readable; allow create/update/delete
+    match /complaints_suggestions/{itemId} {
+      allow read: if true;
+      allow create, write, update, delete: if true;
+    }
+
+    // Class Representatives: Publicly readable; allow create/update/delete
+    match /class_representatives/{repId} {
+      allow read: if true;
+      allow create, write, update, delete: if true;
+    }
   }
 }
+
+

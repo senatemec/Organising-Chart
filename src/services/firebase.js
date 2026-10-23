@@ -18,7 +18,14 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import { initialVenues, initialBookings, initialAllowedUsers } from '../data/mockData';
+import { 
+  initialVenues, 
+  initialBookings, 
+  initialAllowedUsers, 
+  initialUnionMembers, 
+  initialClassRepresentatives,
+  initialComplaints 
+} from '../data/mockData';
 
 // Firebase configuration with environment variables and project defaults
 const firebaseConfig = {
@@ -143,6 +150,44 @@ export async function seedInitialFirestoreData() {
       }
     } catch (cleanErr) {
       console.warn('Firestore clubs cleanup notice:', cleanErr);
+    }
+    // Seed initial Union MEC office bearers if collection empty
+    try {
+      const membersSnap = await getDocs(collection(db, 'union_members'));
+      if (membersSnap.empty) {
+        console.log('Seeding initial Union MEC members to Firestore...');
+        for (const member of initialUnionMembers) {
+          await setDoc(doc(db, 'union_members', member.id), member);
+        }
+      }
+    } catch (memErr) {
+      console.warn('Firestore union members check notice:', memErr);
+    }
+
+    // Seed initial complaints & suggestions if collection empty
+    try {
+      const complaintsSnap = await getDocs(collection(db, 'complaints_suggestions'));
+      if (complaintsSnap.empty) {
+        console.log('Seeding initial complaints & suggestions to Firestore...');
+        for (const complaint of initialComplaints) {
+          await setDoc(doc(db, 'complaints_suggestions', complaint.id), complaint);
+        }
+      }
+    } catch (cmpErr) {
+      console.warn('Firestore complaints check notice:', cmpErr);
+    }
+
+    // Seed initial class representatives if collection empty
+    try {
+      const repsSnap = await getDocs(collection(db, 'class_representatives'));
+      if (repsSnap.empty) {
+        console.log('Seeding initial class representatives to Firestore...');
+        for (const rep of initialClassRepresentatives) {
+          await setDoc(doc(db, 'class_representatives', rep.id), rep);
+        }
+      }
+    } catch (repErr) {
+      console.warn('Firestore class reps check notice:', repErr);
     }
   } catch (err) {
     console.warn('Firestore initial data seed check:', err);
@@ -439,5 +484,209 @@ export async function dbClearActivityLogs(logIds = []) {
     return false;
   }
 }
+
+/**
+ * Real-time listener for Union MEC Office Bearers (About Tab)
+ */
+export function subscribeToUnionMembers(onData, onError) {
+  if (!db) return () => {};
+
+  return onSnapshot(collection(db, 'union_members'), (snapshot) => {
+    const list = [];
+    snapshot.forEach((doc) => {
+      list.push({ ...doc.data(), id: doc.id });
+    });
+    list.sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
+    onData(list);
+  }, (err) => {
+    console.warn('Firestore Union Members Subscription notice:', err);
+    if (onError) onError(err);
+  });
+}
+
+/**
+ * Add a new Union MEC member to Firestore
+ */
+export async function dbAddUnionMember(member) {
+  if (!db || !member) return false;
+  try {
+    const clean = sanitizeBookingData(member);
+    await setDoc(doc(db, 'union_members', clean.id), clean);
+    return true;
+  } catch (err) {
+    console.warn('Firestore add union member notice (saved locally):', err);
+    return false;
+  }
+}
+
+/**
+ * Update an existing Union MEC member in Firestore
+ */
+export async function dbUpdateUnionMember(memberId, updates) {
+  if (!db || !memberId) return false;
+  try {
+    const clean = sanitizeBookingData(updates);
+    await setDoc(doc(db, 'union_members', memberId), clean, { merge: true });
+    return true;
+  } catch (err) {
+    console.warn('Firestore update union member notice:', err);
+    return false;
+  }
+}
+
+/**
+ * Delete a Union MEC member from Firestore
+ */
+export async function dbDeleteUnionMember(memberId) {
+  if (!db || !memberId) return false;
+  try {
+    await deleteDoc(doc(db, 'union_members', memberId));
+    return true;
+  } catch (err) {
+    console.warn('Firestore delete union member notice:', err);
+    return false;
+  }
+}
+
+/**
+ * Real-time listener for Complaints & Suggestions
+ */
+export function subscribeToComplaints(onData, onError) {
+  if (!db) return () => {};
+
+  return onSnapshot(collection(db, 'complaints_suggestions'), (snapshot) => {
+    const list = [];
+    snapshot.forEach((doc) => {
+      list.push({ ...doc.data(), id: doc.id });
+    });
+    list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    onData(list);
+  }, (err) => {
+    console.warn('Firestore Complaints Subscription notice:', err);
+    if (onError) onError(err);
+  });
+}
+
+/**
+ * Add a new complaint or suggestion to Firestore
+ */
+export async function dbAddComplaint(complaint) {
+  if (!db || !complaint) return false;
+  try {
+    const clean = sanitizeBookingData(complaint);
+    await setDoc(doc(db, 'complaints_suggestions', clean.id), clean);
+    return true;
+  } catch (err) {
+    console.warn('Firestore add complaint notice (saved locally):', err);
+    return false;
+  }
+}
+
+/**
+ * Update official admin comment and status on a complaint/suggestion in Firestore
+ */
+export async function dbUpdateComplaintComment(complaintId, updates) {
+  if (!db || !complaintId) return false;
+  try {
+    const clean = sanitizeBookingData(updates);
+    await setDoc(doc(db, 'complaints_suggestions', complaintId), clean, { merge: true });
+    return true;
+  } catch (err) {
+    console.warn('Firestore update complaint comment notice:', err);
+    return false;
+  }
+}
+
+/**
+ * Update complaint/suggestion status in Firestore
+ */
+export async function dbUpdateComplaintStatus(complaintId, status) {
+  if (!db || !complaintId) return false;
+  try {
+    await setDoc(doc(db, 'complaints_suggestions', complaintId), { status }, { merge: true });
+    return true;
+  } catch (err) {
+    console.warn('Firestore update complaint status notice:', err);
+    return false;
+  }
+}
+
+/**
+ * Delete a complaint or suggestion from Firestore
+ */
+export async function dbDeleteComplaint(complaintId) {
+  if (!db || !complaintId) return false;
+  try {
+    await deleteDoc(doc(db, 'complaints_suggestions', complaintId));
+    return true;
+  } catch (err) {
+    console.warn('Firestore delete complaint notice:', err);
+    return false;
+  }
+}
+
+/**
+ * Real-time listener for Class Representatives
+ */
+export function subscribeToClassRepresentatives(onData, onError) {
+  if (!db) return () => {};
+
+  return onSnapshot(collection(db, 'class_representatives'), (snapshot) => {
+    const list = [];
+    snapshot.forEach((doc) => {
+      list.push({ ...doc.data(), id: doc.id });
+    });
+    onData(list);
+  }, (err) => {
+    console.warn('Firestore Class Reps Subscription notice:', err);
+    if (onError) onError(err);
+  });
+}
+
+/**
+ * Add a new Class Representative to Firestore
+ */
+export async function dbAddClassRepresentative(rep) {
+  if (!db || !rep) return false;
+  try {
+    const clean = sanitizeBookingData(rep);
+    await setDoc(doc(db, 'class_representatives', clean.id), clean);
+    return true;
+  } catch (err) {
+    console.warn('Firestore add class rep notice:', err);
+    return false;
+  }
+}
+
+/**
+ * Update a Class Representative in Firestore
+ */
+export async function dbUpdateClassRepresentative(repId, updates) {
+  if (!db || !repId) return false;
+  try {
+    const clean = sanitizeBookingData(updates);
+    await setDoc(doc(db, 'class_representatives', repId), clean, { merge: true });
+    return true;
+  } catch (err) {
+    console.warn('Firestore update class rep notice:', err);
+    return false;
+  }
+}
+
+/**
+ * Delete a Class Representative from Firestore
+ */
+export async function dbDeleteClassRepresentative(repId) {
+  if (!db || !repId) return false;
+  try {
+    await deleteDoc(doc(db, 'class_representatives', repId));
+    return true;
+  } catch (err) {
+    console.warn('Firestore delete class rep notice:', err);
+    return false;
+  }
+}
+
+
 
 
