@@ -242,7 +242,7 @@ export default function AdminDashboard({
 
         <button
           onClick={() => setActiveSubTab('all-history')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
             activeSubTab === 'all-history'
               ? 'bg-red-600 text-white shadow-sm'
               : 'text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 border border-gray-200'
@@ -266,7 +266,7 @@ export default function AdminDashboard({
 
         <button
           onClick={() => setActiveSubTab('access-control')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
             activeSubTab === 'access-control'
               ? 'bg-red-600 text-white shadow-sm'
               : 'text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 border border-gray-200'
@@ -290,7 +290,7 @@ export default function AdminDashboard({
 
         <button
           onClick={() => setActiveSubTab('venue-maintenance')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
             activeSubTab === 'venue-maintenance'
               ? 'bg-red-600 text-white shadow-sm'
               : 'text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 border border-gray-200'

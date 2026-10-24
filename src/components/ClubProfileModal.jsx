@@ -57,22 +57,75 @@ export default function ClubProfileModal({
 
   if (!isOpen || !club) return null;
 
-  // Handle local image file upload and convert to base64 Data URL
+  // Handle local image file upload, enforce fixed 1:1 square crop filled to maximum size, convert to Data URL
   const handleLogoFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      setFormError('Image size exceeds 2MB. Please upload a smaller image.');
+    if (!file.type.startsWith('image/')) {
+      setFormError('Please select a valid image file (PNG, JPG, WEBP, SVG).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('Image size exceeds 5MB. Please upload a smaller image.');
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      setLogo(event.target.result);
-      setFormError('');
+      const rawDataUrl = event.target.result;
+      const img = new Image();
+      img.onload = () => {
+        try {
+          // Crop to largest center square and fill 1:1 canvas to maximum size
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+
+          // Target resolution for crisp logo (up to 800x800)
+          const targetSize = Math.min(Math.max(minDim, 512), 800);
+          const canvas = document.createElement('canvas');
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          const ctx = canvas.getContext('2d');
+
+          if (!ctx) {
+            setLogo(rawDataUrl);
+            setFormError('');
+            return;
+          }
+
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          // Draw center square crop filling full square canvas to maximum size
+          ctx.drawImage(
+            img,
+            sx, sy, minDim, minDim, // source: max center square
+            0, 0, targetSize, targetSize // destination: full 1:1 canvas
+          );
+
+          let squareDataUrl = canvas.toDataURL('image/webp', 0.92);
+          if (!squareDataUrl || squareDataUrl === 'data:,') {
+            squareDataUrl = canvas.toDataURL('image/png');
+          }
+          setLogo(squareDataUrl);
+          setFormError('');
+        } catch (err) {
+          setLogo(rawDataUrl);
+          setFormError('');
+        }
+      };
+      img.onerror = () => {
+        setLogo(rawDataUrl);
+        setFormError('');
+      };
+      img.src = rawDataUrl;
     };
     reader.readAsDataURL(file);
+    // Reset input value so re-selecting same file triggers change
+    e.target.value = '';
   };
 
   // Add core member
@@ -210,25 +263,43 @@ export default function ClubProfileModal({
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-700 flex items-center justify-between">
                 <span>Club Logo</span>
-                <span className="text-[10px] text-gray-500">URL or Image Upload</span>
+                <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
+                  Fixed 1:1 Square Ratio • Fills to Max
+                </span>
               </label>
 
-              <div className="flex items-center gap-4">
-                {/* Logo Thumbnail Preview */}
-                <div className="w-16 h-16 rounded-2xl border border-gray-200 bg-gray-50 flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
+              <div className="flex items-start sm:items-center gap-4">
+                {/* Fixed Square Logo Preview (fills to maximum size) */}
+                <div 
+                  className="w-20 h-20 sm:w-24 sm:h-24 aspect-square rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden shadow-xs relative group"
+                  style={{ aspectRatio: '1 / 1' }}
+                >
                   {logo ? (
-                    <img 
-                      src={logo} 
-                      alt="Logo preview" 
-                      className="w-full h-full object-contain rounded-xl"
-                      onError={() => {
-                        setLogo('');
-                        setFormError('Invalid image URL. Please upload a file or provide a direct image link.');
-                      }}
-                    />
+                    <>
+                      <img 
+                        src={logo} 
+                        alt="Logo preview" 
+                        className="w-full h-full object-cover"
+                        style={{ aspectRatio: '1 / 1', objectFit: 'cover' }}
+                        onError={() => {
+                          setLogo('');
+                          setFormError('Invalid image URL. Please upload a file or provide a direct image link.');
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setLogo('')}
+                        className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-[10px] font-bold gap-1 cursor-pointer"
+                        title="Remove Logo"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-300" />
+                        <span>Remove</span>
+                      </button>
+                    </>
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                      <ImageIcon className="w-6 h-6" />
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 p-2 text-center">
+                      <ImageIcon className="w-6 h-6 stroke-[1.5]" />
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mt-1">1:1 Square</span>
                     </div>
                   )}
                 </div>
@@ -243,10 +314,10 @@ export default function ClubProfileModal({
                     className="input-field text-xs w-full rounded-xl"
                   />
 
-                  <div className="flex items-center gap-2">
-                    <label className="btn-secondary text-[11px] py-1.5 px-3 rounded-lg flex items-center gap-1.5 cursor-pointer font-bold border border-gray-200">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="btn-secondary text-[11px] py-1.5 px-3 rounded-lg flex items-center gap-1.5 cursor-pointer font-bold border border-gray-200 hover:border-red-300">
                       <Upload className="w-3.5 h-3.5 text-gray-600" />
-                      <span>Upload from Device</span>
+                      <span>Upload Logo</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -254,7 +325,9 @@ export default function ClubProfileModal({
                         className="hidden"
                       />
                     </label>
-                    <span className="text-[10px] text-gray-400">JPG, PNG, WebP up to 2MB</span>
+                    <span className="text-[10px] text-gray-500 font-medium">
+                      Auto-crops to fixed 1:1 square &amp; fills to maximum size
+                    </span>
                   </div>
                 </div>
               </div>

@@ -179,7 +179,7 @@ export default function App() {
 
   // Union MEC Executive Council Members (About Tab)
   const [unionMembers, setUnionMembers] = useState(() => {
-    const saved = localStorage.getItem('cs_union_members_v2');
+    const saved = localStorage.getItem('cs_union_members_v6');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -336,7 +336,7 @@ export default function App() {
         if (Array.isArray(liveMembers) && liveMembers.length > 0) {
           setUnionMembers(liveMembers);
           try {
-            localStorage.setItem('cs_union_members_v2', JSON.stringify(liveMembers));
+            localStorage.setItem('cs_union_members_v6', JSON.stringify(liveMembers));
           } catch (e) {}
         }
       });
@@ -374,7 +374,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('cs_union_members_v2', JSON.stringify(unionMembers));
+    localStorage.setItem('cs_union_members_v6', JSON.stringify(unionMembers));
   }, [unionMembers]);
 
   useEffect(() => {
@@ -1142,7 +1142,7 @@ export default function App() {
     const updated = [...unionMembers, memberData].sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
     setUnionMembers(updated);
     try {
-      localStorage.setItem('cs_union_members_v2', JSON.stringify(updated));
+      localStorage.setItem('cs_union_members_v6', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {
@@ -1168,7 +1168,7 @@ export default function App() {
       .sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
     setUnionMembers(updated);
     try {
-      localStorage.setItem('cs_union_members_v2', JSON.stringify(updated));
+      localStorage.setItem('cs_union_members_v6', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {
@@ -1187,7 +1187,7 @@ export default function App() {
     const updated = unionMembers.filter(m => m.id !== memberId);
     setUnionMembers(updated);
     try {
-      localStorage.setItem('cs_union_members_v2', JSON.stringify(updated));
+      localStorage.setItem('cs_union_members_v6', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {

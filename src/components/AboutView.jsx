@@ -16,7 +16,8 @@ import {
   Compass,
   UserCheck,
   CheckCircle2,
-  GraduationCap
+  GraduationCap,
+  Crown
 } from 'lucide-react';
 import { mecClasses, mecYears } from '../data/mockData';
 
@@ -305,15 +306,21 @@ export default function AboutView({
   // 3. Executive Council: 2 UUCs, 2 Women Reps, Sports Secretary, 7 UG Reps (CS, CU, EC, EB, EEE, EV, MECH), and any other council members
   const executiveCouncilMembers = members.filter(m => !officeBearerIds.has(m.id));
 
-  // Render Member Card helper
-  const renderMemberCard = (member, fallbackPostTitle = '', highlightVariant = 'normal') => {
+  // Render Member Card helper with tiered spotlight
+  const renderMemberCard = (member, fallbackPostTitle = '', highlightVariant = 'executive') => {
+    const isLead = highlightVariant === 'spotlight-lead';
+    const isCore = highlightVariant === 'spotlight-core';
+    const isOfficeBearer = isLead || isCore;
+
     if (!member) {
       return (
-        <div className="glass-panel p-5 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center text-center min-h-[220px] space-y-2">
+        <div className={`glass-panel p-5 rounded-2xl border-2 border-dashed bg-gray-50/50 flex flex-col items-center justify-center text-center min-h-[220px] space-y-2 ${
+          isOfficeBearer ? 'border-red-200 bg-red-50/20' : 'border-gray-200'
+        }`}>
           <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center">
             <Users className="w-5 h-5" />
           </div>
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">{fallbackPostTitle}</div>
+          <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">{fallbackPostTitle}</div>
           <p className="text-[11px] text-gray-400">Position Open</p>
           {isAdmin && (
             <button
@@ -327,86 +334,122 @@ export default function AboutView({
       );
     }
 
-    const isChairOrVice = highlightVariant === 'primary';
+    // Determine container styles based on spotlight hierarchy
+    let containerClass = 'group glass-panel rounded-xl border border-gray-200 hover:border-red-200 bg-white shadow-2xs hover:shadow-xs transition-all duration-200 flex flex-col overflow-hidden h-full';
+    if (isLead) {
+      containerClass = 'group glass-panel rounded-2xl sm:rounded-3xl border-2 border-red-300 hover:border-red-600 bg-white shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden ring-4 ring-red-500/10 h-full';
+    } else if (isCore) {
+      containerClass = 'group glass-panel rounded-2xl border-2 border-red-200 hover:border-red-500 bg-white shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden ring-2 ring-red-500/10 h-full';
+    }
 
     return (
-      <div
-        key={member.id}
-        className={`group glass-panel rounded-2xl border overflow-hidden transition-all flex flex-col bg-white shadow-xs ${
-          isChairOrVice 
-            ? 'border-red-300 hover:border-red-500 hover:shadow-lg' 
-            : 'border-gray-200 hover:border-red-300 hover:shadow-md'
-        }`}
-      >
-        {/* Photo Header */}
-        <div className={`relative w-full ${isChairOrVice ? 'aspect-4/3 sm:aspect-16/10' : 'aspect-4/3'} bg-gray-100 overflow-hidden`}>
+      <div key={member.id} className={containerClass}>
+        {/* Raw Photo (100% natural picture, no overlay, perfect 3:4 aspect ratio) */}
+        <div 
+          className="relative w-full aspect-portrait bg-gray-50 overflow-hidden shrink-0"
+          style={{ aspectRatio: '3 / 4' }}
+        >
           <img
             src={member.picture || '/union_mec_logo.webp'}
             alt={member.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover object-top transition-transform duration-300 ${
+              isOfficeBearer ? 'group-hover:scale-105' : 'group-hover:scale-103'
+            }`}
+            style={{ objectFit: 'cover', objectPosition: 'top center' }}
             onError={(e) => {
               const src = e.target.src || '';
-              if (src.includes('/council/') && src.endsWith('.jpg')) {
+              if (src.includes('/council/') && src.endsWith('.webp')) {
+                e.target.src = src.replace('.webp', '.jpg');
+              } else if (src.includes('/council/') && src.endsWith('.jpg')) {
                 e.target.src = src.replace('.jpg', '.png');
-              } else if (src.includes('/council/') && src.endsWith('.png')) {
-                e.target.src = src.replace('.png', '.webp');
-              } else if (src.includes('/council/') && src.endsWith('.webp')) {
-                e.target.src = src.replace('.webp', '.jpeg');
               } else {
                 e.target.onerror = null;
                 e.target.src = '/union_mec_logo.webp';
               }
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          
-          {/* Post Pill Badge overlay */}
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1">
-            <span className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold text-white shadow-xs truncate ${
-              isChairOrVice ? 'bg-red-700/95 backdrop-blur-md' : 'bg-red-700/90 backdrop-blur-md'
-            }`}>
-              {member.post}
-            </span>
-            {member.department && (
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold text-white/90 bg-black/50 backdrop-blur-md whitespace-nowrap">
-                {member.department} {member.year ? `• Y${member.year}` : ''}
-              </span>
-            )}
-          </div>
         </div>
 
-        {/* Card Body (No post description) */}
-        <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between space-y-1.5">
+        {/* Card Body with prominent post spotlight */}
+        <div className={`flex-1 flex flex-col justify-between bg-white ${
+          isLead 
+            ? 'p-4 sm:p-5 space-y-3' 
+            : isCore 
+              ? 'p-3.5 sm:p-4 space-y-2.5' 
+              : 'p-2.5 sm:p-3 space-y-1.5'
+        }`}>
           <div>
-            <h3 className={`font-extrabold text-gray-900 group-hover:text-red-700 transition-colors truncate ${
-              isChairOrVice ? 'text-xs sm:text-base md:text-lg' : 'text-[11px] sm:text-sm md:text-base'
+            {/* Post Badge Spotlight */}
+            <div className="flex items-center justify-between gap-1.5 mb-1.5 flex-wrap">
+              {isLead ? (
+                <div 
+                  className="inline-flex items-center px-3.5 py-1.5 rounded-xl font-black text-xs sm:text-sm tracking-wider uppercase shadow-md"
+                  style={{ backgroundColor: '#991B1B', color: '#FFFFFF', paddingLeft: '14px', paddingRight: '14px' }}
+                >
+                  <span className="truncate">{member.post}</span>
+                </div>
+              ) : isCore ? (
+                <div 
+                  className="inline-flex items-center px-3 py-1 rounded-lg font-extrabold text-xs tracking-wide uppercase shadow-xs"
+                  style={{ backgroundColor: '#B91C1C', color: '#FFFFFF', paddingLeft: '12px', paddingRight: '12px' }}
+                >
+                  <span className="truncate">{member.post}</span>
+                </div>
+              ) : (
+                <span 
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200/80 truncate max-w-[75%]"
+                  style={{ paddingLeft: '8px', paddingRight: '8px' }}
+                >
+                  <span className="truncate">{member.post}</span>
+                </span>
+              )}
+
+              {member.department && (
+                <span className={`font-semibold whitespace-nowrap ${
+                  isLead 
+                    ? 'text-xs text-gray-500 bg-gray-100/90 px-2 py-0.5 rounded-md border border-gray-200/70 font-bold' 
+                    : isCore 
+                      ? 'text-[11px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200/60' 
+                      : 'text-[10px] text-gray-400'
+                }`}>
+                  {member.department} {member.year ? `• Y${member.year}` : ''}
+                </span>
+              )}
+            </div>
+
+            {/* Member Name */}
+            <h3 className={`font-black text-gray-900 group-hover:text-red-700 transition-colors tracking-tight truncate ${
+              isLead 
+                ? 'text-base sm:text-xl md:text-2xl mt-1' 
+                : isCore 
+                  ? 'text-sm sm:text-base md:text-lg mt-0.5' 
+                  : 'text-xs sm:text-sm mt-0.5 font-bold'
             }`}>
               {member.name}
             </h3>
-            <p className="text-[10px] sm:text-xs font-bold text-red-600 truncate">
-              {member.post}
-            </p>
           </div>
 
           {/* Contact Links & Admin Actions */}
-          <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2 text-xs text-gray-500">
+          <div className={`border-t border-gray-100 flex items-center justify-between gap-1.5 ${
+            isLead ? 'pt-3 text-xs text-gray-500' : isCore ? 'pt-2 text-xs text-gray-500' : 'pt-1.5 text-[11px] text-gray-400'
+          }`}>
             <div className="flex items-center gap-2 truncate">
               {member.email && (
                 <a
                   href={`mailto:${member.email}`}
-                  className="hover:text-red-600 transition-colors p-1"
+                  className="hover:text-red-600 transition-colors p-0.5"
                   title={`Email ${member.email}`}
                 >
-                  <Mail className="w-3.5 h-3.5" />
+                  <Mail className={isLead ? 'w-4 h-4' : isCore ? 'w-3.5 h-3.5' : 'w-3 h-3'} />
                 </a>
               )}
               {member.phone && (
                 <a
                   href={`tel:${member.phone}`}
-                  className="hover:text-red-600 transition-colors p-1"
+                  className="hover:text-red-600 transition-colors p-0.5"
                   title={`Call ${member.phone}`}
                 >
-                  <Phone className="w-3.5 h-3.5" />
+                  <Phone className={isLead ? 'w-4 h-4' : isCore ? 'w-3.5 h-3.5' : 'w-3 h-3'} />
                 </a>
               )}
             </div>
@@ -415,17 +458,17 @@ export default function AboutView({
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => handleOpenEditModal(member)}
-                  className="p-1.5 rounded-lg text-gray-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                  className="p-1 rounded text-gray-400 hover:text-red-700 hover:bg-red-50 transition-colors"
                   title="Edit Member"
                 >
-                  <Edit3 className="w-3.5 h-3.5" />
+                  <Edit3 className={isLead ? 'w-4 h-4' : 'w-3 h-3'} />
                 </button>
                 <button
                   onClick={() => setDeleteConfirmId(member.id)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                   title="Delete Member"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className={isLead ? 'w-4 h-4' : 'w-3 h-3'} />
                 </button>
               </div>
             )}
@@ -515,18 +558,18 @@ export default function AboutView({
         </div>
       </div>
 
-      {/* 2. SECTION 1: OFFICE BEARERS */}
-      <section className="space-y-4">
-        <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
+      {/* 2. SECTION 1: OFFICE BEARERS (SPOTLIGHT) */}
+      <section className="space-y-5">
+        <div className="border-b border-red-200/80 pb-3 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
           <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900">
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
               Office Bearers
             </h2>
           </div>
           {isAdmin && (
             <button
               onClick={() => handleOpenAddModal('Office Bearer')}
-              className="btn-primary text-xs py-1.5 px-3"
+              className="btn-primary text-xs py-1.5 px-3 self-start sm:self-auto"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Office Bearer</span>
@@ -534,25 +577,30 @@ export default function AboutView({
           )}
         </div>
 
-        {/* LINE 1: Chairperson first, then Vice Chairperson parallel */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 max-w-4xl mx-auto">
-          {renderMemberCard(chairperson, 'Chairperson', 'primary')}
-          {renderMemberCard(viceChairperson, 'Vice Chairperson', 'primary')}
-        </div>
+        {/* Office Bearers Spotlight Grid:
+            Line 1: Chairperson & Vice Chairperson parallel (2 columns, large spotlight cards)
+            Line 2: General Secretary, Magazine Editor, Arts Secretary parallel (3 columns, spotlight cards) */}
+        <div className="space-y-4 sm:space-y-5">
+          {/* Line 1: Chairperson & Vice Chairperson Parallel */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {renderMemberCard(chairperson, 'Chairperson', 'spotlight-lead')}
+            {renderMemberCard(viceChairperson, 'Vice Chairperson', 'spotlight-lead')}
+          </div>
 
-        {/* LINE 2: General Secretary, Magazine Editor, Arts Secretary parallel */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-5 max-w-5xl mx-auto pt-2">
-          {renderMemberCard(generalSecretary, 'General Secretary')}
-          {renderMemberCard(magazineEditor, 'Magazine Editor')}
-          {renderMemberCard(artsSecretary, 'Arts Secretary')}
+          {/* Line 2: General Secretary, Magazine Editor, Arts Secretary Parallel */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+            {renderMemberCard(generalSecretary, 'General Secretary', 'spotlight-core')}
+            {renderMemberCard(magazineEditor, 'Magazine Editor', 'spotlight-core')}
+            {renderMemberCard(artsSecretary, 'Arts Secretary', 'spotlight-core')}
+          </div>
         </div>
       </section>
 
-      {/* 3. SECTION 2: EXECUTIVE COUNCIL */}
-      <section className="space-y-4 pt-3">
-        <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
+      {/* 3. SECTION 2: EXECUTIVE COUNCIL (13 Members, Compact Grid) */}
+      <section className="space-y-4 pt-4">
+        <div className="border-b border-gray-200 pb-2.5 flex items-center justify-between">
           <div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900">
               Executive Council
             </h2>
           </div>
@@ -567,10 +615,10 @@ export default function AboutView({
           )}
         </div>
 
-        {/* Responsive Grid for Executive Council Members */}
+        {/* Executive Council in clean, compact 5-column grid */}
         {executiveCouncilMembers.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-            {executiveCouncilMembers.map((member) => renderMemberCard(member, member.post))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-3.5">
+            {executiveCouncilMembers.map((member) => renderMemberCard(member, member.post, 'executive'))}
           </div>
         ) : (
           <div className="p-8 text-center bg-gray-50 rounded-2xl border border-gray-200 text-xs text-gray-500">

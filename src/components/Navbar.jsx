@@ -6,7 +6,6 @@ import {
   ShieldCheck, 
   Plus,
   LogOut,
-  UserCheck,
   Users,
   Edit3,
   Award,
@@ -32,16 +31,17 @@ export default function Navbar({
     { id: 'my-bookings', label: 'My Bookings', icon: Ticket },
   ];
 
+  // For Admin only: merge Union Admin and Authorized Gmails into a single "Admin" tab with no extra badges
   const navItems = currentUser?.isUnionAdmin
     ? [
         ...baseNavItems,
-        { id: 'admin', label: 'Union Admin', icon: ShieldCheck, isSpecialAdmin: true },
-        { id: 'access-control', label: 'Authorized Gmails', icon: UserCheck, isSpecialAdmin: true },
+        { id: 'admin', label: 'Admin', icon: ShieldCheck },
       ]
     : baseNavItems;
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md border-b px-3 sm:px-4 lg:px-8 py-2 sm:py-2.5 mb-3 sm:mb-6 shadow-sm w-full max-w-full overflow-hidden"
+    <header 
+      className="sticky top-0 z-50 backdrop-blur-md border-b px-3 sm:px-4 lg:px-8 py-2 sm:py-2.5 mb-3 sm:mb-6 shadow-sm w-full max-w-full overflow-hidden"
       style={{
         background: 'rgba(255,255,255,0.97)',
         borderColor: '#E5E7EB',
@@ -60,29 +60,28 @@ export default function Navbar({
             <img 
               src="/mec_college_logo.webp" 
               alt="Govt. Model Engineering College" 
-              className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-md sm:rounded-lg bg-white p-0.5" 
+              className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-md bg-white p-0.5" 
             />
             <img 
               src="/union_mec_logo.webp" 
               alt="Union MEC" 
-              className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-md sm:rounded-lg bg-white p-0.5" 
+              className="w-7 h-7 sm:w-8 sm:h-8 object-contain rounded-md bg-white p-0.5" 
             />
           </div>
 
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="font-extrabold text-sm sm:text-base tracking-tight truncate"
-                style={{color:'#000000'}}
-              >
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-sm sm:text-base tracking-tight truncate" style={{ color: '#000000' }}>
                 Union MEC
               </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border tracking-wider hidden md:inline-flex"
-                style={{color:'#7F1D1D', background:'#FEE2E2', borderColor:'#FCA5A5'}}
+              <span 
+                className="text-[10px] font-bold px-1.5 rounded-full border tracking-wider hidden lg:inline-flex shrink-0"
+                style={{ color: '#7F1D1D', background: '#FEE2E2', borderColor: '#FCA5A5' }}
               >
                 STUDENT BODY
               </span>
             </div>
-            <p className="text-[10px] font-medium hidden sm:block truncate" style={{color:'#555555'}}>
+            <p className="text-[10px] font-medium hidden sm:block truncate" style={{ color: '#555555' }}>
               Govt. Model Engineering College
             </p>
           </div>
@@ -92,7 +91,7 @@ export default function Navbar({
         <nav className="hidden md:flex items-center bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-inner shrink-0">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isActive = activeTab === item.id || (item.id === 'admin' && activeTab === 'access-control');
             return (
               <button
                 key={item.id}
@@ -103,7 +102,7 @@ export default function Navbar({
                     setActiveTab(item.id);
                   }
                 }}
-                className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all`}
+                className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all whitespace-nowrap"
                 style={isActive
                   ? {
                       background: '#B91C1C',
@@ -111,23 +110,16 @@ export default function Navbar({
                       boxShadow: '0 1px 4px rgba(0,0,0,0.18)'
                     }
                   : {
-                      color: item.isSpecialAdmin ? '#7F1D1D' : '#000000',
+                      color: '#000000',
                       background: 'transparent'
                     }
                 }
               >
-                <Icon className="w-3.5 h-3.5" style={{color: isActive ? '#fff' : item.isSpecialAdmin ? '#EF4444' : '#9CA3AF'}} />
+                <Icon 
+                  className="w-3.5 h-3.5" 
+                  style={{ color: isActive ? '#fff' : '#6B7280' }} 
+                />
                 <span>{item.label}</span>
-                {item.isSpecialAdmin && (
-                  <span className="text-[9px] px-1.5 rounded font-bold border"
-                    style={isActive
-                      ? {background:'rgba(255,255,255,0.2)', color:'#fff', borderColor:'rgba(255,255,255,0.3)'}
-                      : {background:'#FEE2E2', color:'#7F1D1D', borderColor:'#FCA5A5'}
-                    }
-                  >
-                    ADMIN
-                  </span>
-                )}
               </button>
             );
           })}
@@ -139,29 +131,20 @@ export default function Navbar({
           {currentUser ? (
             <div className="flex items-center gap-1.5 sm:gap-2.5 bg-gray-50 border border-gray-200 p-1 sm:pr-2.5 rounded-2xl shadow-xs shrink-0">
               <div 
-                className={`w-6 h-6 sm:w-7 sm:h-7 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border ${
-                  currentUser.isUnionAdmin ? 'bg-white p-0.5' : 'bg-white'
-                }`}
-                style={{borderColor: currentUser.isUnionAdmin ? '#FCA5A5' : '#E5E7EB'}}
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl overflow-hidden shrink-0 flex items-center justify-center border bg-white"
+                style={{ borderColor: '#E5E7EB' }}
               >
                 <img 
                   src={currentUser.avatar} 
                   alt={currentUser.name} 
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain" 
                 />
               </div>
               <div className="hidden md:block text-left text-xs">
-                <div className="font-bold leading-tight flex items-center gap-1.5" style={{color:'#000000'}}>
+                <div className="font-bold leading-tight flex items-center gap-1.5" style={{ color: '#000000' }}>
                   <span className="truncate max-w-[110px]">{currentUser.name}</span>
-                  {currentUser.isUnionAdmin && (
-                    <span className="text-[9px] px-1.5 rounded font-bold border"
-                      style={{background:'#FEE2E2', color:'#7F1D1D', borderColor:'#FCA5A5'}}
-                    >
-                      UNION
-                    </span>
-                  )}
                 </div>
-                <div className="text-[10px] truncate max-w-[110px] font-mono" style={{color:'#555555'}}>
+                <div className="text-[10px] truncate max-w-[110px] font-mono" style={{ color: '#555555' }}>
                   {currentUser.email}
                 </div>
               </div>
@@ -177,9 +160,9 @@ export default function Navbar({
               <button
                 onClick={onLogout}
                 className="p-1 rounded-lg transition-colors ml-0.5"
-                style={{color:'#9CA3AF'}}
-                onMouseEnter={e => e.currentTarget.style.color='#DC2626'}
-                onMouseLeave={e => e.currentTarget.style.color='#9CA3AF'}
+                style={{ color: '#9CA3AF' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#DC2626'}
+                onMouseLeave={e => e.currentTarget.style.color = '#9CA3AF'}
                 title="Sign Out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -218,7 +201,7 @@ export default function Navbar({
       <div className="md:hidden flex items-center justify-start gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:-mx-4 sm:px-4 pt-2 mt-2 border-t border-gray-100">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive = activeTab === item.id || (item.id === 'admin' && activeTab === 'access-control');
           return (
             <button
               key={item.id}
@@ -229,24 +212,14 @@ export default function Navbar({
                   setActiveTab(item.id);
                 }
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap shrink-0 transition-all`}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap shrink-0 transition-all"
               style={isActive
                 ? { background: '#B91C1C', color: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }
-                : { color: item.isSpecialAdmin ? '#7F1D1D' : '#000000', background: 'transparent' }
+                : { color: '#000000', background: 'transparent' }
               }
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{item.label}</span>
-              {item.isSpecialAdmin && (
-                <span className="text-[8px] px-1 rounded font-bold border"
-                  style={isActive
-                    ? {background:'rgba(255,255,255,0.2)', color:'#fff', borderColor:'rgba(255,255,255,0.3)'}
-                    : {background:'#FEE2E2', color:'#7F1D1D', borderColor:'#FCA5A5'}
-                  }
-                >
-                  ADMIN
-                </span>
-              )}
             </button>
           );
         })}

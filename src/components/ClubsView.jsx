@@ -180,13 +180,17 @@ export default function ClubsView({
                   onClick={() => setSelectedClubId(club.id)}
                   className="glass-panel p-4 sm:p-5 rounded-2xl border border-gray-200 bg-white hover:border-red-400 hover:shadow-md cursor-pointer transition-all flex flex-col items-center text-center space-y-3 group"
                 >
-                  {/* Logo Container */}
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center p-1.5 group-hover:scale-105 group-hover:border-red-300 transition-all shadow-2xs relative">
+                  {/* Logo Container (Fixed 1:1 Square, Fills to Maximum Size) */}
+                  <div 
+                    className="w-16 h-16 sm:w-20 sm:h-20 aspect-square rounded-2xl overflow-hidden border border-gray-200 bg-white flex items-center justify-center group-hover:scale-105 group-hover:border-red-300 transition-all shadow-2xs relative shrink-0"
+                    style={{ aspectRatio: '1 / 1' }}
+                  >
                     {club.logo ? (
                       <img
                         src={club.logo}
                         alt={club.name}
-                        className="w-full h-full object-contain rounded-xl"
+                        className="w-full h-full object-cover"
+                        style={{ aspectRatio: '1 / 1', objectFit: 'cover' }}
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.style.display = 'none';
@@ -195,7 +199,7 @@ export default function ClubsView({
                         }}
                       />
                     ) : null}
-                    <div className={`logo-fallback w-full h-full rounded-xl bg-red-50 text-red-700 items-center justify-center font-extrabold text-base sm:text-lg border border-red-100/80 shadow-2xs ${club.logo ? 'hidden' : 'flex'}`}>
+                    <div className={`logo-fallback w-full h-full bg-red-50 text-red-700 items-center justify-center font-extrabold text-base sm:text-lg border border-red-100/80 shadow-2xs ${club.logo ? 'hidden' : 'flex'}`}>
                       {getClubInitials(club.name, club.society)}
                     </div>
                   </div>
@@ -259,13 +263,17 @@ export default function ClubsView({
       <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-gray-200 bg-white shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
           
-          {/* Logo */}
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl border border-gray-200 bg-white p-2 flex items-center justify-center shrink-0 shadow-sm relative overflow-hidden">
+          {/* Logo (Fixed 1:1 Square, Fills to Maximum Size) */}
+          <div 
+            className="w-20 h-20 sm:w-24 sm:h-24 aspect-square rounded-2xl sm:rounded-3xl border border-gray-200 bg-white flex items-center justify-center shrink-0 shadow-sm relative overflow-hidden"
+            style={{ aspectRatio: '1 / 1' }}
+          >
             {selectedClub.logo ? (
               <img
                 src={selectedClub.logo}
                 alt={selectedClub.name}
-                className="w-full h-full object-contain rounded-2xl"
+                className="w-full h-full object-cover"
+                style={{ aspectRatio: '1 / 1', objectFit: 'cover' }}
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.style.display = 'none';
@@ -274,7 +282,7 @@ export default function ClubsView({
                 }}
               />
             ) : null}
-            <div className={`hero-logo-fallback w-full h-full rounded-2xl bg-red-50 text-red-700 items-center justify-center font-extrabold text-2xl border border-red-100/80 shadow-2xs ${selectedClub.logo ? 'hidden' : 'flex'}`}>
+            <div className={`hero-logo-fallback w-full h-full bg-red-50 text-red-700 items-center justify-center font-extrabold text-2xl border border-red-100/80 shadow-2xs ${selectedClub.logo ? 'hidden' : 'flex'}`}>
               {getClubInitials(selectedClub.name, selectedClub.society)}
             </div>
           </div>
