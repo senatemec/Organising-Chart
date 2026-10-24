@@ -151,12 +151,13 @@ export async function seedInitialFirestoreData() {
     } catch (cleanErr) {
       console.warn('Firestore clubs cleanup notice:', cleanErr);
     }
-    // Seed initial Union MEC office bearers if collection empty
+    // Seed initial Union MEC office bearers if collection empty or missing members
     try {
       const membersSnap = await getDocs(collection(db, 'union_members'));
-      if (membersSnap.empty) {
-        console.log('Seeding initial Union MEC members to Firestore...');
-        for (const member of initialUnionMembers) {
+      const existingIds = new Set(membersSnap.docs.map(d => d.id));
+      for (const member of initialUnionMembers) {
+        if (!existingIds.has(member.id)) {
+          console.log(`Seeding missing Union MEC member ${member.name} (${member.id}) to Firestore...`);
           await setDoc(doc(db, 'union_members', member.id), member);
         }
       }

@@ -179,11 +179,21 @@ export default function App() {
 
   // Union MEC Executive Council Members (About Tab)
   const [unionMembers, setUnionMembers] = useState(() => {
-    const saved = localStorage.getItem('cs_union_members_v6');
+    const saved = localStorage.getItem('cs_union_members_v7');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const parsedMap = new Map(parsed.map(m => [m.id, m]));
+          const merged = [...parsed];
+          for (const initM of initialUnionMembers) {
+            if (!parsedMap.has(initM.id)) {
+              merged.push(initM);
+            }
+          }
+          merged.sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
+          return merged;
+        }
       } catch (e) {}
     }
     return initialUnionMembers;
@@ -334,9 +344,18 @@ export default function App() {
 
       const unsubscribeUnionMembers = subscribeToUnionMembers((liveMembers) => {
         if (Array.isArray(liveMembers) && liveMembers.length > 0) {
-          setUnionMembers(liveMembers);
+          const liveMap = new Map(liveMembers.map(m => [m.id, m]));
+          const merged = [...liveMembers];
+          for (const initM of initialUnionMembers) {
+            if (!liveMap.has(initM.id)) {
+              merged.push(initM);
+              dbAddUnionMember(initM).catch(() => {});
+            }
+          }
+          merged.sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
+          setUnionMembers(merged);
           try {
-            localStorage.setItem('cs_union_members_v6', JSON.stringify(liveMembers));
+            localStorage.setItem('cs_union_members_v7', JSON.stringify(merged));
           } catch (e) {}
         }
       });
@@ -374,7 +393,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('cs_union_members_v6', JSON.stringify(unionMembers));
+    localStorage.setItem('cs_union_members_v7', JSON.stringify(unionMembers));
   }, [unionMembers]);
 
   useEffect(() => {
@@ -1142,7 +1161,7 @@ export default function App() {
     const updated = [...unionMembers, memberData].sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
     setUnionMembers(updated);
     try {
-      localStorage.setItem('cs_union_members_v6', JSON.stringify(updated));
+      localStorage.setItem('cs_union_members_v7', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {
@@ -1168,7 +1187,7 @@ export default function App() {
       .sort((a, b) => (Number(a.order) || 99) - (Number(b.order) || 99));
     setUnionMembers(updated);
     try {
-      localStorage.setItem('cs_union_members_v6', JSON.stringify(updated));
+      localStorage.setItem('cs_union_members_v7', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {
@@ -1187,7 +1206,7 @@ export default function App() {
     const updated = unionMembers.filter(m => m.id !== memberId);
     setUnionMembers(updated);
     try {
-      localStorage.setItem('cs_union_members_v6', JSON.stringify(updated));
+      localStorage.setItem('cs_union_members_v7', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {

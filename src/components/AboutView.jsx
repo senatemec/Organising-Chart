@@ -37,6 +37,7 @@ const COMMON_POSTS = [
   'EEE UG Representative',
   'EV UG Representative',
   'MECH UG Representative',
+  'PG Representative',
   'Joint Secretary'
 ];
 
