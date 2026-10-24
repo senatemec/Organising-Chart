@@ -814,57 +814,9 @@ export const initialClassRepresentatives = [
 ];
 
 
-// Initial complaints and suggestions with official admin comments
-export const initialComplaints = [
-  {
-    id: 'CMP-2026-101',
-    type: 'complaint',
-    name: 'Arjun Nair',
-    studentClass: 'CSB',
-    year: '3',
-    contactNumber: '+91 98471 23456',
-    subject: 'Projector and HDMI signal cable issue in Internal Auditorium',
-    description: 'During our club technical session, the podium display cable kept disconnecting and the left audio speaker was distorted. Requesting maintenance inspection before next week.',
-    isPublic: true,
-    status: 'In Progress',
-    createdAt: '2026-10-21T10:30:00.000Z',
-    adminComment: 'Inspected by college technical staff. Replaced HDMI splitter and audio connector cables. Sound system tested successfully.',
-    adminCommentedBy: 'Union Senate Chairman',
-    adminCommentedAt: '2026-10-22T14:20:00.000Z'
-  },
-  {
-    id: 'CMP-2026-102',
-    type: 'suggestion',
-    name: 'Devika Menon',
-    studentClass: 'CSA',
-    year: '2',
-    contactNumber: '+91 94470 54321',
-    subject: 'Install water dispenser near Ground Floor Activity Block (CASA / ELGA)',
-    description: 'Students working late for project and technical club events in CASA and ELGA have to walk over to the main academic block for drinking water. Setting up a cooler/filter near CASA would benefit all clubs.',
-    isPublic: true,
-    status: 'Under Review',
-    createdAt: '2026-10-22T15:45:00.000Z',
-    adminComment: 'Matter taken up in the Union Senate executive council. Site inspection conducted with Campus Maintenance team.',
-    adminCommentedBy: 'Union General Secretary',
-    adminCommentedAt: '2026-10-23T11:00:00.000Z'
-  },
-  {
-    id: 'CMP-2026-103',
-    type: 'complaint',
-    name: 'Nikhil Raj',
-    studentClass: 'MECH',
-    year: '4',
-    contactNumber: '+91 97456 78901',
-    subject: 'Basketball Court floodlights fused at College Ground',
-    description: 'Two floodlight lamps on the east pole are not working, preventing students from practicing basketball and volleyball safely after 6:00 PM.',
-    isPublic: true,
-    status: 'Resolved',
-    createdAt: '2026-10-23T12:00:00.000Z',
-    adminComment: 'Both high-beam LED fixtures replaced by maintenance crew today. Court is fully illuminated.',
-    adminCommentedBy: 'Union General Captain (Sports)',
-    adminCommentedAt: '2026-10-23T19:30:00.000Z'
-  }
-];
+// Initial complaints and suggestions (starts empty for live student submissions)
+export const initialComplaints = [];
+
 
 
 

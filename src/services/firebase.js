@@ -167,7 +167,7 @@ export async function seedInitialFirestoreData() {
     // Seed initial complaints & suggestions if collection empty
     try {
       const complaintsSnap = await getDocs(collection(db, 'complaints_suggestions'));
-      if (complaintsSnap.empty) {
+      if (complaintsSnap.empty && Array.isArray(initialComplaints) && initialComplaints.length > 0) {
         console.log('Seeding initial complaints & suggestions to Firestore...');
         for (const complaint of initialComplaints) {
           await setDoc(doc(db, 'complaints_suggestions', complaint.id), complaint);
