@@ -87,44 +87,6 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Center: Segmented Navigation */}
-        <nav className="hidden md:flex items-center bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-inner shrink-0">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id || (item.id === 'admin' && activeTab === 'access-control');
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.id === 'availability' && onScheduleTabClick) {
-                    onScheduleTabClick();
-                  } else {
-                    setActiveTab(item.id);
-                  }
-                }}
-                className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all whitespace-nowrap"
-                style={isActive
-                  ? {
-                      background: '#B91C1C',
-                      color: '#FFFFFF',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.18)'
-                    }
-                  : {
-                      color: '#000000',
-                      background: 'transparent'
-                    }
-                }
-              >
-                <Icon 
-                  className="w-3.5 h-3.5" 
-                  style={{ color: isActive ? '#fff' : '#6B7280' }} 
-                />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
         {/* Right: Auth + CTA */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           
@@ -197,32 +159,48 @@ export default function Navbar({
 
       </div>
 
-      {/* Mobile Sub-Navigation */}
-      <div className="md:hidden flex items-center justify-start gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:-mx-4 sm:px-4 pt-2 mt-2 border-t border-gray-100">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id || (item.id === 'admin' && activeTab === 'access-control');
-          return (
-            <button
-              key={item.id}
-              onClick={() => {
-                if (item.id === 'availability' && onScheduleTabClick) {
-                  onScheduleTabClick();
-                } else {
-                  setActiveTab(item.id);
-                }
-              }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap shrink-0 transition-all"
-              style={isActive
-                ? { background: '#B91C1C', color: '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }
-                : { color: '#000000', background: 'transparent' }
-              }
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
+      {/* Navigation Bar - Placed directly under the header and logo */}
+      <div className="w-full border-t border-gray-200/80 pt-2 mt-2 sm:mt-2.5">
+        <div className="max-w-7xl mx-auto flex items-center justify-start overflow-x-auto no-scrollbar">
+          <nav className="flex items-center gap-1 sm:gap-1.5 p-0.5 sm:p-1 bg-gray-50/90 rounded-xl border border-gray-200/90 shadow-2xs">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id || (item.id === 'admin' && activeTab === 'access-control');
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (item.id === 'availability' && onScheduleTabClick) {
+                      onScheduleTabClick();
+                    } else {
+                      setActiveTab(item.id);
+                    }
+                  }}
+                  className={`relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-lg font-semibold text-[11px] sm:text-xs transition-all whitespace-nowrap shrink-0 ${
+                    isActive ? 'shadow-xs' : 'hover:bg-white hover:text-red-700'
+                  }`}
+                  style={isActive
+                    ? {
+                        background: '#B91C1C',
+                        color: '#FFFFFF',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.18)'
+                      }
+                    : {
+                        color: '#000000',
+                        background: 'transparent'
+                      }
+                  }
+                >
+                  <Icon 
+                    className="w-3.5 h-3.5 shrink-0" 
+                    style={{ color: isActive ? '#fff' : '#6B7280' }} 
+                  />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
       </div>
 
     </header>
