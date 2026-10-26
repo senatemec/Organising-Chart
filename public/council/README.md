@@ -32,7 +32,7 @@ Both **Member Name** (recommended) and **Post Name** formats are supported in `.
 | **13** | **UG Representative (ECE)** | Ajal M K | EC7 B | `ajal_m_k.webp` | `ug_ec.webp` |
 | **14** | **UG Representative (EC-VLSI)** | Akshai K U | EV5 | `akshai_k_u.webp` | `ug_ev.webp` |
 | **15** | **UG Representative (EEE)** | Levi Biju | EE7 | `levi_biju.webp` | `ug_eee.webp` |
-| **16** | **UG Representative (EBE)** | Sidan Ali Ahmed | EB5 | `ug_eb.webp` | `ug_eb.webp` |
+| **16** | **UG Representative (EBE)** | Sidan Ali Ahmed | EB5 | `sidan_ali_ahmed.webp` | `ug_eb.webp` |
 | **17** | **UG Representative (ME)** | Aasim Jasim Ajmal | ME3 | `aasim_jasim_ajmal.webp` | `ug_mech.webp` |
 | **18** | **PG Representative (VLSI)** | Krishna S Nair | M.Tech VLSI 1 | `krishna_s_nair.webp` | `pg_rep.webp` |
 

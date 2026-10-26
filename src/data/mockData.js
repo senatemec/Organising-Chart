@@ -690,7 +690,7 @@ export const initialUnionMembers = [
     name: 'Sidan Ali Ahmed',
     post: 'EB UG Representative',
     roleCategory: 'executive_council',
-    picture: '/council/ug_eb.webp',
+    picture: '/council/sidan_ali_ahmed.webp',
     department: 'EB',
     year: '3',
     batch: 'EB5',
