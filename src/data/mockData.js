@@ -813,9 +813,11 @@ export const initialClassRepresentatives = [
   { id: 'cr-68', name: 'Akhildev M', className: 'Data Science', year: '1' }
 ];
 
-
-// Initial complaints and suggestions (starts empty for live student submissions)
+// Student Complaints & Grievances (Initial empty list)
 export const initialComplaints = [];
+
+
+
 
 
 

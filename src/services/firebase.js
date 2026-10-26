@@ -165,17 +165,16 @@ export async function seedInitialFirestoreData() {
       console.warn('Firestore union members check notice:', memErr);
     }
 
-    // Seed initial complaints & suggestions if collection empty
+    // Clean up any legacy mock complaints & suggestions from Firestore
     try {
-      const complaintsSnap = await getDocs(collection(db, 'complaints_suggestions'));
-      if (complaintsSnap.empty && Array.isArray(initialComplaints) && initialComplaints.length > 0) {
-        console.log('Seeding initial complaints & suggestions to Firestore...');
-        for (const complaint of initialComplaints) {
-          await setDoc(doc(db, 'complaints_suggestions', complaint.id), complaint);
-        }
+      const mockComplaintIds = ['CMP-2026-101', 'CMP-2026-102', 'CMP-2026-103', 'CMP-1793050033205-466'];
+      for (const mId of mockComplaintIds) {
+        try {
+          await deleteDoc(doc(db, 'complaints_suggestions', mId));
+        } catch (e) {}
       }
     } catch (cmpErr) {
-      console.warn('Firestore complaints check notice:', cmpErr);
+      console.warn('Firestore complaints cleanup notice:', cmpErr);
     }
 
     // Seed initial class representatives if collection empty

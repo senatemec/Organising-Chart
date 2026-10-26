@@ -201,14 +201,16 @@ export default function App() {
 
   // Student Grievances & Suggestions (Complaint & Suggestion Tab)
   const [complaints, setComplaints] = useState(() => {
-    const saved = localStorage.getItem('cs_complaints_v2');
+    const saved = localStorage.getItem('cs_complaints_v3');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.filter(c => !['CMP-2026-101', 'CMP-2026-102', 'CMP-2026-103', 'CMP-1793050033205-466'].includes(c.id));
+        }
       } catch (e) {}
     }
-    return initialComplaints;
+    return initialComplaints || [];
   });
 
   // Union MEC Class Representatives (Only Names list)
@@ -361,10 +363,11 @@ export default function App() {
       });
 
       const unsubscribeComplaints = subscribeToComplaints((liveComplaints) => {
-        if (Array.isArray(liveComplaints) && liveComplaints.length > 0) {
-          setComplaints(liveComplaints);
+        if (Array.isArray(liveComplaints)) {
+          const clean = liveComplaints.filter(c => !['CMP-2026-101', 'CMP-2026-102', 'CMP-2026-103', 'CMP-1793050033205-466'].includes(c.id));
+          setComplaints(clean);
           try {
-            localStorage.setItem('cs_complaints_v2', JSON.stringify(liveComplaints));
+            localStorage.setItem('cs_complaints_v3', JSON.stringify(clean));
           } catch (e) {}
         }
       });
@@ -397,7 +400,7 @@ export default function App() {
   }, [unionMembers]);
 
   useEffect(() => {
-    localStorage.setItem('cs_complaints_v2', JSON.stringify(complaints));
+    localStorage.setItem('cs_complaints_v3', JSON.stringify(complaints));
   }, [complaints]);
 
   useEffect(() => {
@@ -1288,7 +1291,7 @@ export default function App() {
     const updated = [complaintData, ...complaints];
     setComplaints(updated);
     try {
-      localStorage.setItem('cs_complaints_v2', JSON.stringify(updated));
+      localStorage.setItem('cs_complaints_v3', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {
@@ -1306,7 +1309,7 @@ export default function App() {
     const updated = complaints.map(c => c.id === complaintId ? { ...c, ...updates } : c);
     setComplaints(updated);
     try {
-      localStorage.setItem('cs_complaints_v2', JSON.stringify(updated));
+      localStorage.setItem('cs_complaints_v3', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {
@@ -1331,7 +1334,7 @@ export default function App() {
     const updated = complaints.map(c => c.id === complaintId ? { ...c, status } : c);
     setComplaints(updated);
     try {
-      localStorage.setItem('cs_complaints_v2', JSON.stringify(updated));
+      localStorage.setItem('cs_complaints_v3', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {
@@ -1349,7 +1352,7 @@ export default function App() {
     const updated = complaints.filter(c => c.id !== complaintId);
     setComplaints(updated);
     try {
-      localStorage.setItem('cs_complaints_v2', JSON.stringify(updated));
+      localStorage.setItem('cs_complaints_v3', JSON.stringify(updated));
     } catch (e) {}
 
     if (isFirebaseConfigured) {

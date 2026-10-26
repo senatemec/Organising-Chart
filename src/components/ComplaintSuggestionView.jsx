@@ -443,7 +443,7 @@ export default function ComplaintSuggestionView({
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Mohammed Shaddaad"
+                      placeholder="Your Full Name"
                       value={formName}
                       onChange={(e) => setFormName(e.target.value)}
                       className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-white"
