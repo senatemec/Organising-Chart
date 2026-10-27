@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  college-venue-hub:
+    build: .
+    container_name: college-venue-hub
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
