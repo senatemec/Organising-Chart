@@ -38,7 +38,8 @@ export default function EditBookingModal({
   existingBookings = [], 
   currentUser = null,
   onClose, 
-  onSaveBooking 
+  onSaveBooking,
+  onSave
 }) {
   if (!isOpen || !booking) return null;
 
@@ -224,7 +225,10 @@ export default function EditBookingModal({
         updatedAt: new Date().toISOString()
       };
 
-      await onSaveBooking(booking.id, updatedFields, updateWholePackage, changesList);
+      const saveHandler = onSaveBooking || onSave;
+      if (typeof saveHandler === 'function') {
+        await saveHandler(booking.id, updatedFields, updateWholePackage, changesList);
+      }
       onClose();
     } catch (err) {
       console.error('Error saving booking changes:', err);

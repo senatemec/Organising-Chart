@@ -307,7 +307,7 @@ export default function ClubProfileModal({
                 {/* Input URL or File Upload */}
                 <div className="flex-1 space-y-2">
                   <input
-                    type="url"
+                    type="text"
                     value={logo}
                     onChange={(e) => setLogo(e.target.value)}
                     placeholder="Paste image URL (e.g. https://... or /logo.png)"

@@ -761,8 +761,8 @@ export default function AboutView({
                       />
                     </label>
                     <input
-                      type="url"
-                      placeholder="Or paste photo URL (https://...)"
+                      type="text"
+                      placeholder="Or paste photo path / URL (/council/... or https://...)"
                       value={formPicture}
                       onChange={(e) => setFormPicture(e.target.value)}
                       className="w-full px-3 py-1.5 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-red-500"

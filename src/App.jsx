@@ -1586,6 +1586,7 @@ export default function App() {
             setSelectedBookingForEdit(null);
           }}
           onSave={handleSaveBookingEdit}
+          onSaveBooking={handleSaveBookingEdit}
         />
       )}
 
