@@ -146,7 +146,7 @@ export const initialVenues = [
   },
   {
     id: 'ccc',
-    name: 'CCC (Central Computer Centre)',
+    name: 'CCC (Central Computing Centre)',
     type: 'Computer Lab',
     capacity: 48,
     location: 'IT Block (1st Floor)',
@@ -158,7 +158,7 @@ export const initialVenues = [
   },
   {
     id: 'cir',
-    name: 'CIR (Centre for Industrial Relations)',
+    name: 'CIR (Centre for Innovation and Research)',
     type: 'Seminar Hall',
     capacity: 48,
     location: 'Placement & Corporate Block',
