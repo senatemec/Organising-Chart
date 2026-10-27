@@ -159,7 +159,7 @@ export default function App() {
       localStorage.removeItem('cs_clubs_v3');
       localStorage.removeItem('cs_clubs_v4');
     } catch (e) {}
-    const saved = localStorage.getItem('cs_clubs_v5');
+    const saved = localStorage.getItem('cs_clubs_v6');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -328,7 +328,7 @@ export default function App() {
             });
             const merged = Array.from(map.values());
             try {
-              localStorage.setItem('cs_clubs_v5', JSON.stringify(merged));
+              localStorage.setItem('cs_clubs_v6', JSON.stringify(merged));
             } catch (e) {}
             return merged;
           });
@@ -408,7 +408,7 @@ export default function App() {
   }, [classRepresentatives]);
 
   useEffect(() => {
-    localStorage.setItem('cs_clubs_v5', JSON.stringify(clubs));
+    localStorage.setItem('cs_clubs_v6', JSON.stringify(clubs));
   }, [clubs]);
 
   useEffect(() => {
@@ -755,7 +755,7 @@ export default function App() {
         ? prevClubs.map(c => c.id === clubId ? { ...c, ...dataWithFlag } : c)
         : [...prevClubs, dataWithFlag];
       try {
-        localStorage.setItem('cs_clubs_v5', JSON.stringify(updated));
+        localStorage.setItem('cs_clubs_v6', JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });

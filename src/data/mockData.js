@@ -271,7 +271,11 @@ export const initialAllowedUsers = [
   { email: 'rotaractmec@gmail.com', society: 'Rotaract', note: 'Rotaract Representative' },
   { email: 'ircmec28@gmail.com', society: 'COSMEC', note: 'COSMEC Representative' },
   { email: 'topgearmec@gmail.com', society: 'Topgearmec', note: 'Topgearmec Representative' },
-  { email: 'c2sinternship2026@gmail.com', society: 'C2S_Project_Internship', note: 'C2S Project Internship Representative' }
+  { email: 'c2sinternship2026@gmail.com', society: 'C2S_Project_Internship', note: 'C2S Project Internship Representative' },
+  { email: 'bma@mec.ac.in', society: 'BMA MEC', note: 'BMA MEC Representative' },
+  { email: 'thanal@mec.ac.in', society: 'Thanal MEC', note: 'Thanal MEC Representative' },
+  { email: 'trainingcell@mec.ac.in', society: 'Training Cell', note: 'Training Cell Representative' },
+  { email: 'thudi@mec.ac.in', society: 'Thudi', note: 'Thudi Representative' }
 ];
 
 export const studentSocieties = [
@@ -368,7 +372,11 @@ export const initialClubs = [
   { id: 'yuva-mec', name: 'Yuva MEC', society: 'Yuva', email: 'yuvamec26@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
   { id: 'cosmec', name: 'COSMEC', society: 'COSMEC', email: 'ircmec28@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
   { id: 'topgear-mec', name: 'Topgear MEC', society: 'Topgearmec', email: 'topgearmec@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
-  { id: 'c2s-internship', name: 'C2S Project Internship', society: 'C2S_Project_Internship', email: 'c2sinternship2026@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false }
+  { id: 'c2s-internship', name: 'C2S Project Internship', society: 'C2S_Project_Internship', email: 'c2sinternship2026@gmail.com', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'bma-mec', name: 'BMA MEC', society: 'BMA MEC', email: 'bma@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'thanal-mec', name: 'Thanal MEC', society: 'Thanal MEC', email: 'thanal@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'training-cell', name: 'Training Cell', society: 'Training Cell', email: 'trainingcell@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false },
+  { id: 'thudi', name: 'Thudi', society: 'Thudi', email: 'thudi@mec.ac.in', logo: '', instagram: '', description: '', coreMembers: [], updatedByUser: false }
 ];
 
 export const initialActivityLogs = [
