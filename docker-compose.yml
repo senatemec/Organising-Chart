@@ -19,7 +19,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-8082}:80"
     environment:
-      - VIRTUAL_HOST=${VIRTUAL_HOST:-venues.example.edu}
+      - VIRTUAL_HOST=${VIRTUAL_HOST:-union.mec.ac.in}
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/health || exit 1"]
       interval: 15s
