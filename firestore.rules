@@ -2,62 +2,88 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Venues: Publicly readable; allow updates/writes
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isSenateAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email in [
+          'senatemec@mec.ac.in',
+          'senate@mec.ac.in',
+          'union@mec.ac.in',
+          'senatemec@gmail.com',
+          'mohammedshaddaad.mec@gmail.com',
+          'mohammedshaddaad@gmail.com',
+          'shaddaad@mec.ac.in'
+        ]
+      );
+    }
+
+    // Venues: Publicly readable for live calendar; authenticated users / admins can update status
     match /venues/{venueId} {
       allow read: if true;
-      allow write, update, delete: if true;
+      allow write: if isAuthenticated();
     }
 
     // Bookings: Publicly readable for live schedule matrix;
-    // Allow create, update (revocation/cancellation), and delete (purging)
+    // Only authenticated accounts can create, update, or cancel bookings
     match /bookings/{bookingId} {
       allow read: if true;
-      allow create, update, delete: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated();
     }
 
     // Allowed Users (Whitelist of authorized organizer emails):
-    // Allow read, add, update, and delete (revoking authorization)
+    // Publicly readable so frontend client can check whitelist authorization status;
+    // Only Union Admins can add, modify, or revoke authorized accounts
     match /allowed_users/{email} {
       allow read: if true;
-      allow create, write, update, delete: if true;
+      allow write: if isSenateAdmin();
     }
 
     // Settings (Auth policy, strict mode)
+    // Publicly readable; only Union Admins can toggle system-wide policies
     match /settings/{settingId} {
       allow read: if true;
-      allow write, update: if true;
+      allow write: if isSenateAdmin();
     }
 
-    // Club Profiles: Publicly readable; allow write/update
+    // Club Profiles: Publicly readable; authenticated users can update club profiles
     match /clubs/{clubId} {
       allow read: if true;
-      allow create, write, update, delete: if true;
+      allow write: if isAuthenticated();
     }
 
-    // Activity & Change Audit Logs: Publicly readable for admin oversight; allow create/update/delete
+    // Activity & Change Audit Logs:
+    // Readable and appendable by authenticated users; logs are strictly immutable (no edit/delete)
     match /activity_logs/{logId} {
-      allow read: if true;
-      allow create, write, update, delete: if true;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Immutable audit trail
     }
 
-    // Union Members: Publicly readable; allow create/update/delete
+    // Union Members: Publicly readable; only Union Admins can modify executive directory
     match /union_members/{memberId} {
       allow read: if true;
-      allow create, write, update, delete: if true;
+      allow write: if isSenateAdmin();
     }
 
-    // Complaints & Suggestions: Publicly readable; allow create/update/delete
+    // Complaints & Suggestions:
+    // Anyone can create (submit) a student grievance or suggestion;
+    // Public posts readable by all; private grievances only readable by Union Admins;
+    // Only Union Admins can update status or delete
     match /complaints_suggestions/{itemId} {
-      allow read: if true;
-      allow create, write, update, delete: if true;
+      allow create: if true;
+      allow read: if resource.data.isPublic == true || isSenateAdmin();
+      allow update, delete: if isSenateAdmin();
     }
 
-    // Class Representatives: Publicly readable; allow create/update/delete
+    // Class Representatives: Publicly readable; only Union Admins can modify
     match /class_representatives/{repId} {
       allow read: if true;
-      allow create, write, update, delete: if true;
+      allow write: if isSenateAdmin();
     }
   }
 }
-
-

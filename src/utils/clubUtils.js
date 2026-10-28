@@ -84,8 +84,8 @@ export function isRespectiveClubUser(currentUser, club, allowedUsers = []) {
     userEmail === 'senate@mec.ac.in' ||
     userEmail === 'union@mec.ac.in' ||
     userEmail === 'mohammedshaddaad.mec@gmail.com' ||
-    userEmail.startsWith('chairman_senate') ||
-    userEmail.startsWith('general_secretary')
+    userEmail === 'chairman_senate@mec.ac.in' ||
+    userEmail === 'general_secretary@mec.ac.in'
   );
   const isUnionClub = Boolean(normClub === 'union' || normClubId === 'union' || clubId === 'union');
   if (isUnionUser && isUnionClub) {

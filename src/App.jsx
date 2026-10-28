@@ -263,7 +263,9 @@ export default function App() {
   // Real-time Cloud Database Synchronization
   useEffect(() => {
     if (isFirebaseConfigured) {
-      seedInitialFirestoreData();
+      if (currentUser?.isUnionAdmin) {
+        seedInitialFirestoreData();
+      }
 
       const unsubscribeBookings = subscribeToBookings((liveBookings) => {
         if (Array.isArray(liveBookings)) {

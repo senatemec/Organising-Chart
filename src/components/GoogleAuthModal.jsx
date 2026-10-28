@@ -70,12 +70,11 @@ export default function GoogleAuthModal({
     }
     const userEmail = email.toLowerCase().trim();
 
-    // Union Senate / Executive Admins
+    // Union Senate / Executive Admins (Strict exact email match)
     const isSenateAdmin = userEmail === 'senatemec@mec.ac.in' || 
                          userEmail === 'senate@mec.ac.in' || 
-                         userEmail.startsWith('senatemec@') ||
-                         userEmail.startsWith('senate@') || 
                          userEmail === 'union@mec.ac.in' ||
+                         userEmail === 'senatemec@gmail.com' ||
                          userEmail === 'mohammedshaddaad.mec@gmail.com' ||
                          userEmail === 'mohammedshaddaad@gmail.com' ||
                          userEmail === 'shaddaad@mec.ac.in';
